@@ -1,0 +1,13 @@
+# The pilot loop (avians_agent.loop).
+decisions:
+  wake_s: 45            # ask the pilot at least this often, even if nothing happened
+  min_gap_s: 1.0        # never two decisions closer than this (simulated time)
+  history: 4            # last decisions shown in each prompt
+  max_notes_chars: 1200 # the pilot's own notes, kept between decisions
+  end_when: help_arrived_and_landed   # or: horizon
+control_dt: 0.1         # s per simulation step
+monitor:
+  every_s: 5
+  policy: "off"         # violated: end the episode once any clause is violated
+recording:
+  signals_hz: 2

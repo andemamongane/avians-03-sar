@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avians-agent"
+version = "0.3.0"
+description = "AVIANS pilot loop: decisions under simulated latency, memory, pilots, router, CLI"
+requires-python = ">=3.10"
+dependencies = ["pyyaml", "numpy", "avians-env", "avians-spec", "avians-perception", "avians-skills", "avians-safety", "avians-sim", "avians-adp", "avians-viz"]
+[project.optional-dependencies]
+anthropic = ["anthropic>=1"]
+
+[project.scripts]
+avians = "avians_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.md", "*.txt"]

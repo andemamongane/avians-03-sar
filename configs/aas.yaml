@@ -1,0 +1,25 @@
+# The aerial-autonomy-stack interface (Gazebo tier), as in avians-02.
+namespace: /Drone1             # AAS runs drone N as /DroneN on ROS domain N
+takeoff_action: takeoff_action
+land_action: land_action
+orbit_action: orbit_action
+offboard_action: offboard_action
+trajectory_topic: avians/trajectory   # read by px4_offboard's avians_trajectory controller (scripts/aas_plan_ahead.sh)
+offboard_end_topic: offboard_end
+set_reposition: set_reposition
+set_speed: set_speed
+local_position: fmu/out/vehicle_local_position_v1
+status: fmu/out/vehicle_status_v1
+connect_timeout_s: 60
+offboard_max_s: 7200
+
+sim:                           # avians_sim.gazebo.GazeboControl
+  container: simulation-container-inst0
+  world: impalpable_greyness   # the AAS world avians draws sar_valley into
+  model: x500_0
+  px4_bin: /aas/github_apps/PX4-Autopilot/build/px4_sitl_default/bin
+  px4_instance: 0
+  px4_log_root: /aas/github_apps/PX4-Autopilot/build/px4_sitl_default
+  record_video: {width: 1280, height: 720, fps: 15, views: [chase, overview]}
+  plain_world:
+    impalpable_greyness: [objects]

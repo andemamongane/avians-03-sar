@@ -1,0 +1,21 @@
+# The flight envelope, in ONE place. avians_safety turns it into:
+#   - the Limits skills plan with (cruise, accelerations, margins)
+#   - PX4 parameters (the hard limits PX4 enforces in the Gazebo tier)
+#   - the online monitor's speed bound (max_speed x monitor_speed_margin)
+default: standard
+envelopes:
+  standard:
+    cruise_speed: 9.0      # m/s
+    max_speed: 12.0
+    max_accel: 4.0         # m/s^2
+    max_jerk: 10.0
+    max_climb: 3.0
+    max_descent: 2.0
+    min_alt: 5.0           # m, except while taking off and landing
+    max_alt: 60.0
+    cruise_alt: 30.0
+    margin_m: 6.0          # distance kept from no-fly zones and obstacles
+    hazard_margin_m: 3.0   # distance kept from closed (hazard) zones
+    reserve_pct: 10.0      # battery floor the pilot must respect
+    critical_pct: 5.0      # the reflex layer takes over below this
+monitor_speed_margin: 1.3  # the monitor assumes the drone can do max_speed x this

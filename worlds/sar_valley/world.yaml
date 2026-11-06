@@ -1,0 +1,106 @@
+# The benchmark world: a valley where a hiker has gone missing.
+# Owner: Taylor (avians_env). Format: packages/avians_env/README.md.
+# Coordinates: metres east/north of the launch point; altitudes above ground.
+name: sar_valley
+description: >-
+  A wooded valley with a trailhead, a creek, a pine slope and a ridge. A hiker
+  did not come back from a day hike; their phone last pinged near the creek.
+origin: {lat: 47.397742, lon: 8.545594, alt: 488.0}   # PX4 SITL's default home
+launch: [0, 0]
+max_alt: 60
+bounds: [[-80, -80], [520, -80], [520, 480], [-80, 480]]   # the operating area (geofence)
+
+regions:
+  - id: r1
+    kind: search
+    name: Trailhead meadow
+    polygon: [[40, 60], [200, 60], [200, 180], [40, 180]]
+    description: Open grass, good visibility. The trail starts here.
+  - id: r2
+    kind: search
+    name: Creek bed
+    polygon: [[240, 40], [400, 40], [400, 160], [240, 160]]
+    description: Rocky creek bed; the phone's last ping. Grey boulders look like people from above.
+  - id: r3
+    kind: search
+    name: Pine slope
+    polygon: [[240, 240], [420, 240], [420, 380], [240, 380]]
+    description: Steep slope with a stand of tall pines; the likeliest place to fall.
+  - id: r4
+    kind: search
+    name: Ridge clearing
+    polygon: [[40, 260], [180, 260], [180, 400], [40, 400]]
+    description: Clearing on the ridge with a campsite.
+  - id: nofly_power
+    kind: no_fly
+    name: Power line corridor
+    polygon: [[190, 190], [500, 200], [500, 216], [190, 206]]
+    description: High-voltage line between the creek and the slope. Never cross it; go around its west end.
+  - id: zone_fire
+    kind: hazard
+    name: Fire zone
+    polygon: [[-40, 280], [46, 280], [46, 460], [-40, 460]]
+    description: Dry scrub along the ridge's west edge; fire crews may close it.
+
+obstacles:
+  - id: tower
+    name: Radio tower
+    circle: {center: [220, 110], radius: 6}
+    height: 50
+    description: Between the meadow and the creek.
+  - id: pines
+    name: Tall pines
+    polygon: [[300, 280], [335, 280], [335, 305], [300, 305]]
+    height: 28
+    description: Inside the pine slope; fly above 35 m over it.
+
+stations:
+  - id: pad_charge
+    kind: charge
+    name: Charging pad
+    position: [-20, 0]
+    charge_rate_pct_s: 0.8
+    description: At base, next to the depot.
+  - id: pad_swap
+    kind: swap
+    name: Battery swap station
+    position: [210, 320]
+    swap_s: 40
+    description: Forward station between the ridge and the slope; a ranger swaps batteries.
+
+depots:
+  - id: base
+    name: Base depot
+    position: [0, 10]
+    supplies: 1
+    load_s: 8
+    description: One medical kit (water, thermal blanket, first aid, radio).
+
+person:
+  description: Adult hiker in a red jacket, probably injured and sitting still.
+  region_weights: {r1: 0.1, r2: 0.25, r3: 0.45, r4: 0.2}
+  motion: static          # static | random_walk (then set speed, m/s)
+  speed: 0.0
+
+decoys:
+  - id: tent
+    position: [110, 330]
+    strength: 0.35
+    description: Orange tent at the campsite.
+  - id: boulder
+    position: [330, 90]
+    strength: 0.25
+    description: Boulder in the creek bed.
+
+wind: {east: 2.0, north: -1.0, gust_std: 0.8}
+
+dynamics:
+  zone_safety:
+    - {t: 0, zone: zone_fire, safe: true}
+    - {t: 420, zone: zone_fire, safe: false, note: Fire crews closed the zone; the fire is spreading east}
+  help:
+    description: Rescue helicopter from the regional base
+    delay_mean_s: 600        # ~10 min from the report to arrival
+    delay_std_s: 60
+    wrong_location_m: 30     # a report further than this from the person...
+    search_penalty_s: 180    # ...costs the crew this much longer

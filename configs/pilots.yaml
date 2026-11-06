@@ -1,0 +1,20 @@
+# Who flies. `--pilot <name>` picks one.
+default: scripted
+pilots:
+  haiku:                     # the teacher
+    provider: anthropic
+    model: claude-haiku-5-5
+    effort: medium           # low | medium | high | xhigh | max
+    thinking_display: summarized
+    max_tokens: 4000
+  sonnet:
+    provider: anthropic
+    model: claude-sonnet-5-5
+    effort: medium
+    thinking_display: summarized
+    max_tokens: 6000
+  scripted:                  # rule-based baseline: no API key, deterministic
+    provider: scripted
+router:                      # System One routing (avians_agent.router), for student pilots
+  kind: none                 # none | fixed | system_one
+  # system_one: {base_url: http://localhost:8000, model: kev-4b}   # an OpenAI-free local server

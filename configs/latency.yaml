@@ -1,0 +1,12 @@
+# Decision latency, simulated (the sim keeps running while the model "thinks").
+# Lognormal: median_s and sigma (of log); floor_s added. Measured wall-clock
+# latencies (logged as wall_s in every episode) are what to fit these to:
+#   avians latency-fit data/episodes   (prints new medians/sigmas)
+models:
+  claude-haiku-5-5:  {median_s: 2.5, sigma: 0.45, floor_s: 0.3}   # placeholder until fitted
+  claude-sonnet-5-5: {median_s: 6.0, sigma: 0.5,  floor_s: 0.5}
+  claude-opus-5-5:   {median_s: 9.0, sigma: 0.5,  floor_s: 0.5}
+  scripted:          {median_s: 0.0, sigma: 0.0,  floor_s: 0.0}
+  onboard-slm:       {median_s: 0.6, sigma: 0.3,  floor_s: 0.1}   # target for the distilled pilot
+  onboard-router:    {median_s: 0.05, sigma: 0.2, floor_s: 0.01}  # Laya/Kev-class System One model
+default: {median_s: 3.0, sigma: 0.5, floor_s: 0.3}

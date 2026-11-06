@@ -1,0 +1,20 @@
+# secrets
+.env
+*.env
+!.env.example
+
+# episodes, datasets, videos
+data/*
+!data/.gitkeep
+*.mp4
+*.tlog
+*.ulg
+
+# python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+
+.DS_Store

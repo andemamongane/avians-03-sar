@@ -1,0 +1,7 @@
+# Workspace settings only: each package under packages/ is its own distribution.
+[tool.pytest.ini_options]
+testpaths = ["packages/*/tests"]
+addopts = "--import-mode=importlib -q"
+
+[tool.ruff]
+line-length = 110

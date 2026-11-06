@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avians-safety"
+version = "0.3.0"
+description = "AVIANS safety: PX4 limits and geofence, explanatory pre-checks, reflex layer"
+requires-python = ">=3.10"
+dependencies = ["pyyaml", "shapely>=2", "avians-env", "avians-skills"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.md", "*.txt"]

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avians-sim"
+version = "0.3.0"
+description = "AVIANS simulation backends: fast kinematic tier, AAS/Gazebo tier, recording"
+requires-python = ">=3.10"
+dependencies = ["numpy", "pyyaml", "avians-env", "avians-skills", "avians-perception", "avians-safety", "avians-spec"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.md", "*.txt"]
