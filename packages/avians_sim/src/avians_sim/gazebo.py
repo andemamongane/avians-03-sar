@@ -304,35 +304,50 @@ class GazeboControl:
 
     # -- replay
     def replay(self, episode_dir: str | Path, world, speed: float = 1.0) -> dict:
-        """Re-fly a recorded episode as a visual-only drone, recording both views.
-        Real time (speed 1) by default: the cameras record at their own rate."""
+        """Re-fly a recorded episode as visual-only drones (one per recorded drone),
+        recording both views; the person walks along their recorded track and kits
+        appear where they landed. Real time (speed 1) by default."""
         ep = Path(episode_dir)
         rows = [json.loads(line) for line in open(ep / "signals.jsonl")]
         meta = json.loads((ep / "meta.json").read_text())
-        self.prepare(world, None, tuple(meta["person"]) if meta.get("person") else None, set_params=False)
-        self.spawn(REPLAY_MODEL, replay_drone_model())
+        ids = meta.get("drones") or []
+        ids = ids if len(ids) > 1 else [""]
+        scenario = world.sample(int(meta.get("seed", 0)), rows[-1]["t"] + 60)
+        self.prepare(world, None, scenario.person_position(0), set_params=False)
+        models = {did: f"{REPLAY_MODEL}_{did}" if did else REPLAY_MODEL for did in ids}
+        for did, name in models.items():
+            self.spawn(name, replay_drone_model(name))
         mover = self._background("replay_move", self._helper("move", "--world", self.world_name),
                                  stdin=subprocess.PIPE)
-        self.start(rows[-1]["t"] / speed + 5, follow_model=REPLAY_MODEL)
+        self.start(rows[-1]["t"] / speed + 5, follow_model=next(iter(models.values())), wind=scenario.wind)
         kits = [json.loads(line) for line in open(ep / "events.jsonl")]
         kits = [k for k in kits if k["kind"] == "kit_landed"]
-        t0, ax, ay = time.time(), *self._anchor
+        seen_kits = set()
+        t0, (ax, ay) = time.time(), self._anchor
         prev = rows[0]
-        for i, r in enumerate(rows):
+        moving = scenario.motion == "random_walk" and scenario.speed > 0
+        for r in rows:
             while time.time() - t0 < r["t"] / speed:
                 time.sleep(0.005)
-            de, dn = r["east"] - prev["east"], r["north"] - prev["north"]
-            yaw = math.atan2(dn, de) if math.hypot(de, dn) > 0.05 else 0.0
-            line = (f"{REPLAY_MODEL} {ax + r['east']:.3f} {ay + r['north']:.3f} {r['alt'] + 0.1:.3f} "
-                    f"{math.cos(yaw / 2):.5f} 0 0 {math.sin(yaw / 2):.5f}\n")
+            lines = []
+            for did, name in models.items():
+                sfx = f"_{did}" if did else ""
+                de, dn = r["east" + sfx] - prev["east" + sfx], r["north" + sfx] - prev["north" + sfx]
+                yaw = math.atan2(dn, de) if math.hypot(de, dn) > 0.05 else 0.0
+                lines.append(f"{name} {ax + r['east' + sfx]:.3f} {ay + r['north' + sfx]:.3f} "
+                             f"{r['alt' + sfx] + 0.1:.3f} {math.cos(yaw / 2):.5f} 0 0 {math.sin(yaw / 2):.5f}\n")
+            if moving:
+                pe, pn = scenario.person_position(r["t"])
+                lines.append(f"avians_person {ax + pe:.3f} {ay + pn:.3f} 0.45 1 0 0 0\n")
             try:
-                mover.stdin.write(line.encode())
+                mover.stdin.write("".join(lines).encode())
                 mover.stdin.flush()
             except BrokenPipeError:
                 self.notes.append("the pose mover stopped early (see sim/replay_move.log)")
                 break
             for k in kits:
-                if prev["t"] < k["t"] <= r["t"]:
+                if prev["t"] < k["t"] <= r["t"] and k["t"] not in seen_kits:
+                    seen_kits.add(k["t"])
                     import re
                     m = re.findall(r"\(([-\d.]+), ([-\d.]+)\)", k["text"])
                     if m:

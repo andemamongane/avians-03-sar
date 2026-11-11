@@ -163,8 +163,9 @@ The commands are marked **host** (a normal terminal on the machine) or
    ```bash
    avians gazebo-replay data/episodes/sar_supply/haiku/s0003
    ```
-   This flies the recorded path as a visual-only drone, with kits appearing
-   where they landed, and records the same two videos. It is the cheap way to
+   This flies the recorded paths as visual-only drones (one per recorded
+   drone), walks the person along their track, drops kits where they landed,
+   and records the same two videos. It is the cheap way to
    get Gazebo footage of rollouts that ran at 300× real time.
 7. **Stop.** In the container: `exit`. On the host:
    `docker compose -f docker/compose.yml down`, then `tmux attach -t aas-launch`
@@ -172,10 +173,14 @@ The commands are marked **host** (a normal terminal on the machine) or
 
 **Watching in QGroundControl:**
 
-- **Live (Gazebo tier):** run AAS with its ground container
-  (`GND_CONTAINER=true`) or point a desktop QGC at it.
-- **Afterwards (any tier):** QGC → Analyze Tools → Log Replay → `flight.tlog`.
-  For the regions, use Plan view → import `world.kml`.
+- **Live, any tier:** `avians fly MISSION --realtime --qgc-live 127.0.0.1:14550`
+  streams MAVLink over UDP to a desktop QGC (it listens on 14550): one vehicle
+  per drone, and the pilots' decisions and the main events in QGC's message
+  panel. In the Gazebo tier, AAS's own PX4 stream works too
+  (`GND_CONTAINER=true`).
+- **Afterwards, any tier:** `avians qgc EPISODE`, then QGC → Analyze Tools →
+  Log Replay → `flight.tlog` (every drone, decisions and events as status
+  messages). For the regions, use Plan view → import `world.kml`.
 - **PX4's own log:** `px4.ulg` opens in PX4 Flight Review.
 
 If something goes wrong, the symptom table in avians-02's
@@ -250,8 +255,9 @@ such as a second model, play the operator.
 - **Router:** the interfaces exist (`avians_agent/router.py`). The System One
   request format must be checked against the API reference before pointing it
   at Jev, Kev or Laya. The router needs McGlashan's routing dataset to train.
-- **Swarm in Gazebo:** the fast tier flies n drones; the Gazebo tier still
-  drives one `/Drone1`. Full SFO (quantifiers over time-varying domains,
+- **Swarm in Gazebo:** the fast tier flies n drones and `gazebo-replay` shows
+  them all; flying n drones live in Gazebo still drives only `/Drone1` (AAS
+  puts drone N on ROS domain N, which needs one rclpy context per drone). Full SFO (quantifiers over time-varying domains,
   counting) is not ported; the finite `forall`/`exists` covers the benchmark.
 - **aas-gym:** stepped, faster-than-real-time Gazebo for RL. The `Vehicle`
   interface is the seam for it.

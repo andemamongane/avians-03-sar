@@ -88,11 +88,17 @@ def render(ep_dir: str | Path, world, out: str | Path | None = None, speed: floa
     ax_d = fig.add_axes([0.66, 0.26, 0.31, 0.27])
     ax_txt = fig.add_axes([0.62, 0.0, 0.37, 0.2])
     ax_txt.axis("off")
-    ax_b.plot(t, s["battery"], color="#1f5fd1")
+    COLS = ["#111111", "#1f5fd1", "#c2410c", "#15803d"]
+    ids = ep.drones
+    for k, did in enumerate(ids):
+        ax_b.plot(t, ep.drone(did)["battery"], color=COLS[k % 4], label=did or None)
+    if len(ids) > 1:
+        ax_b.legend(fontsize=8, loc="lower left")
     ax_b.axhline(10, color="#d13b3b", ls="--", lw=0.8)
     ax_b.set_ylabel("battery %")
     ax_b.set_xlim(0, t[-1])
-    ax_d.plot(t, np.minimum(s["dist_person"], 400), color="#555")
+    dp = s["min_dist_person"] if "min_dist_person" in s else s["dist_person"]
+    ax_d.plot(t, np.minimum(dp, 400), color="#555")
     ax_d.axhline(30, color="#d13b3b", ls="--", lw=0.8)
     ax_d.set_ylabel("to person (m)")
     ax_d.set_xlabel("t (s)")
@@ -100,8 +106,8 @@ def render(ep_dir: str | Path, world, out: str | Path | None = None, speed: floa
     cur_b = ax_b.axvline(0, color="k", lw=0.8)
     cur_d = ax_d.axvline(0, color="k", lw=0.8)
     timeline = _timeline(ep, world)
-    trail, = ax.plot([], [], color="#222", lw=1.0)
-    drone, = ax.plot([], [], marker="o", color="#000", ms=6)
+    trails = {did: ax.plot([], [], color=COLS[k % 4], lw=1.0)[0] for k, did in enumerate(ids)}
+    dots = {did: ax.plot([], [], marker="o", color=COLS[k % 4], ms=6)[0] for k, did in enumerate(ids)}
     est, = ax.plot([], [], marker="+", color="#c0392b", ms=10, mew=2)
     sig_c = Circle((0, 0), 1, fill=False, ec="#c0392b", lw=1, ls="--")
     ax.add_patch(sig_c)
@@ -126,8 +132,10 @@ def render(ep_dir: str | Path, world, out: str | Path | None = None, speed: floa
                 tx.remove()
             draw_world(ax, world, tk, timeline)
             drawn_world["closed"] = closed
-        trail.set_data(s["east"][: i + 1], s["north"][: i + 1])
-        drone.set_data([s["east"][i]], [s["north"][i]])
+        for did in ids:
+            sd = ep.drone(did)
+            trails[did].set_data(sd["east"][: i + 1], sd["north"][: i + 1])
+            dots[did].set_data([sd["east"][i]], [sd["north"][i]])
         est.set_data([s["est_east"][i]], [s["est_north"][i]])
         sig_c.center = (s["est_east"][i], s["est_north"][i])
         sig_c.set_radius(max(1.0, s["est_sigma"][i]))
@@ -138,16 +146,18 @@ def render(ep_dir: str | Path, world, out: str | Path | None = None, speed: floa
             kit.set_data([p[0] for p in pts], [p[1] for p in pts])
         cur_b.set_xdata([tk, tk])
         cur_d.set_xdata([tk, tk])
-        title.set_text(f"{ep.meta.get('episode', '')}   t = {tk:5.0f} s   alt {s['alt'][i]:.0f} m   "
+        alts = " ".join(f"{did or 'alt'} {ep.drone(did)['alt'][i]:.0f} m" for did in ids)
+        title.set_text(f"{ep.meta.get('episode', '')}   t = {tk:5.0f} s   {alts}   "
                        f"{'FOUND' if s['found'][i] > 0 else 'searching'}"
                        + ("   HELP ARRIVED" if s['help'][i] > 0 else ""))
         dec = [d for d in ep.decisions if (d["t_apply"] or 0) <= tk and d["tool"] != "keep"]
         if dec:
             d = dec[-1]
             args = ", ".join(f"{a}={v}" for a, v in d["args"].items())
-            body = f"t={d['t_apply']:.0f}  {d['tool']}({args})\n" + "\n".join(textwrap.wrap(d["reason"], 48)[:3])
+            who = f"{d['drone']} " if d.get("drone") else ""
+            body = f"t={d['t_apply']:.0f}  {who}{d['tool']}({args})\n" + "\n".join(textwrap.wrap(d["reason"], 48)[:3])
             txt.set_text(body)
-        return trail, drone, est
+        return est,
 
     _ffmpeg()
     writer = FFMpegWriter(fps=fps, bitrate=2400)
@@ -164,7 +174,8 @@ def summary_png(ep_dir, world, out=None) -> Path:
     out = Path(out or Path(ep_dir) / "summary.png")
     fig, ax = plt.subplots(figsize=(8, 7))
     draw_world(ax, world, ep.t[-1], _timeline(ep, world))
-    ax.plot(ep.sig["east"], ep.sig["north"], color="#222", lw=0.8)
+    for did in ep.drones:
+        ax.plot(ep.drone(did)["east"], ep.drone(did)["north"], lw=0.8)
     if ep.meta.get("person"):
         ax.plot(*ep.meta["person"], marker="x", color="#c0392b", ms=9)
     ax.set_title(f"{ep.meta.get('episode', '')}: robustness {ep.score.get('robustness')}, "

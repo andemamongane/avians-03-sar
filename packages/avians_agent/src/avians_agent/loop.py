@@ -146,7 +146,8 @@ def _console_state(fleet, agents) -> str:
 
 def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict, latency_cfg: dict,
                 remote_pilot=None, router=None, quiet: bool = True, make_sim=None,
-                realtime: bool = False, ground_live: int | None = None, make_pilot=None) -> dict:
+                realtime: bool = False, ground_live: int | None = None, make_pilot=None,
+                qgc_live: str | None = None) -> dict:
     """make_sim(mission, seed, limits, dt, horizon) -> a sim (FastSim, MultiSim or a Gazebo sim);
     make_pilot(drone_id) -> a pilot per drone (default: `pilot` for every drone; scripted pilots
     keep state, so give each drone its own). A sim with realtime = True runs the pilots in threads
@@ -204,6 +205,12 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
         from avians_sim.ground_live import Console
         console = Console(sim.ground, lambda: _console_state(fleet, agents), lambda: fleet.t, port=ground_live)
         print(f"ground station console: {console.url}")
+    live = None
+    if qgc_live:
+        from avians_viz import LiveMavlink
+        host, _, port = qgc_live.partition(":")
+        live = LiveMavlink(host or "127.0.0.1", int(port or 14550), list(fleet.sims), mission.world.origin)
+        print(f"streaming MAVLink to QGroundControl at {host or '127.0.0.1'}:{port or 14550}")
     end_reason, wall0 = "horizon", time.monotonic()
     stl_log = open(out / "stl_online.jsonl", "w")
 
@@ -242,6 +249,8 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
                 else:
                     ok, text = a.ex.start(d.tool, d.args)
                 a.memory.set_notes(d.notes)
+                if live is not None and d.tool != "keep":
+                    live.text(a.id, f"{d.tool}: {d.reason}")
                 call = f"{d.tool}({', '.join(f'{k}={v}' for k, v in d.args.items())})"
                 a.memory.add_decision(t_obs, call, text.split("\n")[0][:200], d.reason)
                 a.last_result = f"(decided at t={t_obs:.0f}, applied at t={t:.0f}) {call}: {text}"
@@ -260,11 +269,17 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
         for a in agents.values():
             for e in a.sim.ctx.events:
                 a.rec.event(e.t, e.kind, e.text)
+                if live is not None and e.kind in ("found", "kit_landed", "zone", "help", "reflex", "message"):
+                    live.text(a.id, e.text)
                 a.since.append(e)
                 if e.kind in FACT_KINDS or (e.kind == "skill_done" and e.data.get("skill") in
                                              ("search_region", "recharge", "swap_battery", "pick_up", "deliver")):
                     a.memory.add_fact(e.t, e.text)
             a.sim.ctx.events.clear()
+        if live is not None:
+            live.tick(fleet.t, {did: (s.vehicle.state().east, s.vehicle.state().north, s.vehicle.state().alt,
+                                      s.vehicle.state().battery, s.vehicle.state().landed)
+                                for did, s in fleet.sims.items()})
         sig = fleet.signals()
         mon.add(fleet.t, sig)
         rec0.signals(fleet.t, sig)
@@ -286,6 +301,8 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
         pool.shutdown(wait=False, cancel_futures=True)
     if console is not None:
         console.close()
+    if live is not None:
+        live.close()
     with open(out / "messages.jsonl", "w") as f:
         for m in sim.ground.summary():
             f.write(json.dumps(m, default=str) + "\n")

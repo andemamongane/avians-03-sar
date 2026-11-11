@@ -7,6 +7,7 @@
     avians score    EPISODE                          re-score from signals.jsonl
     avians video    EPISODE [--speed 20]             the 2D sped-up replay (replay.mp4)
     avians qgc      EPISODE                          world.kml, flight.kml, flight.tlog for QGroundControl
+    avians fly ... --realtime --qgc-live 127.0.0.1:14550   watch it live in QGroundControl
     avians gazebo-replay EPISODE                     re-fly it visually in Gazebo, recording gazebo*.mp4
     avians latency-fit DIR                           fit configs/latency.yaml from measured wall times
     avians doctor                                    what is installed and reachable
@@ -113,7 +114,7 @@ def cmd_fly(a) -> int:
         s = run_episode(m, pilot, a.seed, out, load_config("agent.yaml"), load_config("latency.yaml"),
                         quiet=a.quiet, make_sim=make_sim, realtime=a.realtime,
                         ground_live=a.port if a.ground == "live" else None,
-                        make_pilot=lambda did: make_pilot(name, pcfg))
+                        make_pilot=lambda did: make_pilot(name, pcfg), qgc_live=a.qgc_live)
     finally:
         if "ctl" in holder:
             holder["ctl"].stop()
@@ -255,6 +256,8 @@ def main(argv=None) -> int:
     p.add_argument("--ground", choices=["scripted", "live"], default="scripted",
                    help="live: open the operator console (http://localhost:PORT)")
     p.add_argument("--port", type=int, default=8765)
+    p.add_argument("--qgc-live", metavar="HOST:PORT", help="stream MAVLink to QGroundControl while flying "
+                   "(QGC listens on 14550); use with --realtime")
     p = sub.add_parser("rollouts")
     p.add_argument("mission")
     p.add_argument("--pilot")

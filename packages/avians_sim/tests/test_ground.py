@@ -52,3 +52,49 @@ def test_live_console_round_trip(world, limits):
         assert b"Ground station" in urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=5).read()
     finally:
         con.close()
+
+
+def test_gazebo_replay_moves_every_drone(tmp_path, world, monkeypatch):
+    """GazeboControl.replay against a recording stand-in for docker: one visual
+    drone per recorded drone, pose lines for each every row."""
+    import subprocess as sp
+    from avians_agent.loop import run_episode
+    from avians_agent.mission import Mission, load_config
+    from avians_agent.pilots import ScriptedPilot
+    from avians_sim import gazebo
+    m = Mission.load("missions/sar_supply_2drones.yaml")
+    m.horizon_s = 20
+    ep = tmp_path / "ep"
+    run_episode(m, ScriptedPilot(), 1, ep, load_config("agent.yaml"), load_config("latency.yaml"),
+                make_pilot=lambda did: ScriptedPilot())
+    calls, written = [], []
+
+    def run(cmd, **kw):
+        calls.append(" ".join(cmd))
+        out = "/clock\n/world/impalpable_greyness/pose/info\n" if "gz topic -l" in calls[-1] else ""
+        out = "1.0 2.0 0.2 0.0\n" if "avians_gz.py pose" in calls[-1] else out
+        return sp.CompletedProcess(cmd, 0, out, "")
+
+    class P:
+        class _In:
+            def write(self, b):
+                written.append(b.decode())
+            def flush(self):
+                pass
+            def close(self):
+                pass
+        stdin, stdout = _In(), None
+        def wait(self, timeout=None):
+            return 0
+        def kill(self):
+            pass
+
+    monkeypatch.setattr(gazebo.time, "sleep", lambda s: None)
+    monkeypatch.setattr(gazebo.time, "time", iter(float(k) for k in range(10 ** 6)).__next__)
+    monkeypatch.setattr(gazebo.shutil, "which", lambda x: None)          # no ffmpeg: skip recording
+    ctl = gazebo.GazeboControl({}, tmp_path / "gz", run=run, popen=lambda *a, **k: P())
+    ctl.replay(ep, world, speed=1000)
+    spawned = [c for c in calls if "avians_gz.py spawn" in c]
+    assert any("avians_replay_drone_d1" in c for c in spawned) and any("avians_replay_drone_d2" in c for c in spawned)
+    text = "".join(written)
+    assert "avians_replay_drone_d1 " in text and "avians_replay_drone_d2 " in text
