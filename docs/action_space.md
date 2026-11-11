@@ -64,6 +64,7 @@ the running skill continue.
 
 | tool | parameters | what it does | built on | set |
 |---|---|---|---|---|
-| `assign_tasks` (runs) | tasks | Split tasks (search regions, delivery, tracking) between the drones, optimally. | Hungarian method (scipy linear_sum_assignment) (swarm) | swarm |
-| `formation` (runs) | leader, role ∈ {relay, wing} | Hold a position relative to another drone (e.g. as a radio relay). | offset setpoints relative to a leader (swarm) | swarm |
-| `handoff` (runs) | to | Hand the current task (e.g. tracking the person) to another drone. | transfers the running skill (swarm) | swarm |
+| `assign_tasks` (instant) | regions? | Split search regions between all drones at minimum total flight distance (Hungarian method); records the claims and radios each drone its region. | Hungarian method (scipy linear_sum_assignment) (swarm) | swarm |
+| `claim_region` (instant) | region | Claim a search region as yours (the other drones see claims); release with region ''. |  | swarm |
+| `formation` (runs) | leader, role? ∈ {relay, wing}="wing" | Hold a position relative to another drone until replaced: relay (20 m behind and 10 m above it, a radio relay) or wing (20 m beside it). | offset setpoints relative to a leader (swarm) | swarm |
+| `handoff` (instant) | to, task | Ask another drone, by radio, to take over a task (e.g. tracking the person); it decides. | transfers the running skill (swarm) | swarm |

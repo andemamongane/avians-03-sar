@@ -130,6 +130,14 @@ class Context:
     energy: Any = None              # avians_skills.energy.BatteryModel
     markers: list = field(default_factory=list)
     events: list = field(default_factory=list)
+    drone_id: str = "drone1"
+    home: tuple | None = None       # this drone's own pad (multi-drone); None = the world's launch point
+
+    def place(self, pid: str) -> tuple[float, float]:
+        """A named place, with 'launch' meaning this drone's own pad."""
+        if pid == "launch" and self.home is not None:
+            return self.home
+        return self.world.place(pid)
 
     @property
     def t(self) -> float:

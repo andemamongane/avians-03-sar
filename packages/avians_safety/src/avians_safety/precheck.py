@@ -32,6 +32,21 @@ def battery_check(ctx, goal: tuple[float, float], payload: bool | None = None) -
     return ""
 
 
+def _pad_of(ctx, name: str, args: dict):
+    """(pad id, position) a landing-type skill will occupy, or None."""
+    w = ctx.world
+    if name in ("recharge", "swap_battery") and args.get("station") in w.stations:
+        return args["station"], w.stations[args["station"]].position
+    if name == "pick_up" and args.get("depot", "base") in w.depots:
+        return args.get("depot", "base"), w.depots[args.get("depot", "base")].position
+    if name in ("land", "precision_land") and args.get("place") and args["place"] != "launch":
+        try:
+            return args["place"], ctx.place(args["place"])
+        except KeyError:
+            return None
+    return None
+
+
 def goal_of(ctx, name: str, args: dict):
     w = ctx.world
     if name in ("goto", "land", "precision_land") and args.get("place"):
@@ -64,6 +79,13 @@ def precheck(ctx, name: str, args: dict) -> list[str]:
         raise SkillError("on the ground: take off first (or use a skill that takes off itself)")
     goal = goal_of(ctx, name, args)
     warnings = []
+    sw = getattr(ctx.actuators, "swarm", None)
+    pad = _pad_of(ctx, name, args)
+    if sw is not None and pad is not None:
+        for o in sw.others(ctx.drone_id):
+            busy = (o["landed"] and math.dist((o["east"], o["north"]), pad[1]) < 4.0) or pad[0] in (o["skill"] or "")
+            if busy:
+                raise SkillError(f"{pad[0]} is in use by {o['id']} ({o['skill']}); wait, or use another pad")
     if goal is not None:
         why = ctx.planner.blocked_by(goal[0], goal[1], float(alt or lim.cruise_alt), ctx.unsafe_zones())
         if why and name not in ("search_region",):

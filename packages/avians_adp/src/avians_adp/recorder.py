@@ -33,16 +33,26 @@ from .schema import APIAction, MessageAction, TextObservation, Trajectory
 
 
 class EpisodeRecorder:
-    def __init__(self, out_dir: str | Path, episode_id: str, meta: dict, signals_hz: float = 2.0):
+    def __init__(self, out_dir: str | Path, episode_id: str, meta: dict, signals_hz: float = 2.0,
+                 agent: str | None = None, shared: "EpisodeRecorder | None" = None):
+        """One recorder per agent. In a multi-drone episode the first recorder
+        owns the folder (signals, events, meta, score); the others pass it as
+        `shared` and write only their own trajectory_<agent>.json."""
         self.dir = Path(out_dir)
         self.dir.mkdir(parents=True, exist_ok=True)
-        self.traj = Trajectory(id=episode_id, details={"meta": meta})
+        self.agent = agent
+        self.traj = Trajectory(id=f"{episode_id}_{agent}" if agent else episode_id,
+                               details={"meta": meta, **({"agent": agent} if agent else {})})
         self.meta = meta
-        self._sig = open(self.dir / "signals.jsonl", "w")
-        self._ev = open(self.dir / "events.jsonl", "w")
+        self.shared = shared
+        if shared is None:
+            self._sig = open(self.dir / "signals.jsonl", "w")
+            self._ev = open(self.dir / "events.jsonl", "w")
+            (self.dir / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
+        else:
+            self._sig, self._ev = shared._sig, shared._ev
         self._sig_dt = 1.0 / signals_hz
         self._next_sig = 0.0
-        (self.dir / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
 
     def brief(self, system: str, tools: list[dict]) -> None:
         self.traj.details["system"] = system
@@ -68,16 +78,20 @@ class EpisodeRecorder:
         self._sig.write(json.dumps({"t": round(t, 2), **{k: _num(v) for k, v in values.items()}}) + "\n")
 
     def event(self, t: float, kind: str, text: str, **data) -> None:
+        if self.agent and "drone" not in data:
+            data["drone"] = self.agent
         self._ev.write(json.dumps({"t": round(t, 2), "kind": kind, "text": text, **data}, default=str) + "\n")
 
     def finish(self, score: dict, summary: dict) -> None:
         self.traj.details["score"] = score
         self.traj.details["summary"] = summary
-        (self.dir / "trajectory.json").write_text(self.traj.model_dump_json(indent=1))
-        (self.dir / "score.json").write_text(json.dumps(score, indent=2, default=str))
-        (self.dir / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
-        self._sig.close()
-        self._ev.close()
+        name = f"trajectory_{self.agent}.json" if self.agent else "trajectory.json"
+        (self.dir / name).write_text(self.traj.model_dump_json(indent=1))
+        if self.shared is None:
+            (self.dir / "score.json").write_text(json.dumps(score, indent=2, default=str))
+            (self.dir / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
+            self._sig.close()
+            self._ev.close()
 
 
 def _num(v):

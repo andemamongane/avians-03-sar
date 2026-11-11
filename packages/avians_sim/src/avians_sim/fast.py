@@ -83,7 +83,7 @@ class FastActuators:
 
     def __init__(self, sim: "FastSim"):
         self.sim = sim
-        self.swarm = None
+        self.swarm = None           # the Shared world when there are other drones
 
     def load(self, depot_id: str) -> str | None:
         left = self.sim.supplies.get(depot_id, 0)
@@ -139,40 +139,110 @@ class FastActuators:
         return f"photo at {v.alt:.0f} m ({r:.0f} m around): {len(dets)} object(s): " + "; ".join(parts)
 
 
-class FastSim:
-    """One episode's world + vehicle + perception, stepped at dt."""
+class Shared:
+    """What every drone in an episode shares: the scenario and world state,
+    the person belief (detections from all drones fuse into one tracker), the
+    coverage map, the ground station, depots, kits, reports and markers.
+    `advance()` runs the world forward once per step; each drone's sim turns
+    the returned events into its own."""
 
-    def __init__(self, world, seed: int, limits: Limits, critical_pct: float = 5.0,
-                 camera: CameraModel | None = None, battery: BatteryModel | None = None,
-                 dt: float = 0.1, horizon_s: float = 3600.0, ground: dict | None = None,
-                 realtime: bool = False, drone_id: str = "drone1"):
-        self.world, self.seed, self.dt = world, seed, dt
-        self.realtime, self.drone_id = realtime, drone_id
-        self._wall_next = None
+    def __init__(self, world, seed: int, limits: Limits, camera: CameraModel | None = None,
+                 battery: BatteryModel | None = None, horizon_s: float = 3600.0, ground: dict | None = None):
+        self.world, self.seed = world, seed
         self.rng = np.random.default_rng(seed + 1000)
         self.scenario = world.sample(seed, horizon_s)
         self.world_state = WorldState(self.scenario)
         self.camera = camera or CameraModel()
         self.energy = battery or BatteryModel()
-        self.vehicle = FastVehicle(limits, self.energy, world.launch, dt)
-        self.detector = SimulatedDetector(self.camera, seed + 2000)
         self.tracker = PersonTracker.from_world(world)
         self.coverage = CoverageMap(world.search_regions())
         self.planner = PathPlanner(world, limits.margin_m, hazard_margin_m=limits.hazard_margin_m)
-        self.reflex = Reflex(world, limits, critical_pct)
         self.supplies = {d.id: d.supplies for d in world.depots.values()}
         self.reports: list[dict] = []
         self.images: list[dict] = []
         self.kits: list[dict] = []           # released kits: in flight, then landed
+        self.markers: list[dict] = []
         self.ground = GroundStation(world, ground, np.random.default_rng(seed + 3000))
+        self.drones: dict[str, "FastSim"] = {}
+        self.claims: dict[str, str] = {}     # region id -> drone id (swarm: who searches what)
+        self._help_emitted = False
+
+    def advance(self, t0: float, t: float) -> list[tuple[str, str, dict]]:
+        """World-level events in (t0, t]: kits landing, zone changes, news, help."""
+        out = []
+        for k in self.kits:
+            if not k["landed"] and t >= k["t_land"]:
+                k["landed"] = True
+                pe, pn = self.world_state.person_position(t)
+                k["err"] = math.dist(k["at"], (pe, pn))
+                b = self.tracker.belief()
+                seen = math.dist(k["at"], (b.east, b.north))
+                out.append(("kit_landed", f"kit landed at ({k['at'][0]:.0f}, {k['at'][1]:.0f}), "
+                                          f"{seen:.1f} m from the person estimate", {}))
+        for e in self.world_state.changes(t0, t):
+            out.append(("zone", f"{e.zone} is now {'SAFE' if e.safe else 'CLOSED'}"
+                                + (f": {e.note}" if e.note else ""), {}))
+        for n in self.world_state.news(t0, t):
+            self.ground.push(t, "scenario", "news", n.text + (f" (the description of {n.about} is updated)"
+                                                             if n.description else ""))
+        h = self.world_state.help
+        if h.arrival_t is not None and t0 < h.arrival_t <= t:
+            out.append(("help", f"{self.world.help.description} has arrived at the person", {}))
+        return out
+
+    def others(self, drone_id: str) -> list[dict]:
+        """The other drones' states, as a skill or a prompt sees them."""
+        out = []
+        for did, sim in self.drones.items():
+            if did == drone_id:
+                continue
+            v = sim.vehicle.state()
+            out.append({"id": did, "east": v.east, "north": v.north, "alt": v.alt, "battery": v.battery,
+                        "payload": v.payload, "landed": v.landed, "skill": sim.current_skill(),
+                        "claims": [r for r, d in self.claims.items() if d == did]})
+        return out
+
+
+class FastSim:
+    """One drone in an episode's world, stepped at dt. Several FastSims can
+    share one `Shared` (multi-drone: avians_sim.multi.MultiSim)."""
+
+    def __init__(self, world, seed: int, limits: Limits, critical_pct: float = 5.0,
+                 camera: CameraModel | None = None, battery: BatteryModel | None = None,
+                 dt: float = 0.1, horizon_s: float = 3600.0, ground: dict | None = None,
+                 realtime: bool = False, drone_id: str = "drone1", shared: Shared | None = None,
+                 launch=None):
+        self.world, self.seed, self.dt = world, seed, dt
+        self.realtime, self.drone_id = realtime, drone_id
+        self._wall_next = None
+        sh = shared or Shared(world, seed, limits, camera, battery, horizon_s, ground)
+        self.shared = sh
+        self.rng, self.scenario, self.world_state = sh.rng, sh.scenario, sh.world_state
+        self.camera, self.energy, self.tracker, self.coverage = sh.camera, sh.energy, sh.tracker, sh.coverage
+        self.planner, self.supplies, self.reports, self.images = sh.planner, sh.supplies, sh.reports, sh.images
+        self.kits, self.ground = sh.kits, sh.ground
+        self.vehicle = FastVehicle(limits, self.energy, launch or world.launch, dt)
+        self.detector = SimulatedDetector(self.camera, seed + 2000 + len(sh.drones))
+        self.reflex = Reflex(world, limits, critical_pct)
         self.actuators = FastActuators(self)
+        self.actuators.swarm = sh if shared is not None else None
         self.ctx = Context(world=world, world_state=self.world_state, vehicle=self.vehicle,
                            limits=limits, planner=self.planner, camera=self.camera,
                            actuators=self.actuators, belief=self.tracker.belief,
-                           coverage=self.coverage, energy=self.energy)
+                           coverage=self.coverage, energy=self.energy, markers=sh.markers)
+        self.ctx.drone_id = drone_id
+        self.ctx.home = tuple(launch) if launch is not None else None
         self._next_frame = 0.0
         self._found_emitted = False
         self._battery_marks = sorted({30.0, 20.0, limits.reserve_pct + 5}, reverse=True)
+        self.executor = None                 # set by the Executor that drives this sim
+        sh.drones[drone_id] = self
+
+    def current_skill(self) -> str:
+        ex = self.executor
+        if ex is None or ex.skill is None or ex.skill.done:
+            return "idle"
+        return ex.skill.describe()
 
     realtime = False
 
@@ -194,7 +264,7 @@ class FastSim:
                           "err": None})
         return f"(falls for ~{tf:.1f} s)"
 
-    def step(self, sp: Setpoint | None) -> None:
+    def step(self, sp: Setpoint | None, world_events=None) -> None:
         t0 = self.t
         self.vehicle.command(sp)
         self.vehicle.step()
@@ -206,9 +276,9 @@ class FastSim:
             delay = self._wall_next - time.monotonic()
             if delay > 0:
                 time.sleep(delay)
-        self._observe(t0)
+        self._observe(t0, world_events)
 
-    def _observe(self, t0: float) -> None:
+    def _observe(self, t0: float, world_events=None) -> None:
         """Everything after the vehicle moved: camera, kits, world timeline, battery marks."""
         ctx = self.ctx
         t, v = self.t, self.vehicle.state()
@@ -225,48 +295,37 @@ class FastSim:
                 self._found_emitted = True
                 ctx.emit("found", f"person found: estimate ({b.east:.0f}, {b.north:.0f}) +/- "
                          f"{b.sigma:.1f} m, confidence {b.conf:.2f}")
-        # kits in flight
-        for k in self.kits:
-            if not k["landed"] and t >= k["t_land"]:
-                k["landed"] = True
-                pe, pn = self.world_state.person_position(t)
-                k["err"] = math.dist(k["at"], (pe, pn))
-                b = self.tracker.belief()
-                seen = math.dist(k["at"], (b.east, b.north))
-                ctx.emit("kit_landed", f"kit landed at ({k['at'][0]:.0f}, {k['at'][1]:.0f}), "
-                         f"{seen:.1f} m from the person estimate")
-        # world timeline
-        for e in self.world_state.changes(t0, t):
-            ctx.emit("zone", f"{e.zone} is now {'SAFE' if e.safe else 'CLOSED'}" + (f": {e.note}" if e.note else ""))
-        for n in self.world_state.news(t0, t):
-            self.ground.push(t, "scenario", "news", n.text + (f" (the description of {n.about} is updated)"
-                                                             if n.description else ""))
+        # the world (once per step for all drones; MultiSim passes the events in)
+        if world_events is None:
+            world_events = self.shared.advance(t0, t)
+        for kind, text, data in world_events:
+            ctx.emit(kind, text, **data)
         for m in self.ground.inbox(t0, t, self.drone_id):
             ctx.emit("message", f"radio from {m.sender} [{m.kind}]: {m.text}", sender=m.sender, kind_=m.kind)
-        h = self.world_state.help
-        if h.arrival_t is not None and t0 < h.arrival_t <= t:
-            ctx.emit("help", f"{self.world.help.description} has arrived at the person")
         # battery marks
         while self._battery_marks and v.battery < self._battery_marks[0]:
             ctx.emit("battery", f"battery at {self._battery_marks.pop(0):.0f} %")
 
     # ------------------------------------------------------------ signals
-    def signals(self) -> dict[str, float]:
-        t, v = self.t, self.vehicle.s
+    def drone_signals(self) -> dict[str, float]:
+        """This drone's own signals (unsuffixed)."""
+        t, v = self.t, self.vehicle.state()
         pe, pn = self.world_state.person_position(t)
         clearance = min((float(o.clearance(v.east, v.north, v.alt)[0])
                          for o in self.world.obstacles.values()), default=1e3)
+        return {"east": v.east, "north": v.north, "alt": v.alt, "speed": v.speed,
+                "battery": v.battery, "clearance": clearance, "payload": 1.0 if v.payload else 0.0,
+                "dist_person": math.hypot(v.east - pe, v.north - pn), "landed": 1.0 if v.landed else 0.0}
+
+    def shared_signals(self) -> dict[str, float]:
         landed = [k for k in self.kits if k["landed"]]
-        out = {"east": v.east, "north": v.north, "alt": v.alt, "speed": v.speed,
-               "battery": v.battery, "clearance": clearance,
-               "payload": 1.0 if v.payload else 0.0,
-               "released": 1.0 if self.kits else 0.0,
-               "drop_err": min((k["err"] for k in landed), default=1e3),
-               "dist_person": math.hypot(v.east - pe, v.north - pn),
-               "landed": 1.0 if v.landed else 0.0}
+        out = {"released": 1.0 if self.kits else 0.0, "drop_err": min((k["err"] for k in landed), default=1e3)}
         out.update(self.tracker.belief().signals())
-        out.update(self.world_state.signals(t))
+        out.update(self.world_state.signals(self.t))
         return out
+
+    def signals(self) -> dict[str, float]:
+        return {**self.drone_signals(), **self.shared_signals()}
 
     def truth(self) -> dict:
         """Ground truth for logs and replays (never shown to the pilot)."""

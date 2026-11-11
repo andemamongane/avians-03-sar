@@ -113,7 +113,7 @@ class PathPlan(Skill):
         a = self.args
         if a.get("place"):
             try:
-                goal = ctx.world.place(a["place"])
+                goal = ctx.place(a["place"])
             except KeyError:
                 raise SkillError(f"no place named {a['place']!r}") from None
         elif a.get("east") is not None and a.get("north") is not None:

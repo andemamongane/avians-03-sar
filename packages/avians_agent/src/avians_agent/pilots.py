@@ -114,6 +114,9 @@ class ScriptedPilot:
         skill, status = s["skill"], s["skill_status"]
         running = status == "running"
         b, bat = s["belief"], s["battery"]
+        others = s.get("others") or []
+        if others and s["me"] != min([s["me"]] + [o["id"] for o in others]):
+            return self._wingman(s)          # not the lowest id: the supporting drone
         if s["help_arrived"]:
             if s["landed"]:
                 return Decision("keep", reason="mission complete")
@@ -174,14 +177,56 @@ class ScriptedPilot:
             return Decision("inspect", {"alt": 15, "seconds": 8}, reason="check the candidate")
         if skill == "search_region" and running:
             return Decision("keep")
+        return self._next_search(s)
+
+    def _next_search(self, s: dict) -> Decision:
+        """The most overdue open region that no other drone has claimed."""
+        skill, status = s["skill"], s["skill_status"]
         if skill == "search_region" and status in ("succeeded", "failed"):
             self.searched[s["skill_args"].get("region", "")] = s["t"]
+        taken = {r for r, who in (s.get("claims") or {}).items() if who != s["me"]}
         order = sorted(s["regions"], key=lambda r: (self.searched.get(r["id"], -1e9), -r["prior"]))
+        for r in order:
+            if not r["closed"] and r["id"] not in taken:
+                return Decision("search_region", {"region": r["id"], "alt": 30},
+                                reason=f"search {r['id']} (prior {r['prior']:.0%})")
         for r in order:
             if not r["closed"]:
                 return Decision("search_region", {"region": r["id"], "alt": 30},
-                                reason=f"search {r['id']} (prior {r['prior']:.0%})")
+                                reason=f"search {r['id']} again (all regions claimed)")
         return Decision("hover", {"seconds": 0}, reason="nothing open to search")
+
+    def _wingman(self, s: dict) -> Decision:
+        """The supporting drone: searches its own regions until the person is
+        found, then stays on them (orbit) so the estimate stays sharp while the
+        lead drone fetches the kit; recharges when low and comes back."""
+        skill, status = s["skill"], s["skill_status"]
+        running = status == "running"
+        b, bat = s["belief"], s["battery"]
+        if s["help_arrived"]:
+            if s["landed"]:
+                return Decision("keep", reason="mission complete")
+            return Decision("keep") if skill == "rtl" and running else Decision("rtl", reason="help is here")
+        if s["landed"] and skill not in ("recharge", "takeoff") or (skill == "takeoff" and not running and s["landed"]):
+            return Decision("takeoff", {"alt": 30}, reason="start")
+        if skill in ("recharge", "takeoff") and running:
+            return Decision("keep")
+        if bat < s["battery_needed_home"] + 25:
+            if "recharge" in s["rejected"]:        # the charging pad is taken: swap at the forward station
+                return Decision("swap_battery", {"station": "pad_swap"}, reason="battery low; charging pad in use")
+            return Decision("recharge", {"station": "pad_charge", "until_pct": 95}, reason="battery low")
+        if b["found"]:
+            if skill == "track_person" and running:
+                return Decision("keep")
+            return Decision("track_person", {"mode": "orbit", "alt": 30, "standoff": 15, "until": "help_arrived"},
+                            reason="keep eyes on the person while the lead drone fetches the kit")
+        if skill == "inspect" and running:
+            return Decision("keep")
+        if b["source"] != "prior" and b["conf"] > 0.4 and skill != "inspect":
+            return Decision("inspect", {"alt": 15, "seconds": 8}, reason="check the candidate")
+        if skill == "search_region" and running:
+            return Decision("keep")
+        return self._next_search(s)
 
 
 def make_pilot(name: str, cfg: dict):
@@ -202,7 +247,10 @@ def snapshot(sim, executor) -> dict:
     home = min((s.position for s in w.stations.values() if s.kind == "charge"),
                key=lambda p: math.dist(p, (v.east, v.north)), default=w.launch)
     weights = w.person.region_weights
+    sw = getattr(sim.actuators, "swarm", None)
     return {
+        "me": sim.drone_id, "others": sw.others(sim.drone_id) if sw else [],
+        "claims": dict(sw.claims) if sw else {},
         "t": round(sim.t, 2), "east": v.east, "north": v.north, "alt": v.alt, "battery": v.battery,
         "landed": v.landed, "payload": v.payload, "released": bool(sim.kits),
         "skill": sk.name if sk else None, "skill_status": sk.status if sk else None,

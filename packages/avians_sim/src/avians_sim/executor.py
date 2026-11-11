@@ -23,6 +23,7 @@ class Executor:
         self.ctx = sim.ctx
         self.skill = None
         self.history: list[dict] = []
+        sim.executor = self
 
     def start(self, name: str, args: dict) -> tuple[bool, str]:
         """(accepted, what to tell the pilot)."""
@@ -61,6 +62,12 @@ class Executor:
         return True, text + warn
 
     def tick(self) -> None:
+        """One control step: the skill's setpoint through the reflex, then the simulator."""
+        self.sim.step(self.setpoint())
+
+    def setpoint(self):
+        """The setpoint to send this tick (reflex applied), without stepping:
+        MultiSim collects one per drone and steps them together."""
         ctx, sim = self.ctx, self.sim
         sp = None
         if self.skill is not None and not self.skill.done:
@@ -76,7 +83,7 @@ class Executor:
             if self.skill is not None and not self.skill.done:
                 self.skill.interrupt(ctx, why)
             ctx.emit("reflex", f"safety reflex: {why}")
-        sim.step(sp)
+        return sp
 
     def status(self) -> str:
         s = self.skill

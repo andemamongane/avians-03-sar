@@ -37,6 +37,7 @@ class Signal:
 @dataclass
 class Registry:
     signals: dict[str, Signal] = field(default_factory=dict)
+    domains: dict[str, list[str]] = field(default_factory=dict)    # "drones" -> ["d1", "d2"]
 
     def add(self, s: Signal) -> None:
         self.signals[s.name] = s
@@ -63,14 +64,20 @@ class Registry:
 POSITION = ("east", "north", "alt")
 
 
+PER_DRONE = ("east", "north", "alt", "speed", "battery", "clearance", "payload", "landed", "dist_person")
+
+
 def sar_registry(world=None, max_speed: float = 15.0, max_climb: float = 5.0,
                  max_drain_pct_s: float = 0.4, max_charge_pct_s: float = 1.0,
-                 person_speed: float = 0.5) -> Registry:
+                 person_speed: float = 0.5, drones: list[str] | None = None) -> Registry:
     """The signals of the search-and-rescue benchmark. `max_speed` etc. are
-    the vehicle's TRUE limits (envelope x margin), not the commanded ones."""
+    the vehicle's TRUE limits (envelope x margin), not the commanded ones.
+    With `drones` (ids), the per-drone signals exist once per drone
+    (battery_d1, ...), plus min_sep and min_dist_person; the unsuffixed
+    names then belong to no drone and are absent."""
     r = Registry()
     v = max_speed
-    for s in (
+    per = [
         Signal("east", "m", "drone position east of launch", rate=v),
         Signal("north", "m", "drone position north of launch", rate=v),
         Signal("alt", "m", "drone altitude above ground", lo=0.0, rate=max_climb),
@@ -78,25 +85,40 @@ def sar_registry(world=None, max_speed: float = 15.0, max_climb: float = 5.0,
         Signal("battery", "%", "battery remaining", lo=0.0, hi=100.0, default=100.0,
                rate=max(max_drain_pct_s, max_charge_pct_s)),
         Signal("clearance", "m", "distance to the nearest obstacle", lo=0.0, rate=v, default=1e3),
+        Signal("payload", "0/1", "carrying the medical kit", lo=0.0, hi=1.0, boolean=True),
+        Signal("dist_person", "m", "true horizontal distance from the drone to the person",
+               lo=0.0, rate=v + person_speed, default=1e3),
+        Signal("landed", "0/1", "on the ground, disarmed or idle", lo=0.0, hi=1.0, boolean=True,
+               default=1.0),
+    ]
+    if drones:
+        r.domains["drones"] = list(drones)
+        for d in drones:
+            for s in per:
+                r.add(Signal(f"{s.name}_{d}", s.unit, f"{s.description} ({d})", s.lo, s.hi, s.rate,
+                             s.monotone, s.default, s.boolean))
+        r.add(Signal("min_sep", "m", "smallest 3D distance between any two drones", lo=0.0,
+                     rate=2 * v, default=1e3))
+        r.add(Signal("min_dist_person", "m", "distance from the nearest drone to the person", lo=0.0,
+                     rate=v + person_speed, default=1e3))
+    else:
+        for s in per:
+            r.add(s)
+    for s in (
         Signal("est_east", "m", "estimated person position east (the prior mean before any sighting)"),
         Signal("est_north", "m", "estimated person position north"),
         Signal("est_sigma", "m", "1-sigma uncertainty of the person estimate", lo=0.0),
         Signal("conf", "0..1", "detection confidence that the estimate is the person", lo=0.0, hi=1.0),
         Signal("found", "0/1", "confidence has reached the found threshold (latched)",
                lo=0.0, hi=1.0, monotone="up", boolean=True),
-        Signal("payload", "0/1", "carrying the medical kit", lo=0.0, hi=1.0, boolean=True),
-        Signal("released", "0/1", "the kit has been released (latched)", lo=0.0, hi=1.0,
+        Signal("released", "0/1", "a kit has been released (latched)", lo=0.0, hi=1.0,
                monotone="up", boolean=True),
-        Signal("drop_err", "m", "distance from where the kit landed to the person (1000 before release)",
+        Signal("drop_err", "m", "distance from where the closest kit landed to the person (1000 before release)",
                lo=0.0, default=1e3),
-        Signal("dist_person", "m", "true horizontal distance from the drone to the person",
-               lo=0.0, rate=v + person_speed, default=1e3),
         Signal("help_dispatched", "0/1", "help has been dispatched by a report (latched)",
                lo=0.0, hi=1.0, monotone="up", boolean=True),
         Signal("help", "0/1", "help has arrived at the person (latched)", lo=0.0, hi=1.0,
                monotone="up", boolean=True),
-        Signal("landed", "0/1", "on the ground, disarmed or idle", lo=0.0, hi=1.0, boolean=True,
-               default=1.0),
     ):
         r.add(s)
     zones = world.hazard_zones() if world is not None else []

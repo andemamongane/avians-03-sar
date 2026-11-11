@@ -1,7 +1,9 @@
 # avians_agent: the pilot loop and the `avians` command
 
-- **`loop.py`:** `run_episode`. The simulator runs continuously. Decision
-  points come from events and from a `wake_s` timer. Each decision applies
+- **`loop.py`:** `run_episode`. One `Agent` per drone (pilot, memory, timer,
+  recorder) over a `Fleet` (one `FastSim`, or a `MultiSim` for several
+  drones). The simulator runs continuously. Decision points come from events
+  and from a `wake_s` timer. Each decision applies
   after a simulated latency (fast tier) or its real latency (Gazebo tier,
   where the call runs in a thread). The online monitor runs alongside, and
   everything is recorded through `avians_adp`.
@@ -12,7 +14,9 @@
   - `AnthropicPilot` (the teacher, `claude-haiku-5-5`): adaptive thinking with
     summarized display, the system prompt cached, and one tool call per
     decision.
-  - `ScriptedPilot`: the rule-based baseline, and the no-key dry run.
+  - `ScriptedPilot`: the rule-based baseline, and the no-key dry run. With
+    several drones the lowest id leads (report, kit, delivery) and the others
+    are wingmen (search their claims, then keep eyes on the person).
   - `snapshot()`: the structured state logged with every decision.
 - **`memory.py`:** structured mission memory, the pilot's notes, and recent
   decisions.

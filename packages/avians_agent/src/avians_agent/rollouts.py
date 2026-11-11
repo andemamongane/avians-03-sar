@@ -16,7 +16,8 @@ def _one(job):
     pcfg = load_config("pilots.yaml")
     try:
         return run_episode(m, make_pilot(pilot_name, pcfg), seed, Path(out) / f"s{seed:04d}",
-                           load_config("agent.yaml"), load_config("latency.yaml"))
+                           load_config("agent.yaml"), load_config("latency.yaml"),
+                           make_pilot=lambda did: make_pilot(pilot_name, pcfg))
     except Exception as e:                          # one bad episode must not stop a sweep
         return {"seed": seed, "error": f"{type(e).__name__}: {e}"}
 

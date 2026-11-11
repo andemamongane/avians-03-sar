@@ -15,6 +15,11 @@ while the timing the drone experiences is the modelled one.
 With a router (student pilots), each decision point first asks the router:
 commit (keep, no model), local (the student) or escalate (the teacher); a
 student calling `escalate` also hands over to the teacher. Latencies add up.
+
+Several drones (mission `drones: n`): one Agent per drone, each with its own
+pilot, memory, decision timer, latency and ADP trajectory, all flying in one
+shared world (avians_sim.multi). A Fleet adapter makes one drone and n drones
+the same loop.
 """
 from __future__ import annotations
 
@@ -30,7 +35,8 @@ import numpy as np
 
 from avians_adp import EpisodeRecorder
 from avians_sim import Executor, FastSim
-from avians_skills import BENCHMARK_TOOLS
+from avians_sim.multi import MultiSim
+from avians_skills import BENCHMARK_TOOLS, SWARM_TOOLS
 from avians_spec import OnlineMonitor
 
 from .latency import LatencyModel
@@ -77,146 +83,202 @@ def _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, qu
         rec.message(d.text, t, thinking=d.thinking, decision=n_dec)
     rec.action(d.tool, d.args, d.reason, t, notes=d.notes, **details)
     if not quiet:
-        print(f"[{t:7.1f}] -> {d.tool}({json.dumps(d.args)}) after {latency:.1f} s: {d.reason}"
+        who = f"{rec.agent} " if rec.agent else ""
+        print(f"[{t:7.1f}] {who}-> {d.tool}({json.dumps(d.args)}) after {latency:.1f} s: {d.reason}"
               + (f"  ERROR {d.error}" if d.error else ""))
     return _cost(d.model, d.usage)
 
 
-def _console_state(sim, ex) -> str:
-    v, b = sim.vehicle.state(), sim.tracker.belief()
-    return (f"t={sim.t:.0f} s  drone at ({v.east:.0f}, {v.north:.0f}) alt {v.alt:.0f} m  battery {v.battery:.0f} %  "
-            f"{'kit aboard' if v.payload else 'no kit'}\n{ex.status() if ex else ''}\n"
-            f"person: {'FOUND' if b.found else 'not found'} estimate ({b.east:.0f}, {b.north:.0f}) +/- {b.sigma:.0f} m\n"
-            f"{sim.world_state.status(sim.t)}")
+
+class Fleet:
+    """One drone (a FastSim) or several (a MultiSim) behind the same calls."""
+
+    def __init__(self, sim):
+        self.sim = sim
+        self.multi = isinstance(sim, MultiSim)
+        self.sims = sim.sims if self.multi else {sim.drone_id: sim}
+
+    @property
+    def t(self):
+        return self.sim.t
+
+    def step(self, setpoints: dict) -> None:
+        if self.multi:
+            self.sim.step(setpoints)
+        else:
+            self.sim.step(next(iter(setpoints.values())))
+
+    def signals(self) -> dict:
+        return self.sim.signals()
+
+    def all_landed(self) -> bool:
+        return all(s.vehicle.state().landed for s in self.sims.values())
+
+    def any_dead(self) -> bool:
+        return any(s.vehicle.state().battery <= 0 and not s.vehicle.state().landed for s in self.sims.values())
+
+
+class Agent:
+    """The per-drone decision state of the loop."""
+
+    def __init__(self, did, sim, pilot, memory, rec, system, tools, lat):
+        self.id, self.sim, self.pilot, self.memory, self.rec = did, sim, pilot, memory, rec
+        self.system, self.tools, self.lat = system, tools, lat
+        self.ex = Executor(sim)
+        self.pending = None
+        self.since: list = []
+        self.need, self.last_t, self.last_result, self.last_rejected = True, -math.inf, "", None
+        self.n_dec, self.cost = 0, 0.0
+        self.usage = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
+
+
+def _console_state(fleet, agents) -> str:
+    lines = []
+    for did, sim in fleet.sims.items():
+        v = sim.vehicle.state()
+        lines.append(f"{did}: t={sim.t:.0f} s at ({v.east:.0f}, {v.north:.0f}) alt {v.alt:.0f} m battery "
+                     f"{v.battery:.0f} % {'kit aboard' if v.payload else 'no kit'}; {agents[did].ex.status()}")
+    b = fleet.sim.tracker.belief()
+    lines.append(f"person: {'FOUND' if b.found else 'not found'} estimate ({b.east:.0f}, {b.north:.0f}) +/- {b.sigma:.0f} m")
+    lines.append(fleet.sim.world_state.status(fleet.t))
+    return "\n".join(lines)
 
 
 def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict, latency_cfg: dict,
                 remote_pilot=None, router=None, quiet: bool = True, make_sim=None,
-                realtime: bool = False, ground_live: int | None = None) -> dict:
-    """make_sim(mission, seed, limits, dt, horizon) -> a sim; default FastSim.
-    A sim with realtime = True (Gazebo) runs the pilot in a thread while the
-    drone flies, and the latency is the real one."""
+                realtime: bool = False, ground_live: int | None = None, make_pilot=None) -> dict:
+    """make_sim(mission, seed, limits, dt, horizon) -> a sim (FastSim, MultiSim or a Gazebo sim);
+    make_pilot(drone_id) -> a pilot per drone (default: `pilot` for every drone; scripted pilots
+    keep state, so give each drone its own). A sim with realtime = True runs the pilots in threads
+    while the drones fly, and the latency is the real one."""
     dc = agent_cfg["decisions"]
     wake_s, min_gap, horizon = float(dc["wake_s"]), float(dc["min_gap_s"]), mission.horizon_s
     rng = np.random.default_rng(seed + 7)
     limits, dt = copy.deepcopy(mission.limits), float(agent_cfg.get("control_dt", 0.1))
     ground_cfg = dict(mission.raw.get("ground") or {})
-    sim = (make_sim(mission, seed, limits, dt, horizon + 60) if make_sim else
-           FastSim(mission.world, seed, limits, mission.extras["critical_pct"], dt=dt, horizon_s=horizon + 60,
-                   ground=ground_cfg, realtime=realtime))
+    n = len(mission.drones)
+    if make_sim:
+        sim = make_sim(mission, seed, limits, dt, horizon + 60)
+    elif n > 1:
+        sim = MultiSim(mission.world, seed, limits, mission.extras["critical_pct"], n=n, dt=dt,
+                       horizon_s=horizon + 60, ground=ground_cfg, realtime=realtime, ids=mission.drones)
+    else:
+        sim = FastSim(mission.world, seed, limits, mission.extras["critical_pct"], dt=dt, horizon_s=horizon + 60,
+                      ground=ground_cfg, realtime=realtime, drone_id=mission.drones[0])
+    fleet = Fleet(sim)
     realtime = bool(getattr(sim, "realtime", False))
-    console = None
-    if ground_live:
-        from avians_sim.ground_live import Console
-        console = Console(sim.ground, lambda: _console_state(sim, ex_holder[0]), lambda: sim.t, port=ground_live)
-        print(f"ground station console: {console.url}")
-    ex_holder = [None]
-    pool = ThreadPoolExecutor(1) if realtime else None
-    ex = Executor(sim)
-    ex_holder[0] = ex
+    pool = ThreadPoolExecutor(n) if realtime else None
     mon = OnlineMonitor(mission.spec, mission.extras["monitor_max_speed"],
                         float(agent_cfg["monitor"]["every_s"]), str(agent_cfg["monitor"]["policy"]))
-    memory = Memory(int(dc["history"]), int(dc["max_notes_chars"]))
-    tool_names = list(BENCHMARK_TOOLS) + (["escalate"] if router is not None else [])
+    tool_names = list(SWARM_TOOLS if n > 1 else BENCHMARK_TOOLS) + (["escalate"] if router is not None else [])
     tools = tool_definitions(tool_names)
-    system = system_prompt(mission, wake_s, sim.world_state.describe())
-    pilots = {"local": pilot, "escalate": remote_pilot or pilot}
-    lat = {k: LatencyModel.for_model(latency_cfg, getattr(p, "name", "scripted")) for k, p in pilots.items()}
     lat_router = LatencyModel.for_model(latency_cfg, "onboard-router")
     ep_id = f"{mission.name}_{getattr(pilot, 'name', 'pilot')}_s{seed:04d}"
     out = Path(out_dir)
     meta = {"episode": ep_id, "mission": mission.name, "world": mission.world.name, "seed": seed,
             "pilot": getattr(pilot, "name", "?"), "remote_pilot": getattr(remote_pilot, "name", None),
             "router": type(router).__name__ if router else None,
-            "tier": "gazebo" if realtime else "fast",
+            "tier": "gazebo" if realtime and make_sim else "fast", "drones": mission.drones,
             "envelope": mission.extras["envelope"], "horizon_s": horizon, "wake_s": wake_s,
-            "latency": {k: asdict(v) for k, v in lat.items()},
             "person": sim.scenario.person_position(0), "help_delay_s": sim.scenario.help_delay_s,
             "scenario": sim.scenario.summary()}
-    rec = EpisodeRecorder(out, ep_id, meta, float(agent_cfg["recording"]["signals_hz"]))
-    rec.brief(system, tools)
-    with open(out / "system_prompt.txt", "w") as f:
-        f.write(system)
-
-    pending = None                       # (t_apply, Decision, t_obs)
-    since: list = []                     # events since the last decision prompt
-    need, last_t, last_result, last_rejected = True, -math.inf, "", None
-    n_dec, cost, wall0 = 0, 0.0, time.monotonic()
-    usage_tot = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
-    end_reason = "horizon"
+    agents: dict[str, Agent] = {}
+    rec0 = None
+    for did, dsim in fleet.sims.items():
+        p = make_pilot(did) if make_pilot else pilot
+        pilots = {"local": p, "escalate": remote_pilot or p}
+        lat = {k: LatencyModel.for_model(latency_cfg, getattr(x, "name", "scripted")) for k, x in pilots.items()}
+        meta.setdefault("latency", {})[did] = {k: asdict(v) for k, v in lat.items()}
+        system = system_prompt(mission, wake_s, dsim.world_state.describe(), did, mission.drones)
+        rec = EpisodeRecorder(out, ep_id, meta, float(agent_cfg["recording"]["signals_hz"]),
+                              agent=did if n > 1 else None, shared=rec0)
+        rec0 = rec0 or rec
+        rec.brief(system, tools)
+        (out / (f"system_prompt_{did}.txt" if n > 1 else "system_prompt.txt")).write_text(system)
+        a = Agent(did, dsim, pilots, Memory(int(dc["history"]), int(dc["max_notes_chars"])), rec, system,
+                  tools, lat)
+        a.router = router
+        agents[did] = a
+    console = None
+    if ground_live:
+        from avians_sim.ground_live import Console
+        console = Console(sim.ground, lambda: _console_state(fleet, agents), lambda: fleet.t, port=ground_live)
+        print(f"ground station console: {console.url}")
+    end_reason, wall0 = "horizon", time.monotonic()
     stl_log = open(out / "stl_online.jsonl", "w")
 
-    while sim.t < horizon - 1e-9:
-        t = sim.t
-        # ---------------------------------------------------- decide
-        if pending is None and t - last_t >= min_gap:
-            wake = need or any(e.wake for e in since) or (t - last_t >= wake_s)
-            if wake:
-                state = snapshot(sim, ex)
-                prompt = decision_prompt(sim, ex, memory, mon, since, last_result, horizon)
-                n_dec += 1
-                rec.observation(prompt, t, decision=n_dec)
-                job = (lambda st=state, pr=prompt, ev=list(since):  # noqa: E731
-                       _decide(st, pr, ev, system, tools, pilots, router, lat, lat_router, rng))
-                if realtime:
-                    pending = {"t_obs": t, "future": pool.submit(job), "state": state}
+    while fleet.t < horizon - 1e-9:
+        t = fleet.t
+        for a in agents.values():
+            # ------------------------------------------------ decide
+            if a.pending is None and t - a.last_t >= min_gap:
+                wake = a.need or any(e.wake for e in a.since) or (t - a.last_t >= wake_s)
+                if wake:
+                    state = snapshot(a.sim, a.ex)
+                    prompt = decision_prompt(a.sim, a.ex, a.memory, mon, a.since, a.last_result, horizon)
+                    a.n_dec += 1
+                    a.rec.observation(prompt, t, decision=a.n_dec)
+                    job = (lambda ag=a, st=state, pr=prompt, ev=list(a.since):  # noqa: E731
+                           _decide(st, pr, ev, ag.system, ag.tools, ag.pilot, ag.router, ag.lat, lat_router, rng))
+                    if realtime:
+                        a.pending = {"t_obs": t, "future": pool.submit(job), "state": state}
+                    else:
+                        d, latency, chosen, route = job()
+                        a.pending = {"t_obs": t, "t_apply": t + latency, "result": (d, latency, chosen, route),
+                                     "state": state}
+                        a.cost += _log_decision(a.rec, d, latency, chosen, route, state, t, a.n_dec, a.usage, quiet)
+                    a.since, a.need, a.last_t = [], False, t
+            # ------------------------------------------------ apply
+            if a.pending is not None and realtime and "result" not in a.pending and a.pending["future"].done():
+                d, _, chosen, route = a.pending["future"].result()
+                latency = t - a.pending["t_obs"]                       # the real one
+                a.pending.update(result=(d, latency, chosen, route), t_apply=t)
+                a.cost += _log_decision(a.rec, d, latency, chosen, route, a.pending["state"], a.pending["t_obs"],
+                                        a.n_dec, a.usage, quiet)
+            if a.pending is not None and "t_apply" in a.pending and t >= a.pending["t_apply"] - 1e-9:
+                d, t_obs = a.pending["result"][0], a.pending["t_obs"]
+                if d.tool == "keep":
+                    ok, text = True, "kept: " + a.ex.status()
                 else:
-                    d, latency, chosen, route = job()
-                    pending = {"t_obs": t, "t_apply": t + latency, "result": (d, latency, chosen, route),
-                               "state": state}
-                    cost += _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, quiet)
-                since, need, last_t = [], False, t
-        # ---------------------------------------------------- apply
-        if pending is not None and realtime and "result" not in pending and pending["future"].done():
-            d, _, chosen, route = pending["future"].result()
-            latency = t - pending["t_obs"]                       # the real one
-            pending.update(result=(d, latency, chosen, route), t_apply=t)
-            cost += _log_decision(rec, d, latency, chosen, route, pending["state"], pending["t_obs"],
-                                  n_dec, usage_tot, quiet)
-        if pending is not None and "t_apply" in pending and t >= pending["t_apply"] - 1e-9:
-            d, t_obs = pending["result"][0], pending["t_obs"]
-            if d.tool == "keep":
-                ok, text = True, "kept: " + ex.status()
-            else:
-                ok, text = ex.start(d.tool, d.args)
-            memory.set_notes(d.notes)
-            call = f"{d.tool}({', '.join(f'{k}={v}' for k, v in d.args.items())})"
-            memory.add_decision(t_obs, call, text.split("\n")[0][:200], d.reason)
-            last_result = f"(decided at t={t_obs:.0f}, applied at t={t:.0f}) {call}: {text}"
-            rec.tool_result(text, t, accepted=ok, decision=n_dec)
-            if ok and d.tool in ("report", "drop_marker", "request_help"):
-                memory.add_fact(t, text)
-            if not ok:
-                sig = (d.tool, json.dumps(d.args, sort_keys=True))
-                need = sig != last_rejected        # the same rejected call again: wait for wake_s
-                last_rejected = sig
-            else:
-                last_rejected = None
-            pending = None
+                    ok, text = a.ex.start(d.tool, d.args)
+                a.memory.set_notes(d.notes)
+                call = f"{d.tool}({', '.join(f'{k}={v}' for k, v in d.args.items())})"
+                a.memory.add_decision(t_obs, call, text.split("\n")[0][:200], d.reason)
+                a.last_result = f"(decided at t={t_obs:.0f}, applied at t={t:.0f}) {call}: {text}"
+                a.rec.tool_result(text, t, accepted=ok, decision=a.n_dec)
+                if ok and d.tool in ("report", "drop_marker", "request_help", "assign_tasks", "handoff", "claim_region"):
+                    a.memory.add_fact(t, text)
+                if not ok:
+                    sig = (d.tool, json.dumps(d.args, sort_keys=True))
+                    a.need = sig != a.last_rejected        # the same rejected call again: wait for wake_s
+                    a.last_rejected = sig
+                else:
+                    a.last_rejected = None
+                a.pending = None
         # ---------------------------------------------------- step
-        ex.tick()
-        for e in sim.ctx.events:
-            rec.event(e.t, e.kind, e.text)
-            since.append(e)
-            if e.kind in FACT_KINDS or (e.kind == "skill_done" and e.data.get("skill") in
-                                         ("search_region", "recharge", "swap_battery", "pick_up", "deliver")):
-                memory.add_fact(e.t, e.text)
-        sim.ctx.events.clear()
-        sig = sim.signals()
-        mon.add(sim.t, sig)
-        rec.signals(sim.t, sig)
-        rep = mon.maybe_eval(sim.t)
+        fleet.step({did: a.ex.setpoint() for did, a in agents.items()})
+        for a in agents.values():
+            for e in a.sim.ctx.events:
+                a.rec.event(e.t, e.kind, e.text)
+                a.since.append(e)
+                if e.kind in FACT_KINDS or (e.kind == "skill_done" and e.data.get("skill") in
+                                             ("search_region", "recharge", "swap_battery", "pick_up", "deliver")):
+                    a.memory.add_fact(e.t, e.text)
+            a.sim.ctx.events.clear()
+        sig = fleet.signals()
+        mon.add(fleet.t, sig)
+        rec0.signals(fleet.t, sig)
+        rep = mon.maybe_eval(fleet.t)
         if rep is not None:
             stl_log.write(json.dumps(rep) + "\n")
         if mon.should_stop():
             end_reason = f"violated: {', '.join(mon.violated())}"
             break
-        v = sim.vehicle.s
-        if dc.get("end_when") == "help_arrived_and_landed" and sim.world_state.help_arrived(sim.t) \
-                and v.landed and sim.t > 5:
+        if dc.get("end_when") == "help_arrived_and_landed" and sim.world_state.help_arrived(fleet.t) \
+                and fleet.all_landed() and fleet.t > 5:
             end_reason = "help arrived and landed"
             break
-        if v.battery <= 0 and not v.landed:
+        if fleet.any_dead():
             end_reason = "battery depleted in flight"
             break
     stl_log.close()
@@ -229,15 +291,23 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
             f.write(json.dumps(m, default=str) + "\n")
     tr = mon.trace()
     score = mission.spec.score(tr)
-    summary = {"episode": ep_id, "seed": seed, "end": end_reason, "t_end": round(sim.t, 1),
+    first = next(iter(agents.values()))
+    usage_tot = {k: sum(a.usage[k] for a in agents.values()) for k in first.usage}
+    summary = {"episode": ep_id, "seed": seed, "end": end_reason, "t_end": round(fleet.t, 1),
                "robustness": score["robustness"], "satisfied": score["satisfied"],
                "violated": [c["clause"] for c in score["clauses"] if not c["satisfied"]],
-               "decisions": n_dec, "usage": usage_tot, "cost_usd": round(cost, 4),
+               "decisions": sum(a.n_dec for a in agents.values()), "usage": usage_tot,
+               "cost_usd": round(sum(a.cost for a in agents.values()), 4),
                "wall_s": round(time.monotonic() - wall0, 2),
                "found_t": sim.tracker.found_t, "help_dispatched_t": sim.world_state.help.dispatched_t,
                "help_arrival_t": sim.world_state.help.arrival_t,
                "drop_err": min((k["err"] for k in sim.kits if k["landed"]), default=None),
-               "battery_end": round(sim.vehicle.s.battery, 1), "reports": sim.reports,
-               "markers": sim.ctx.markers, "skills": ex.history}
-    rec.finish(score, summary)
+               "battery_end": {did: round(s.vehicle.state().battery, 1) for did, s in fleet.sims.items()}
+               if n > 1 else round(sim.vehicle.state().battery, 1),
+               "reports": sim.reports, "markers": sim.ctx.markers,
+               "skills": {did: a.ex.history for did, a in agents.items()} if n > 1 else first.ex.history}
+    for a in agents.values():
+        if a.rec is not rec0:
+            a.rec.finish(score, {"decisions": a.n_dec, "cost_usd": round(a.cost, 4)})
+    rec0.finish(score, summary)
     return summary

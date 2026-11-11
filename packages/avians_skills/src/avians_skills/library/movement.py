@@ -12,7 +12,7 @@ NUM = {"type": "number"}
 def _goal(ctx: Context, args: dict) -> tuple[float, float]:
     if args.get("place"):
         try:
-            return ctx.world.place(args["place"])
+            return ctx.place(args["place"])
         except KeyError:
             raise SkillError(f"no place named {args['place']!r}") from None
     if args.get("east") is None or args.get("north") is None:
@@ -180,7 +180,7 @@ class Land(Skill):
 
     def start(self, ctx):
         st = ctx.state
-        pad = ctx.world.place(self.args["place"]) if self.args.get("place") else (st.east, st.north)
+        pad = ctx.place(self.args["place"]) if self.args.get("place") else (st.east, st.north)
         self.op = LandAt(ctx, pad, approach_alt=max(10.0, min(st.alt, ctx.limits.cruise_alt)))
 
     def tick(self, ctx, dt):
@@ -203,7 +203,7 @@ class ReturnToLaunch(Skill):
     params = {}
 
     def start(self, ctx):
-        self.op = LandAt(ctx, ctx.world.launch)
+        self.op = LandAt(ctx, ctx.place("launch"))
 
     def tick(self, ctx, dt):
         sp = self.op.tick(ctx)

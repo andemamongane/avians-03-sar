@@ -28,7 +28,7 @@ def tool_definitions(names: list[str]) -> list[dict]:
     return out
 
 
-SYSTEM = """You are the pilot of a search-and-rescue drone.
+SYSTEM = """You are the pilot of a search-and-rescue drone.{identity}
 
 You fly by calling skills (the tools). A skill runs on its own until it
 finishes, fails or you replace it: it plans paths around no-fly zones, closed
@@ -69,14 +69,22 @@ Units: metres east/north of the launch point, altitude above ground, seconds
 since the start, battery in percent."""
 
 
-def system_prompt(mission, wake_s: float, world_text: str | None = None) -> str:
+def system_prompt(mission, wake_s: float, world_text: str | None = None, drone_id: str | None = None,
+                  drones: list[str] | None = None) -> str:
+    identity = ""
+    if drones and len(drones) > 1:
+        identity = (f"\nYou are {drone_id}, one of {len(drones)} drones ({', '.join(drones)}) on this mission; "
+                    f"each has its own pilot. You share the person estimate, the search coverage, the kit "
+                    f"depot and the radio. Each prompt lists the others' positions, skills, batteries and "
+                    f"claimed regions; coordinate through claims (search_region claims its region), "
+                    f"assign_tasks, handoff and radio tasking. Keep 10 m or more from the others.")
     used = set()
     for c in mission.spec.clauses:
         used |= c.node.signals()
     reg = mission.spec.registry
     sig = "Signals used by the spec:\n" + "\n".join(
         f"- {n} ({reg[n].unit}): {reg[n].description}" for n in reg.names() if n in used)
-    return SYSTEM.format(wake_s=wake_s, brief=mission.brief, spec=mission.spec.describe(),
+    return SYSTEM.format(identity=identity, wake_s=wake_s, brief=mission.brief, spec=mission.spec.describe(),
                          signals=sig, world=world_text or mission.world.describe())
 
 
@@ -116,6 +124,18 @@ def decision_prompt(sim, executor, memory, monitor, events, last_result: str, ho
                                             if c['last_seen_s_ago'] is not None else ", never")
         for rid, c in cov.items()))
     lines.append("WORLD NOW:\n" + sim.world_state.status(t))
+    sw = getattr(sim.actuators, "swarm", None)
+    if sw is not None:
+        rows = []
+        for o in sw.others(sim.drone_id):
+            d = math.hypot(o["east"] - v.east, o["north"] - v.north)
+            rows.append(f"- {o['id']}: at ({o['east']:.0f}, {o['north']:.0f}) alt {o['alt']:.0f} m, {d:.0f} m from "
+                        f"you, battery {o['battery']:.0f} %, {'kit aboard' if o['payload'] else 'no kit'}, "
+                        f"{'on the ground' if o['landed'] else 'flying'}; doing {o['skill']}"
+                        + (f"; claims {', '.join(o['claims'])}" if o["claims"] else ""))
+        mine = [r for r, who in sw.claims.items() if who == sim.drone_id]
+        lines.append(f"OTHER DRONES (you are {sim.drone_id}" + (f", claiming {', '.join(mine)}" if mine else "")
+                     + "):\n" + ("\n".join(rows) or "- (none)"))
     near = []
     for s in sim.world.stations.values():
         d, c = _battery_to(sim, s.position)

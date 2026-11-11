@@ -34,6 +34,7 @@ class Mission:
     horizon_s: float
     path: Path
     raw: dict
+    drones: list[str] = None          # ids; one drone -> ["drone1"] and unsuffixed signals
 
     @classmethod
     def load(cls, path: str | Path, envelope: str | None = None) -> "Mission":
@@ -44,10 +45,13 @@ class Mission:
         raw = yaml.safe_load(path.read_text())
         world = WorldSpec.load(root / raw["world"])
         limits, extras = load_limits(root / "configs/limits.yaml", envelope or raw.get("envelope"))
-        reg = sar_registry(world, max_speed=extras["monitor_max_speed"], max_climb=limits.max_climb * 1.3)
+        n = int(raw.get("drones", 1))
+        drones = [f"d{k + 1}" for k in range(n)] if n > 1 else ["drone1"]
+        reg = sar_registry(world, max_speed=extras["monitor_max_speed"], max_climb=limits.max_climb * 1.3,
+                           drones=drones if n > 1 else None)
         spec = MissionSpec.from_dict(raw["spec"], reg, world.regions)
         return cls(raw["name"], raw.get("brief", ""), world, spec, limits, extras,
-                   float(raw.get("horizon_s", spec.horizon)), path, raw)
+                   float(raw.get("horizon_s", spec.horizon)), path, raw, drones)
 
 
 def load_config(name: str) -> dict:

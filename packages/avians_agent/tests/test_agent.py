@@ -55,3 +55,15 @@ def test_anthropic_pilot_parses_one_call():
     kw = fc.calls[0]
     assert kw["model"] == "claude-haiku-5-5" and kw["thinking"]["type"] == "adaptive"
     assert kw["system"][0]["cache_control"] == {"type": "ephemeral"}
+
+
+def test_two_drone_episode(tmp_path):
+    m = Mission.load("missions/sar_supply_2drones.yaml")
+    assert m.drones == ["d1", "d2"] and "battery_d2" in m.spec.registry
+    cfg = load_config("agent.yaml")
+    s = run_episode(m, ScriptedPilot(), 0, tmp_path, cfg, load_config("latency.yaml"),
+                    make_pilot=lambda did: ScriptedPilot())
+    assert s["satisfied"], s["violated"]
+    assert (tmp_path / "trajectory_d1.json").exists() and (tmp_path / "trajectory_d2.json").exists()
+    assert (tmp_path / "system_prompt_d2.txt").read_text().startswith("You are the pilot")
+    assert "You are d2" in (tmp_path / "system_prompt_d2.txt").read_text()

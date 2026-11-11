@@ -53,12 +53,21 @@ def cmd_check(a) -> int:
     from avians_skills import BENCHMARK_TOOLS
     m = Mission.load(a.mission, a.envelope)
     cfg = load_config("agent.yaml")
-    sim = FastSim(m.world, a.seed, m.limits, m.extras["critical_pct"])
+    if len(m.drones) > 1:
+        from avians_sim.multi import MultiSim
+        ms = MultiSim(m.world, a.seed, m.limits, m.extras["critical_pct"], n=len(m.drones), ids=m.drones)
+        sim = ms.sims[m.drones[0]]
+        for s_ in ms.sims.values():
+            Executor(s_)
+    else:
+        sim = FastSim(m.world, a.seed, m.limits, m.extras["critical_pct"])
+        Executor(sim)
     print("=" * 30, "SYSTEM PROMPT", "=" * 30)
-    print(system_prompt(m, cfg["decisions"]["wake_s"], sim.world_state.describe()))
+    print(system_prompt(m, cfg["decisions"]["wake_s"], sim.world_state.describe(), m.drones[0], m.drones))
     print("=" * 30, "FIRST DECISION PROMPT", "=" * 30)
-    print(decision_prompt(sim, Executor(sim), Memory(), None, [], "", m.horizon_s))
-    tools = tool_definitions(BENCHMARK_TOOLS)
+    print(decision_prompt(sim, sim.executor, Memory(), None, [], "", m.horizon_s))
+    from avians_skills import SWARM_TOOLS
+    tools = tool_definitions(SWARM_TOOLS if len(m.drones) > 1 else BENCHMARK_TOOLS)
     print("=" * 30, f"TOOLS ({len(tools)})", "=" * 30)
     for t in tools:
         print(f"- {t['name']}: {t['description'][:90]}")
@@ -103,7 +112,8 @@ def cmd_fly(a) -> int:
     try:
         s = run_episode(m, pilot, a.seed, out, load_config("agent.yaml"), load_config("latency.yaml"),
                         quiet=a.quiet, make_sim=make_sim, realtime=a.realtime,
-                        ground_live=a.port if a.ground == "live" else None)
+                        ground_live=a.port if a.ground == "live" else None,
+                        make_pilot=lambda did: make_pilot(name, pcfg))
     finally:
         if "ctl" in holder:
             holder["ctl"].stop()

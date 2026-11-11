@@ -13,6 +13,13 @@ Syntax (whitespace-insensitive; times in seconds; `inf` allowed in past windows)
     past                   H[a,b] phi   historically: always in [t-b, t-a]
                            O[a,b] phi   once: at some time in [t-b, t-a]
                            H phi, O phi the whole past, [0, inf)
+    drones                 forall x in drones: phi    every drone (a conjunction)
+                           exists x in drones: phi    some drone (a disjunction)
+                           inside phi, x.battery, x.in(r3), x.dist_person name that
+                           drone's signals (battery_d1, east_d1, ...). The registry
+                           supplies the domain; the quantifier is expanded at parse
+                           time, so evaluation and the online bounds are unchanged.
+                           (This is the finite-domain fragment of SFO.)
 
     e.g.  G[0,1500] ((O released) & !help -> dist_person <= 25)
           "once the kit is down, stay within 25 m of the person until help arrives"
@@ -54,12 +61,13 @@ class Node:
     name: str = ""       # region id, or signal name
     cmp: str = ""
     value: float = 0.0
+    var: str = ""        # for `in`: the drone whose position (east_<var>, ...); "" = the drone
 
     def __str__(self) -> str:
         if self.op in ("true", "false"):
             return self.op
         if self.op == "in":
-            return f"in({self.name})"
+            return f"{self.var + '.' if self.var else ''}in({self.name})"
         if self.op == "cmp":
             return self.name if self.cmp == "bool" else f"{self.name} {self.cmp} {self.value:g}"
         if self.op == "not":
@@ -84,7 +92,8 @@ class Node:
         return out
 
     def signals(self) -> set[str]:
-        out = {self.name} if self.op == "cmp" else (set(POSITION) if self.op == "in" else set())
+        pos = {f"{p}_{self.var}" if self.var else p for p in POSITION}
+        out = {self.name} if self.op == "cmp" else (pos if self.op == "in" else set())
         for a in self.args:
             out |= a.signals()
         return out
@@ -104,8 +113,10 @@ class STLSyntaxError(ValueError):
     pass
 
 
-_TOKEN = re.compile(r"\s*(->|<=|>=|[()\[\],!&|<>~]|[A-Za-z_][A-Za-z0-9_]*|-?\d+(?:\.\d*)?(?:e-?\d+)?|-?\.\d+)")
+_TOKEN = re.compile(r"\s*(->|<=|>=|[()\[\],!&|<>~:]|[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?"
+                    r"|-?\d+(?:\.\d*)?(?:e-?\d+)?|-?\.\d+)")
 TEMPORAL = ("G", "F", "H", "O")
+QUANTIFIERS = ("forall", "exists")
 
 
 def _tokenize(text: str) -> list[str]:
@@ -126,6 +137,7 @@ class _Parser:
 
     def __init__(self, text: str, registry: Registry | None):
         self.toks, self.i, self.reg = _tokenize(text), 0, registry
+        self.bound: dict[str, str] = {}        # quantified variable -> the drone it stands for now
 
     def parse(self) -> Node:
         if not self.toks:
@@ -181,6 +193,8 @@ class _Parser:
         if tok in ("!", "~"):
             self.take()
             return Node("not", (self.unary(),))
+        if tok in QUANTIFIERS:
+            return self.quantifier()
         if tok in TEMPORAL:
             self.take()
             past = tok in ("H", "O")
@@ -192,6 +206,25 @@ class _Parser:
                 raise STLSyntaxError(f"{tok} needs an interval, e.g. {tok}[0,60]")
             return Node(tok, (self.unary(),), lo=lo, hi=hi)
         return self.atom()
+
+    def quantifier(self) -> Node:
+        q = self.take()
+        var = self.take()
+        self.take("in")
+        domain = self.take()
+        self.take(":")
+        members = (self.reg.domains.get(domain) if self.reg is not None else None)
+        if not members:
+            raise STLSyntaxError(f"unknown domain '{domain}' (the registry defines: "
+                                 f"{', '.join(self.reg.domains) if self.reg else 'none'})")
+        start = self.i
+        parts = []
+        for d in members:                      # parse the body once per member, with var bound
+            self.i = start
+            self.bound[var] = d
+            parts.append(self.unary())
+        del self.bound[var]
+        return parts[0] if len(parts) == 1 else Node("and" if q == "forall" else "or", tuple(parts))
 
     def interval(self, allow_inf: bool) -> tuple[float, float]:
         self.take("[")
@@ -224,13 +257,21 @@ class _Parser:
             return node
         if tok in ("true", "false"):
             return Node(tok)
-        if tok == "in":
+        if tok == "in" or tok.endswith(".in"):
+            var = tok[:-3] if "." in tok else ""
+            if var and var not in self.bound:
+                raise STLSyntaxError(f"'{var}' is not a quantified drone variable")
             self.take("(")
             name = self.take()
             self.take(")")
-            return Node("in", name=name)
+            return Node("in", name=name, var=self.bound.get(var, ""))
         if not re.match(r"[A-Za-z_]", tok):
             raise STLSyntaxError(f"unexpected '{tok}'")
+        if "." in tok:                         # x.battery -> battery_<drone>
+            var, sig = tok.split(".", 1)
+            if var not in self.bound:
+                raise STLSyntaxError(f"'{var}' is not a quantified drone variable")
+            tok = f"{sig}_{self.bound[var]}"
         if self.reg is not None and tok not in self.reg:
             raise STLSyntaxError(f"unknown signal '{tok}' (known: {', '.join(self.reg.names())})")
         if self.peek() in ("<", "<=", ">", ">="):
@@ -347,7 +388,8 @@ def _atom(node: Node, tr: Trace, regions) -> np.ndarray:
     if node.op == "in":
         if regions is None or node.name not in regions:
             raise ValueError(f"spec uses region '{node.name}', which the world does not define")
-        return regions[node.name].robustness(tr["east"], tr["north"], tr["alt"])
+        sfx = f"_{node.var}" if node.var else ""
+        return regions[node.name].robustness(tr["east" + sfx], tr["north" + sfx], tr["alt" + sfx])
     x = tr[node.name]
     if node.cmp in ("<", "<="):
         return node.value - x

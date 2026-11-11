@@ -15,9 +15,9 @@ def hold(st) -> Setpoint:
 
 
 class Transit:
-    """Fly to (east, north) at `alt`: change altitude in place first if the
-    difference is large (climbing over obstacles before crossing them), then
-    follow the planned path. Replans when a zone closes across the rest of the
+    """Fly to (east, north) at `alt`: climb in place first if the target is
+    higher (over obstacles before crossing them), then follow the planned
+    path; a descent happens along the way. Replans when a zone closes across the rest of the
     path; raises SkillError if no path exists any more."""
 
     def __init__(self, ctx: Context, goal, alt: float, speed: float | None = None,
@@ -33,10 +33,13 @@ class Transit:
     def _plan(self, ctx: Context) -> None:
         st = ctx.state
         self.unsafe = {z.id for z in ctx.unsafe_zones()}
-        path = ctx.planner.plan((st.east, st.north), self.goal, max(self.alt, st.alt),
-                                ctx.unsafe_zones())
+        # planned at the altitude the leg is flown at (the altitude change happens in place first)
+        path = ctx.planner.plan((st.east, st.north), self.goal, self.alt, ctx.unsafe_zones())
         pts = [(st.east, st.north, st.alt)]
-        if abs(st.alt - self.alt) > 2.0:
+        if self.alt - st.alt > 2.0:
+            # climb in place first (an obstacle between the two altitudes could lie on the path);
+            # a descent happens en route: the path is clear at the target altitude and the drone
+            # stays above it (and a deconfliction override, which only raises, cannot stall it)
             pts.append((st.east, st.north, self.alt))
         pts += [(e, n, self.alt) for e, n in path[1:]]
         self.path2d = path

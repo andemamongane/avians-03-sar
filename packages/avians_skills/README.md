@@ -16,7 +16,7 @@ for the JSON-schema tool definitions.
 | `recharge`, `swap_battery` | land on the pad; the battery model's charge rate or swap time |
 | `report`, `request_help`, `escalate`, `capture_image`, `drop_marker` | instant (radio, operator, router hand-off, camera, map) |
 | `takeoff`, `land`, `precision_land`, `rtl`, `hover`, `wait_until`, `set_speed`, `emergency_stop` | basics |
-| `handoff`, `formation`, `assign_tasks` | swarm only: `swarm.assign_tasks` (Hungarian method) works; the skills refuse until there is a multi-vehicle backend |
+| `claim_region`, `assign_tasks`, `handoff`, `formation` | swarm only (they refuse with one drone): claims shared through the world, Hungarian assignment (scipy) radioed to each drone, a tasking request, relay/wing offsets on a leader |
 
 Optional, Linux only (no macOS wheels): OMPL (RRT*) can replace
 `planning.PathPlanner` for 3D or kinodynamic planning, and Fields2Cover can

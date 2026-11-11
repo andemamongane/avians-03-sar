@@ -37,6 +37,14 @@ class SearchRegion(Skill):
             raise SkillError(f"{a['region']!r} is not a search region "
                              f"(search regions: {', '.join(x.id for x in ctx.world.search_regions())})")
         self.region, alt = r, a["alt"]
+        sw = getattr(ctx.actuators, "swarm", None)
+        if sw is not None:                        # claim it, unless another drone has
+            owner = sw.claims.get(r.id)
+            if owner and owner != ctx.drone_id:
+                raise SkillError(f"{r.id} is being searched by {owner}; pick another region or ask for a handoff")
+            for old in [x for x, who in sw.claims.items() if who == ctx.drone_id]:
+                del sw.claims[old]
+            sw.claims[r.id] = ctx.drone_id
         if not 0 <= a["overlap"] < 0.9:
             raise SkillError("overlap must be in [0, 0.9)")
         fp = ctx.camera.footprint(alt)

@@ -42,6 +42,7 @@ takeoff.
 |---|---|---|
 | `scripted` (rule-based baseline) | 39 / 40 seeds | the miss is a person not detected on the first pass over their region |
 | `haiku` (the teacher, Claude Haiku 5.5) | 1 / 1 (seed 3) | 38 decisions, $0.018, 110 s of wall time |
+| `scripted`, two drones (`sar_supply_2drones`) | 30 / 30 seeds | one pilot per drone; the lead fetches the kit, the wingman keeps eyes on the person |
 
 ## Layout
 
@@ -180,6 +181,26 @@ If something goes wrong, the symptom table in avians-02's
 `docs/running_simulations.md` applies unchanged (AAS not starting, no
 `/Drone1` topics, empty videos, the missing `avians_trajectory` controller).
 
+## Several drones, one pilot each
+
+`drones: 2` in a mission file gives two drones, each with its own pilot,
+memory, decision timer, latency and ADP trajectory (`trajectory_d1.json`,
+`trajectory_d2.json`), flying in one shared world (`avians_sim.multi`): one
+person belief fused from every camera, one coverage map, one depot, one
+radio. Each prompt lists the other drones (position, skill, battery, claimed
+regions). Coordination is through the skills: `search_region` claims its
+region, `assign_tasks` splits regions optimally (Hungarian method) and
+radios each drone its share, `handoff` asks another drone to take over,
+`formation` holds a relay or wing position. Pads are exclusive, and the
+reflex layer keeps the drones apart by altitude (the higher id flies 12 m
+above the other while within range, triggered early enough for the closing
+speed).
+
+The spec quantifies over drones: `forall x in drones: x.battery >= 10`,
+`exists x in drones: x.in(r1)`, plus `min_sep` and `min_dist_person`
+(`missions/sar_supply_2drones.yaml`). Quantifiers expand at parse time, so
+scoring and the online monitor are unchanged (the finite fragment of SFO).
+
 ## The ground station
 
 Every report, status and question the drone sends goes to a `GroundStation`
@@ -228,9 +249,8 @@ such as a second model, play the operator.
 - **Router:** the interfaces exist (`avians_agent/router.py`). The System One
   request format must be checked against the API reference before pointing it
   at Jev, Kev or Laya. The router needs McGlashan's routing dataset to train.
-- **Swarm:** multi-drone SFO and task assignment. `assign_tasks` (Hungarian
-  method) works; the swarm skills refuse until there is a multi-vehicle
-  backend. SFO from avians-02 still has to be ported to the new signal
-  registry.
+- **Swarm in Gazebo:** the fast tier flies n drones; the Gazebo tier still
+  drives one `/Drone1`. Full SFO (quantifiers over time-varying domains,
+  counting) is not ported; the finite `forall`/`exists` covers the benchmark.
 - **aas-gym:** stepped, faster-than-real-time Gazebo for RL. The `Vehicle`
   interface is the seam for it.

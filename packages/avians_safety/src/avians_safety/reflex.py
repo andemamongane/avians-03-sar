@@ -12,6 +12,11 @@ Every control tick, before a setpoint reaches the vehicle:
                  a hold" and raise an event
     battery      below critical_pct, take over: land at the nearest station
                  if it is reachable, else land in place
+    separation   (several drones) altitude deconfliction: when another drone
+                 is within `sep_m` horizontally, the drone with the higher id
+                 flies `sep_dz` above the other's altitude for as long as the
+                 conflict lasts; the skill keeps running, only its altitude is
+                 overridden (the way layered flight levels separate traffic)
 
 When it acts, the current skill is interrupted and the pilot is woken with
 the reason. It never acts while the skill's own behaviour is safe, so the
@@ -26,11 +31,13 @@ from avians_skills import Setpoint
 
 
 class Reflex:
-    def __init__(self, world, limits, critical_pct: float = 5.0):
+    def __init__(self, world, limits, critical_pct: float = 5.0, sep_m: float = 20.0, sep_dz: float = 12.0):
         self.world, self.limits, self.critical = world, limits, critical_pct
+        self.sep_m, self.sep_dz = sep_m, sep_dz
         self.active: str | None = None
         self._hold = None
         self._emergency_land = None
+        self._deconflicting = False
 
     def check(self, ctx, sp: Setpoint | None) -> tuple[Setpoint | None, str | None]:
         """(the setpoint to send, why the reflex intervened or None)."""
@@ -54,6 +61,7 @@ class Reflex:
             first = self.active != f"leaving {inside.id}"
             self.active = f"leaving {inside.id}"
             return sp_out, (f"inside closed zone {inside.id}: leaving by the shortest way" if first else None)
+        sp = self._separate(ctx, st, sp)
         why = self._keep_out(ctx, st)
         if why:
             if self.active is None:
@@ -66,6 +74,38 @@ class Reflex:
             return self._hold, None
         self.active = None
         return sp, None
+
+    def _separate(self, ctx, st, sp):
+        """Altitude deconfliction against the other drones (no-op with one drone)."""
+        sw = getattr(ctx.actuators, "swarm", None)
+        if sw is None or sp is None or sp.mode != "position" or sp.pos is None:
+            self._deconflicting = False
+            return sp
+        import math
+        me = ctx.drone_id
+        above = None
+        climb_s = self.sep_dz / max(self.limits.max_climb, 0.1)
+        for o in sw.others(me):
+            if (o["landed"] and st.landed) or me <= o["id"]:
+                continue
+            dx, dy = o["east"] - st.east, o["north"] - st.north
+            d = math.hypot(dx, dy)
+            ov = sw.drones[o["id"]].vehicle.state()
+            closing = max(0.0, -((dx * (ov.ve - st.ve) + dy * (ov.vn - st.vn)) / d)) if d > 1e-6 else 0.0
+            # trigger early enough to have climbed by the time the other drone is here
+            if d < self.sep_m + closing * climb_s + 5.0:
+                above = max(above or 0.0, o["alt"] + self.sep_dz)
+        if above is None:
+            if self._deconflicting:
+                ctx.emit("progress", "clear of the other drone: back to the skill's altitude", wake=False)
+            self._deconflicting = False
+            return sp
+        alt = min(self.limits.max_alt, max(sp.pos[2], above))
+        if not self._deconflicting:
+            ctx.emit("progress", f"another drone within {self.sep_m:.0f} m: flying {self.sep_dz:.0f} m above it "
+                     f"until clear", wake=False)
+            self._deconflicting = True
+        return Setpoint(sp.mode, (sp.pos[0], sp.pos[1], alt), (sp.vel[0], sp.vel[1], 0.0), sp.max_speed, sp.yaw)
 
     def _keep_out(self, ctx, st) -> str | None:
         v = st.speed
