@@ -105,8 +105,25 @@ Each episode is written to `data/episodes/<mission>/<pilot>/s<seed>/`:
 | `score.json`, `summary.json`, `stl_online.jsonl` | final robustness per clause; outcome, cost, timings; live ROSI verdicts |
 | `system_prompt.txt`, `meta.json` | the prompt, the scenario (true person position, help delay), pilot, latency models |
 | `replay.mp4`, `summary.png` | with `--video`: the sped-up 2D replay |
+| `showcase.mp4` | `avians showcase EPISODE`: the 1080p sponsor film (below) |
 | `flight.tlog`, `world.kml`, `flight.kml` | with `--qgc`: QGroundControl replay and map overlay |
 | `gazebo.mp4`, `gazebo_overview.mp4`, `px4.ulg` | Gazebo tier only (below) |
+
+## The sponsor showcase
+
+`avians showcase EPISODE [--seconds 90]` turns any episode into a 1080p film:
+the valley on shaded terrain, a heat map of where the hiker probably is
+(cooling as the cameras sweep), the drones with their camera footprints, the
+fire zone closing, the kit drop, the helicopter flying in, each pilot's
+battery and current skill, the latest decision and its reason as a caption,
+and the mission's STL promises turning green as the online monitor decides
+them. Time runs fast through routine flight and slows around the key
+moments, between a title card and a results card.
+
+The current film, `data/showcase/avians_sar_showcase.mp4` (gitignored; on
+the branch's release or shared separately), is two Claude Haiku 5.5 pilots
+flying `sar_supply_2drones` seed 3: all 13 promises kept, kit 0.9 m from the
+hiker, 52 decisions, $0.028 of model calls.
 
 ## Flying and recording in Gazebo (Linux GPU machine)
 
@@ -243,21 +260,24 @@ such as a second model, play the operator.
 
 ## What is not done yet
 
-- **The Gazebo tier is untested** (see above). The YOLO detection path is
-  written (`avians_perception/projection.py`) but not wired in: the Gazebo
-  tier still uses the simulated detector, fed with the true person position.
+- **The Gazebo tier is untested** (the Linux machine was unavailable): the
+  AAS vehicle adapter, live Gazebo flights, `gazebo-replay`, and the YOLO
+  bridge (`perception: source: yolo`) and its calibration. Run
+  `avians gazebo-replay` on an existing episode first: it involves no PX4.
+- **Several drones live in Gazebo:** the fast tier flies n drones and
+  `gazebo-replay` shows them all, but a live Gazebo flight still drives only
+  `/Drone1` (AAS puts drone N on ROS domain N, which needs one rclpy context
+  per drone).
 - **Taylor's tasks** (`packages/avians_env/README.md`): a full Gazebo world
-  file, the person model, procedurally varied scenarios, and the payload's
+  file, the person model, layout variation in the families, and the payload's
   detachable joint.
 - **McGlashan's tasks** (`packages/avians_adp/README.md`): validate against
-  the upstream ADP schema, build the SFT and router datasets, and the
-  dataset manifests.
+  the upstream ADP schema, build the SFT and router datasets (multi-drone
+  episodes give one trajectory per drone), and the dataset manifests.
 - **Router:** the interfaces exist (`avians_agent/router.py`). The System One
   request format must be checked against the API reference before pointing it
-  at Jev, Kev or Laya. The router needs McGlashan's routing dataset to train.
-- **Swarm in Gazebo:** the fast tier flies n drones and `gazebo-replay` shows
-  them all; flying n drones live in Gazebo still drives only `/Drone1` (AAS
-  puts drone N on ROS domain N, which needs one rclpy context per drone). Full SFO (quantifiers over time-varying domains,
-  counting) is not ported; the finite `forall`/`exists` covers the benchmark.
+  at Jev, Kev or Laya, and the router needs McGlashan's routing dataset.
+- **Full SFO** (quantifiers over time-varying domains, counting) is not
+  ported; the finite `forall`/`exists` covers the benchmark.
 - **aas-gym:** stepped, faster-than-real-time Gazebo for RL. The `Vehicle`
   interface is the seam for it.

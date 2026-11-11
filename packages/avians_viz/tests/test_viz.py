@@ -55,3 +55,15 @@ def test_two_drone_exports_and_live_feed(tmp_path, world):
     assert seen == {1, 2} and texts > 0
     out = render(tmp_path, world, speed=30)
     assert out.exists() and out.stat().st_size > 10_000
+
+
+def test_showcase_renders(tmp_path, world):
+    from avians_viz.showcase import _frame_times, render as showcase
+    m = Mission.load("missions/sar_supply.yaml")
+    m.horizon_s = 200
+    run_episode(m, ScriptedPilot(), 6, tmp_path, load_config("agent.yaml"), load_config("latency.yaml"))
+    ep = Episode.load(tmp_path)
+    ft = _frame_times(ep, 10, 10)
+    assert len(ft) == 100 and ft[0] == 0 and abs(ft[-1] - ep.t[-1]) < 5 and all(ft[1:] >= ft[:-1])
+    out = showcase(tmp_path, world, seconds=3, fps=4)
+    assert out.exists() and out.stat().st_size > 20_000

@@ -6,6 +6,7 @@
     avians rollouts MISSION [--pilot P] --seeds 0-99 [--workers 8]
     avians score    EPISODE                          re-score from signals.jsonl
     avians video    EPISODE [--speed 20]             the 2D sped-up replay (replay.mp4)
+    avians showcase EPISODE [--seconds 90]           the 1080p sponsor film (showcase.mp4)
     avians qgc      EPISODE                          world.kml, flight.kml, flight.tlog for QGroundControl
     avians fly ... --realtime --qgc-live 127.0.0.1:14550   watch it live in QGroundControl
     avians gazebo-replay EPISODE                     re-fly it visually in Gazebo, recording gazebo*.mp4
@@ -176,6 +177,14 @@ def _qgc(ep: Path, world) -> None:
           f"(Plan view > import KML)")
 
 
+def cmd_showcase(a) -> int:
+    from avians_viz.showcase import render as showcase
+    ep = Path(a.episode)
+    world, _ = _world_of(ep)
+    print(showcase(ep, world, a.out, seconds=a.seconds, fps=a.fps))
+    return 0
+
+
 def cmd_qgc(a) -> int:
     ep = Path(a.episode)
     world, _ = _world_of(ep)
@@ -269,12 +278,17 @@ def main(argv=None) -> int:
         p = sub.add_parser(name)
         p.add_argument("episode")
         p.add_argument("--speed", type=float, default=20.0 if name == "video" else 1.0)
+    p = sub.add_parser("showcase")
+    p.add_argument("episode")
+    p.add_argument("--out")
+    p.add_argument("--seconds", type=float, default=90.0)
+    p.add_argument("--fps", type=int, default=24)
     p = sub.add_parser("latency-fit")
     p.add_argument("dir")
     sub.add_parser("doctor")
     a = ap.parse_args(argv)
     fn = {"check": cmd_check, "fly": cmd_fly, "rollouts": cmd_rollouts, "score": cmd_score,
-          "video": cmd_video, "qgc": cmd_qgc, "gazebo-replay": cmd_gazebo_replay,
+          "video": cmd_video, "qgc": cmd_qgc, "showcase": cmd_showcase, "gazebo-replay": cmd_gazebo_replay,
           "latency-fit": cmd_latency_fit, "doctor": cmd_doctor}[a.cmd]
     return fn(a)
 

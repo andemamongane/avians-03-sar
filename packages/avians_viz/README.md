@@ -10,7 +10,11 @@
   `flight_kml`, and `tlog`: a MAVLink v2 telemetry log of the flight
   (heartbeat, global position, attitude, battery) that QGC's Log Replay
   plays like a live flight.
-- **`episode.py`:** reads an episode folder back.
+- **`showcase.py`:** the 1080p sponsor film (`avians showcase`): terrain,
+  search heat map, drones and footprints, zone closures, kit drop, the
+  helicopter, the pilots' captions, the STL promises as live chips; variable
+  speed around key moments, title and results cards.
+- **`episode.py`:** reads an episode folder back (any number of drones).
 
 Gazebo replays live in `avians_sim.gazebo` (`avians gazebo-replay`), because
 they need the simulator.
