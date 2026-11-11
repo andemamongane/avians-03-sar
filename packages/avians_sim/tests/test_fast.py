@@ -39,8 +39,11 @@ def test_search_finds_and_kit_lands_near(world, limits):
     assert sim.world_state.help.dispatched_t is not None
     ex.start("pick_up", {})
     assert run(ex, sim, lambda: ex.skill.done, 900) and sim.vehicle.s.payload
-    ex.start("deliver", {})
-    assert run(ex, sim, lambda: ex.skill.done, 1200)
+    assert sim.tracker.belief().sigma > 4          # out of sight for a while: the estimate loosened
+    ex.start("inspect", {})                         # re-acquire, then drop
+    assert run(ex, sim, lambda: ex.skill.done, 1200) and sim.tracker.belief().sigma < 3
+    assert ex.start("deliver", {})[0]
+    assert run(ex, sim, lambda: ex.skill.done, 1400)
     run(ex, sim, lambda: any(k["landed"] for k in sim.kits), 1300)
     assert sim.signals()["drop_err"] < 5
 

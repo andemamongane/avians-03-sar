@@ -57,19 +57,48 @@ class CameraModel:
         return p * (1.0 - self.edge_loss * (d / r) ** 2)
 
 
+def occluded(camera, target, obstacles) -> bool:
+    """Is the ground point `target` hidden from `camera` by any obstacle prism?"""
+    from shapely.geometry import LineString, Point
+    e0, n0, alt = camera
+    seg = LineString([(e0, n0), (target[0], target[1])])
+    pt = Point(target[0], target[1])
+    for o in obstacles:
+        if o.shape.contains(pt):
+            return True                      # under the canopy / inside the structure
+        if not seg.intersects(o.shape):
+            continue
+        # altitude of the sight line where it crosses the obstacle: below its top = blocked
+        cross = seg.intersection(o.shape)
+        pts = list(cross.coords) if cross.geom_type == "LineString" else \
+            [c for g in getattr(cross, "geoms", []) for c in g.coords]
+        total = seg.length
+        for (x, y) in pts:
+            frac = math.dist((e0, n0), (x, y)) / total if total > 0 else 1.0
+            if alt * (1 - frac) < o.height:
+                return True
+    return False
+
+
 class SimulatedDetector:
     def __init__(self, camera: CameraModel | None = None, seed: int = 0):
         self.cam = camera or CameraModel()
         self.rng = np.random.default_rng(seed)
 
     def frame(self, t: float, drone: tuple[float, float, float], person: tuple[float, float],
-              decoys=()) -> list[Detection]:
+              decoys=(), obstacles=()) -> list[Detection]:
+        """One frame from `drone` (east, north, alt). `obstacles` (avians_env
+        Obstacle) occlude: a target is hidden when the line of sight from the
+        camera passes through one, or the target stands inside its footprint
+        (under a canopy)."""
         e0, n0, alt = drone
         cam, rng, out = self.cam, self.rng, []
         sigma = cam.sigma0 + cam.sigma_per_m * max(0.0, alt)
         cands = [("person", person, 1.0, cam.person_score)]
         cands += [(f"decoy:{d.id}", d.position, d.strength, cam.decoy_score) for d in decoys]
         for truth, (pe, pn), strength, (mu, sd) in cands:
+            if obstacles and occluded((e0, n0, alt), (pe, pn), obstacles):
+                continue
             p = cam.p_detect(alt, math.hypot(pe - e0, pn - n0)) * strength
             if rng.random() < p:
                 out.append(Detection(t, pe + rng.normal(0, sigma), pn + rng.normal(0, sigma),

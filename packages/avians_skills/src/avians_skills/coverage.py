@@ -19,6 +19,10 @@ coverage when its Python bindings are available (Linux); same output.
 
 CoverageMap keeps, per search region, a 5 m grid of cells the camera footprint
 has passed over at a useful altitude: "r3: 64 % covered, last seen 210 s ago".
+It also keeps, per cell, the probability that a person there would NOT have
+been detected yet (the product of (1 - P_D) over the passes, the standard
+search-theory bookkeeping): with the prior over regions this gives the
+probability the person is in each region, `probability_map`.
 """
 from __future__ import annotations
 
@@ -110,8 +114,9 @@ def sector(datum: tuple[float, float], radius: float, heading: float = 0.0):
 class CoverageMap:
     """Which parts of each search region the camera has seen."""
 
-    def __init__(self, regions, cell_m: float = 5.0, min_alt: float = 5.0, max_alt: float = 50.0):
-        self.cell, self.min_alt, self.max_alt = cell_m, min_alt, max_alt
+    def __init__(self, regions, cell_m: float = 5.0, min_alt: float = 5.0, max_alt: float = 50.0,
+                 camera=None):
+        self.cell, self.min_alt, self.max_alt, self.cam = cell_m, min_alt, max_alt, camera
         self.grids = {}
         for r in regions:
             x0, y0, x1, y1 = r.shape.bounds
@@ -120,14 +125,35 @@ class CoverageMap:
             X, Y = np.meshgrid(xs, ys)
             inside = shapely.contains_xy(r.shape, X, Y)
             self.grids[r.id] = {"X": X[inside], "Y": Y[inside],
-                                "seen": np.full(int(inside.sum()), -1.0)}
+                                "seen": np.full(int(inside.sum()), -1.0),
+                                "missed": np.ones(int(inside.sum()))}     # P(not detected yet | here)
+        self._last_mark = {}
 
-    def mark(self, t: float, e: float, n: float, alt: float, radius: float) -> None:
+    def mark(self, t: float, e: float, n: float, alt: float, radius: float, frame_s: float = 0.25) -> None:
+        """A camera frame at (e, n, alt) seeing `radius` around; `frame_s` is the
+        frame period, so a cell seen for one frame at P_D gets (1 - P_D) once."""
         if not (self.min_alt <= alt <= self.max_alt) or radius <= 0:
             return
         for g in self.grids.values():
-            m = (g["X"] - e) ** 2 + (g["Y"] - n) ** 2 <= radius ** 2
+            d2 = (g["X"] - e) ** 2 + (g["Y"] - n) ** 2
+            m = d2 <= radius ** 2
             g["seen"][m] = t
+            if self.cam is not None and m.any():
+                dist = np.sqrt(d2[m])
+                pd = np.array([self.cam.p_detect(alt, float(x)) for x in dist])
+                # a cell stays in view for several frames: count one frame's worth per call
+                g["missed"][m] *= np.clip(1.0 - pd * min(1.0, frame_s * self.cam.rate_hz), 0.0, 1.0)
+
+    def missed_mass(self, rid: str) -> float:
+        """Mean over the region's cells of P(not detected yet | the person is there)."""
+        g = self.grids[rid]
+        return float(g["missed"].mean()) if len(g["missed"]) else 0.0
+
+    def probability_map(self, prior: dict[str, float]) -> dict[str, float]:
+        """P(person is in region r | nothing found) from the prior and the search so far."""
+        raw = {rid: max(prior.get(rid, 0.0), 0.0) * self.missed_mass(rid) for rid in self.grids}
+        tot = sum(raw.values())
+        return {rid: (v / tot if tot > 0 else 0.0) for rid, v in raw.items()}
 
     def fraction(self, rid: str, since: float | None = None) -> float:
         s = self.grids[rid]["seen"]

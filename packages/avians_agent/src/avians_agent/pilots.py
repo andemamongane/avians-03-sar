@@ -103,6 +103,8 @@ class ScriptedPilot:
     def __init__(self):
         self.searched: dict[str, float] = {}
         self.charged = False          # charged to full once, with the kit aboard
+        self.moving = False           # the person was seen walking: don't wait on the ground
+        self.watched = False          # watched them for a while after finding (to see if they move)
 
     def decide(self, req: DecisionRequest) -> Decision:
         s = req.state
@@ -122,18 +124,24 @@ class ScriptedPilot:
                 return Decision("keep", reason="mission complete")
             return Decision("keep") if skill in ("rtl",) and running else Decision("rtl", reason="help is here")
         if s["released"]:
-            if skill == "track_person" and running:
+            if skill in ("track_person", "search_around") and running:
                 return Decision("keep")
+            if b["sigma"] > 15 or (skill == "track_person" and status == "failed"):
+                return Decision("search_around", {"around": "person", "alt": 25}, reason="lost them: datum search")
             return Decision("track_person", {"mode": "orbit", "until": "help_arrived"},
                             reason="stay with the person until help arrives")
         if b["found"]:
             if not s["help_dispatched"]:
                 return Decision("report", {"kind": "person_found"}, reason="dispatch the helicopter")
             if not s["payload"]:
-                if skill == "recharge" and running:
+                if skill in ("recharge", "pick_up", "inspect") and running:
                     return Decision("keep")
-                if skill == "pick_up" and running:
-                    return Decision("keep")
+                if not self.watched and not s["released"]:
+                    self.watched = True
+                    return Decision("inspect", {"alt": 20, "seconds": 12},
+                                    reason="watch them briefly: are they moving?")
+                if math.hypot(b.get("ve", 0.0), b.get("vn", 0.0)) > 0.12:
+                    self.moving = True
                 return Decision("pick_up", {"depot": "base"}, reason="get the kit")
             # with the kit: charge to full at base (a recharge the reflex interrupted is retried),
             # then, since the battery cannot hover through a 10-minute wait, wait on the ground
@@ -145,8 +153,10 @@ class ScriptedPilot:
             if bat < 90 and not self.charged:
                 return Decision("recharge", {"station": "pad_charge", "until_pct": 100},
                                 reason="charge to full before the wait with the person")
+            if math.hypot(b.get("ve", 0.0), b.get("vn", 0.0)) > 0.12 and b["sigma"] < 5:
+                self.moving = True
             eta = s["help_eta_t"]
-            if eta is not None and eta - s["t"] > 300 and not s["released"]:
+            if eta is not None and eta - s["t"] > 300 and not s["released"] and not self.moving:
                 if skill in ("precision_land", "wait_until") and running:
                     return Decision("keep")
                 if not s["landed"]:
@@ -156,11 +166,14 @@ class ScriptedPilot:
                                 reason="wait on the pad until help is 5 minutes out")
             if s["landed"]:
                 return Decision("takeoff", {"alt": 30}, reason="help is close: go deliver")
-            if skill in ("deliver", "inspect", "takeoff") and running:
+            if skill in ("deliver", "inspect", "takeoff", "search_around") and running:
                 return Decision("keep")
-            if "deliver" in s["rejected"]:
+            if "deliver" in s["rejected"] and b["sigma"] <= 6:
                 return Decision("track_person", {"until": "help_arrived"},
                                 reason="cannot drop there; stay with the person instead")
+            if b["sigma"] > 15 or (skill == "inspect" and status == "succeeded" and b["conf"] < 0.6):
+                return Decision("search_around", {"around": "person", "alt": 25},
+                                reason=f"the estimate has drifted (+/- {b['sigma']:.0f} m): datum search")
             if b["sigma"] > 6 and "inspect" not in s["rejected"]:
                 return Decision("inspect", {"alt": 15, "seconds": 8}, reason="tighten the estimate before the drop")
             return Decision("deliver", {"target": "person", "drop_alt": 8}, reason="drop the kit")
@@ -216,8 +229,10 @@ class ScriptedPilot:
                 return Decision("swap_battery", {"station": "pad_swap"}, reason="battery low; charging pad in use")
             return Decision("recharge", {"station": "pad_charge", "until_pct": 95}, reason="battery low")
         if b["found"]:
-            if skill == "track_person" and running:
+            if skill in ("track_person", "search_around") and running:
                 return Decision("keep")
+            if b["sigma"] > 15 or (skill == "track_person" and status == "failed"):
+                return Decision("search_around", {"around": "person", "alt": 25}, reason="lost them: datum search")
             return Decision("track_person", {"mode": "orbit", "alt": 30, "standoff": 15, "until": "help_arrived"},
                             reason="keep eyes on the person while the lead drone fetches the kit")
         if skill == "inspect" and running:
@@ -257,7 +272,7 @@ def snapshot(sim, executor) -> dict:
         "skill_args": dict(sk.args) if sk else {},
         "rejected": [h["skill"] for h in executor.history[-3:] if not h["accepted"]],
         "belief": {"east": b.east, "north": b.north, "sigma": b.sigma, "conf": b.conf,
-                   "found": b.found, "source": b.source},
+                   "found": b.found, "source": b.source, "ve": b.ve, "vn": b.vn},
         "help_dispatched": sim.world_state.help.dispatched_t is not None,
         "help_eta_t": sim.world_state.help.arrival_t,
         "help_arrived": sim.world_state.help_arrived(sim.t),

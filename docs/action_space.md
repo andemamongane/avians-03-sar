@@ -26,7 +26,9 @@ the running skill continue.
 | tool | parameters | what it does | built on | set |
 |---|---|---|---|---|
 | `inspect` (runs) | east?, north?, alt?=15.0, seconds?=8.0 | Fly low over the person estimate (or a point) and hover there to look closely: raises confidence in a real person, lowers it for a decoy. | hover over the estimate; the tracker's log-odds update | benchmark |
+| `probability_map` (instant) | - | Where the person probably is now, per search region: the prior updated by what the cameras have covered (search theory). Free. |  | benchmark |
 | `scan` (runs) | east, north, east2, north2, alt?=15.0, speed?=4.0 | Scan a straight line (a road, a creek, a ridge) at low altitude and slow speed with the camera: from (east, north) to (east2, north2). | straight low-altitude leg | benchmark |
+| `search_around` (runs) | around? ∈ {person, point}="person", east?, north?, radius?, alt?=25.0, speed? | Datum search: an expanding square around the person estimate (or a point) out to a radius, for a person who was seen and then lost (their estimate has drifted), or a tip about a place. Lane spacing from the camera footprint at the altitude. |  | benchmark |
 | `search_region` (runs) | region, pattern? ∈ {lawnmower, crosshatch, expanding_square, sector}="lawnmower", alt?=30.0, overlap?=0.2, speed?, datum_east?, datum_north? | Search a region with a standard pattern: lawnmower (parallel tracks over the whole region), crosshatch (lawnmower twice, the second pass perpendicular: slower, best detection), expanding_square or sector (around the region centre or a datum). Lane spacing comes from the camera footprint at the altitude. Finishes when the pattern is flown; a sighting does not stop it (you decide). | IAMSAR parallel track (boustrophedon on the minimum rotated rectangle), expanding square, sector; crosshatch = two perpendicular passes | benchmark |
 
 ## targets

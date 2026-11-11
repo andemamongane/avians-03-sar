@@ -154,8 +154,8 @@ class Shared:
         self.world_state = WorldState(self.scenario)
         self.camera = camera or CameraModel()
         self.energy = battery or BatteryModel()
-        self.tracker = PersonTracker.from_world(world)
-        self.coverage = CoverageMap(world.search_regions())
+        self.tracker = PersonTracker.from_world(world, self.camera, self.scenario.region_weights)
+        self.coverage = CoverageMap(world.search_regions(), camera=self.camera)
         self.planner = PathPlanner(world, limits.margin_m, hazard_margin_m=limits.hazard_margin_m)
         self.supplies = {d.id: d.supplies for d in world.depots.values()}
         self.reports: list[dict] = []
@@ -286,11 +286,12 @@ class FastSim:
         if t + 1e-9 >= self._next_frame:
             self._next_frame = t + 1.0 / self.camera.rate_hz
             person = self.world_state.person_position(t)
-            dets = self.detector.frame(t, v.pos, person, self.scenario.decoys) if not v.landed else []
+            dets = (self.detector.frame(t, v.pos, person, self.scenario.decoys, self.world.obstacles.values())
+                    if not v.landed else [])
             r = self.camera.footprint(v.alt)
-            b = self.tracker.update(t, dets, (v.east, v.north, r) if not v.landed else None)
+            b = self.tracker.update(t, dets, (v.east, v.north, r) if not v.landed else None, alt=v.alt)
             if not v.landed:
-                self.coverage.mark(t, v.east, v.north, v.alt, r)
+                self.coverage.mark(t, v.east, v.north, v.alt, r, 1.0 / self.camera.rate_hz)
             if b.found and not self._found_emitted:
                 self._found_emitted = True
                 ctx.emit("found", f"person found: estimate ({b.east:.0f}, {b.north:.0f}) +/- "

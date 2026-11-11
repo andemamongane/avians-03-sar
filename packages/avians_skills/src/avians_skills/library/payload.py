@@ -1,8 +1,10 @@
 """The medical kit: pick it up at a depot, deliver it to the person."""
 from __future__ import annotations
 
+import math
 
-from ..ballistics import release_point
+
+from ..ballistics import fall_time, release_point
 from ..base import Setpoint, Skill, SkillError
 from ._common import LandAt, TakeOff, Transit
 
@@ -67,7 +69,9 @@ class Deliver(Skill):
             if b.sigma > a["max_sigma"]:
                 raise SkillError(f"estimate uncertain by {b.sigma:.1f} m (> {a['max_sigma']:g}): inspect first")
             self.target = (b.east, b.north)
+            self.src = b.source                   # follow this track only (a moving person: lead)
         else:
+            self.src = None
             if a.get("east") is None or a.get("north") is None:
                 raise SkillError("deliver to a point needs east and north")
             self.target = (a["east"], a["north"])
@@ -84,6 +88,16 @@ class Deliver(Skill):
 
     def tick(self, ctx, dt):
         st = ctx.state
+        if self.src is not None and self.phase in ("transit", "descend", "settle"):
+            b = ctx.belief()
+            # the person's track (its id changes when they are re-acquired); never a jump to a stray
+            if b.source != "prior" and (b.found or b.source == self.src) and \
+                    math.dist((b.east, b.north), self.target) < 15.0:
+                # lead a walking person: where they will be when the kit lands
+                # only the settle and the fall: a walker's heading changes within ~20 s,
+                # so predicting further than the drop itself aims worse than not leading
+                lead = 2.0 + fall_time(self.args["drop_alt"], **ctx.world.kit.params())
+                self.target = (b.east + b.ve * lead, b.north + b.vn * lead)
         if self.phase == "transit":
             sp = self.transit.tick(ctx)
             if self.transit.done(ctx):
@@ -91,7 +105,7 @@ class Deliver(Skill):
             return sp
         aim = self._aim(ctx)
         if self.phase == "descend":
-            if abs(st.alt - self.args["drop_alt"]) < 0.5 and st.speed3 < 0.4:
+            if abs(st.alt - self.args["drop_alt"]) < 0.5 and math.dist((st.east, st.north), aim) < 1.0:
                 self.phase, self.t_settle = "settle", ctx.t
             return Setpoint("position", (aim[0], aim[1], self.args["drop_alt"]), max_speed=2.0)
         if self.phase == "settle":

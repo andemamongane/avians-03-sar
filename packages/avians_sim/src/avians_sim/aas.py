@@ -195,6 +195,11 @@ class GazeboSim(FastSim):
         self.ctx.vehicle = self.vehicle
         self._wall_next = time.monotonic()
         self._kits_shown = 0
+        self.yolo = None
+        pc = aas_cfg.get("perception") or {}
+        if pc.get("source") == "yolo":
+            from avians_perception.yolo import YoloBridge
+            self.yolo = YoloBridge(self.vehicle.node, {**pc, "topic": f"{aas_cfg.get('namespace', '/Drone1')}/{pc['topic']}"})
 
     def step(self, sp: Setpoint | None) -> None:
         t0 = self.t
@@ -206,6 +211,20 @@ class GazeboSim(FastSim):
         v = self.vehicle.state()
         if not v.landed:
             v.battery = max(0.0, v.battery - self.energy.drain(v.speed, v.vu, v.payload) * self.dt)
+        if self.yolo is not None:
+            # real detections replace the simulated camera: feed the same tracker and coverage
+            dets = self.yolo.frame(self.t, v.pos, v.yaw)
+            if dets is not None:
+                r = self.camera.footprint(v.alt)
+                self.tracker.update(self.t, dets, (v.east, v.north, r) if not v.landed else None, alt=v.alt)
+                if not v.landed:
+                    self.coverage.mark(self.t, v.east, v.north, v.alt, r, 1.0 / self.camera.rate_hz)
+                pe, pn = self.world_state.person_position(self.t)
+                for d in dets:
+                    self.ctx.emit("detector_sample", "", wake=False, alt=v.alt, score=d.score,
+                                  dist=math.hypot(pe - v.east, pn - v.north), detected=1,
+                                  truth="person" if math.dist((d.east, d.north), (pe, pn)) < 5 else "false")
+            self._next_frame = self.t + 1e9           # the simulated camera stays off
         self._observe(t0)
         for k in self.kits[self._kits_shown:]:
             if k["landed"]:

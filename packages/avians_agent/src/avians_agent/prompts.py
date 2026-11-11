@@ -119,10 +119,11 @@ def decision_prompt(sim, executor, memory, monitor, events, last_result: str, ho
     else:
         lines.append(f"PERSON: not found; no credible candidate ({b.tracks} weak track(s))")
     cov = sim.coverage.summary(t)
-    lines.append("SEARCH COVERAGE: " + "; ".join(
+    pm = sim.coverage.probability_map(sim.scenario.region_weights or sim.world.person.region_weights)
+    lines.append("SEARCH COVERAGE (P = where the person probably is, given the search so far): " + "; ".join(
         f"{rid} {c['covered']:.0%} seen" + (f", last {c['last_seen_s_ago']:.0f} s ago"
                                             if c['last_seen_s_ago'] is not None else ", never")
-        for rid, c in cov.items()))
+        + f", P {pm.get(rid, 0):.0%}" for rid, c in cov.items()))
     lines.append("WORLD NOW:\n" + sim.world_state.status(t))
     sw = getattr(sim.actuators, "swarm", None)
     if sw is not None:

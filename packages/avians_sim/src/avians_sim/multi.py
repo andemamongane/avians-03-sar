@@ -25,7 +25,7 @@ class MultiSim:
         self.shared = Shared(world, seed, limits, kw.get("camera"), kw.get("battery"), horizon_s, ground)
         self.sims: dict[str, FastSim] = {}
         for k, did in enumerate(self.ids):
-            launch = (world.launch[0] + 12.0 * k, world.launch[1])      # a pad each, 12 m apart
+            launch = (world.launch[0] + 25.0 * k, world.launch[1])      # a pad each, 25 m apart
             self.sims[did] = FastSim(world, seed, limits, critical_pct, dt=dt, horizon_s=horizon_s,
                                      drone_id=did, shared=self.shared, launch=launch, realtime=False,
                                      camera=kw.get("camera"), battery=kw.get("battery"))
@@ -51,8 +51,6 @@ class MultiSim:
 
     def step(self, setpoints: dict) -> None:
         t0 = self.t
-        first = True
-        events = None
         for did, sim in self.sims.items():
             sim.vehicle.command(setpoints.get(did))
             sim.vehicle.step()
@@ -68,7 +66,6 @@ class MultiSim:
         events = self.shared.advance(t0, t)
         for sim in self.sims.values():
             sim._observe(t0, events)
-            first = False
 
     def signals(self) -> dict[str, float]:
         out = {}

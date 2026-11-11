@@ -40,9 +40,10 @@ takeoff.
 
 | Pilot | Satisfied | Notes |
 |---|---|---|
-| `scripted` (rule-based baseline) | 39 / 40 seeds | the miss is a person not detected on the first pass over their region |
+| `scripted` (rule-based baseline) | 40 / 40 seeds | |
+| `scripted` on the family (`sar_supply_family`) | 35 / 40 seeds | misses: a walker who wandered into searched ground (3), a walker lost after the drop (2) |
 | `haiku` (the teacher, Claude Haiku 5.5) | 1 / 1 (seed 3) | 38 decisions, $0.018, 110 s of wall time |
-| `scripted`, two drones (`sar_supply_2drones`) | 30 / 30 seeds | one pilot per drone; the lead fetches the kit, the wingman keeps eyes on the person |
+| `scripted`, two drones (`sar_supply_2drones`) | 36 / 40 seeds | one pilot per drone; the lead fetches the kit, the wingman keeps eyes on the person |
 
 ## Layout
 

@@ -23,3 +23,13 @@ sim:                           # avians_sim.gazebo.GazeboControl
   record_video: {width: 1280, height: 720, fps: 15, views: [chase, overview]}
   plain_world:
     impalpable_greyness: [objects]
+
+perception:                    # the Gazebo tier's camera (avians_perception.yolo; untested)
+  source: simulated            # simulated | yolo
+  topic: yolo/detections       # relative to the drone namespace (AAS yolo_py's Detection2DArray)
+  person_classes: ["person", "0"]
+  min_score: 0.25
+  width: 640
+  height: 480
+  hfov: 1.2
+  pitch: 1.5708                # rad down from horizontal; pi/2 = nadir

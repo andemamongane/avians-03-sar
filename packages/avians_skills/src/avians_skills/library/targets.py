@@ -48,8 +48,8 @@ class TrackPerson(Skill):
         if a["until"] == "help_arrived" and ctx.world_state.help_arrived(ctx.t):
             self.succeed(ctx, f"help arrived; tracked for {ctx.t - self.t0:.0f} s")
             return Setpoint("position", st.pos, max_speed=2.0)
-        if b.source == "prior":
-            self.fail(ctx, "lost the person track")
+        if b.source == "prior" or b.sigma > 25.0:
+            self.fail(ctx, f"lost the person: estimate uncertain by {b.sigma:.0f} m (search_around to re-acquire)")
             return Setpoint("position", st.pos, max_speed=2.0)
         r = a["standoff"] if a["mode"] == "orbit" else 0.0
         d = math.hypot(st.east - b.east, st.north - b.north)
