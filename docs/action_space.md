@@ -57,8 +57,8 @@ the running skill continue.
 | tool | parameters | what it does | built on | set |
 |---|---|---|---|---|
 | `escalate` (instant) | reason | Hand this decision to the larger remote model (onboard pilots only): use when the situation is unfamiliar or the stakes are high. | hands the decision to the remote model | student |
-| `report` (instant) | kind ∈ {person_found, status, hazard}, message?="", east?, north? | Radio a report. kind person_found dispatches the rescue crew to the given position (default: the current estimate): a wrong position delays them. | ground station message; dispatches help | benchmark |
-| `request_help` (instant) | question | Ask the human operator a question (they may not answer quickly, or at all). | ground station question | benchmark |
+| `report` (instant) | kind ∈ {person_found, status, hazard}, message?="", east?, north? | Radio a report to the ground station. kind person_found dispatches the rescue crew to the given position (default: the current estimate): a wrong position delays them. The acknowledgement (and the crew's ETA) comes back as a message. | ground station message; dispatches help | benchmark |
+| `request_help` (instant) | question | Ask the operator at the ground station a question; the answer, if any, arrives later as a message (they may be slow, or not answer at all). | ground station question | benchmark |
 
 ## swarm
 

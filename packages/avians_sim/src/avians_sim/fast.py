@@ -29,6 +29,8 @@ from avians_skills import BatteryModel, Context, CoverageMap, Limits, PathPlanne
 from avians_skills.ballistics import landing
 from avians_skills.reference import ReferenceGenerator
 
+from .ground import GroundStation
+
 
 class FastVehicle:
     """The reference generator (Ruckig, avians_skills.reference) plus ground
@@ -112,15 +114,18 @@ class FastActuators:
         return (w.east + rng.normal(0, 0.3), w.north + rng.normal(0, 0.3))
 
     def report(self, kind: str, east, north, message: str) -> str:
-        t = self.sim.t
-        self.sim.reports.append({"t": t, "kind": kind, "east": east, "north": north, "message": message})
+        sim, t = self.sim, self.sim.t
+        sim.reports.append({"t": t, "kind": kind, "east": east, "north": north, "message": message})
+        text = message or kind
         if kind == "person_found":
-            return self.sim.world_state.report_found(t, east, north)
-        return "base: copy"
+            text = f"person found at ({east:.0f}, {north:.0f})" + (f": {message}" if message else "")
+        return sim.ground.send(t, sim.drone_id, kind, text, sim.vehicle.state().pos, sim.world_state,
+                               east=east, north=north)
 
     def ask_operator(self, question: str) -> str:
-        self.sim.reports.append({"t": self.sim.t, "kind": "question", "message": question})
-        return "operator: no new information; use your judgement"
+        sim = self.sim
+        sim.reports.append({"t": sim.t, "kind": "question", "message": question})
+        return sim.ground.send(sim.t, sim.drone_id, "question", question, sim.vehicle.state().pos)
 
     def capture(self, note: str) -> str:
         sim = self.sim
@@ -139,8 +144,11 @@ class FastSim:
 
     def __init__(self, world, seed: int, limits: Limits, critical_pct: float = 5.0,
                  camera: CameraModel | None = None, battery: BatteryModel | None = None,
-                 dt: float = 0.1, horizon_s: float = 3600.0):
+                 dt: float = 0.1, horizon_s: float = 3600.0, ground: dict | None = None,
+                 realtime: bool = False, drone_id: str = "drone1"):
         self.world, self.seed, self.dt = world, seed, dt
+        self.realtime, self.drone_id = realtime, drone_id
+        self._wall_next = None
         self.rng = np.random.default_rng(seed + 1000)
         self.scenario = world.sample(seed, horizon_s)
         self.world_state = WorldState(self.scenario)
@@ -156,6 +164,7 @@ class FastSim:
         self.reports: list[dict] = []
         self.images: list[dict] = []
         self.kits: list[dict] = []           # released kits: in flight, then landed
+        self.ground = GroundStation(world, ground, np.random.default_rng(seed + 3000))
         self.actuators = FastActuators(self)
         self.ctx = Context(world=world, world_state=self.world_state, vehicle=self.vehicle,
                            limits=limits, planner=self.planner, camera=self.camera,
@@ -189,6 +198,14 @@ class FastSim:
         t0 = self.t
         self.vehicle.command(sp)
         self.vehicle.step()
+        if self.realtime:                        # the fast tier slowed to the wall clock
+            import time
+            if self._wall_next is None:
+                self._wall_next = time.monotonic()
+            self._wall_next += self.dt
+            delay = self._wall_next - time.monotonic()
+            if delay > 0:
+                time.sleep(delay)
         self._observe(t0)
 
     def _observe(self, t0: float) -> None:
@@ -222,8 +239,10 @@ class FastSim:
         for e in self.world_state.changes(t0, t):
             ctx.emit("zone", f"{e.zone} is now {'SAFE' if e.safe else 'CLOSED'}" + (f": {e.note}" if e.note else ""))
         for n in self.world_state.news(t0, t):
-            ctx.emit("news", f"ground station: {n.text}" + (f" (the description of {n.about} is updated)"
-                                                          if n.description else ""))
+            self.ground.push(t, "scenario", "news", n.text + (f" (the description of {n.about} is updated)"
+                                                             if n.description else ""))
+        for m in self.ground.inbox(t0, t, self.drone_id):
+            ctx.emit("message", f"radio from {m.sender} [{m.kind}]: {m.text}", sender=m.sender, kind_=m.kind)
         h = self.world_state.help
         if h.arrival_t is not None and t0 < h.arrival_t <= t:
             ctx.emit("help", f"{self.world.help.description} has arrived at the person")

@@ -82,8 +82,17 @@ def _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, qu
     return _cost(d.model, d.usage)
 
 
+def _console_state(sim, ex) -> str:
+    v, b = sim.vehicle.state(), sim.tracker.belief()
+    return (f"t={sim.t:.0f} s  drone at ({v.east:.0f}, {v.north:.0f}) alt {v.alt:.0f} m  battery {v.battery:.0f} %  "
+            f"{'kit aboard' if v.payload else 'no kit'}\n{ex.status() if ex else ''}\n"
+            f"person: {'FOUND' if b.found else 'not found'} estimate ({b.east:.0f}, {b.north:.0f}) +/- {b.sigma:.0f} m\n"
+            f"{sim.world_state.status(sim.t)}")
+
+
 def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict, latency_cfg: dict,
-                remote_pilot=None, router=None, quiet: bool = True, make_sim=None) -> dict:
+                remote_pilot=None, router=None, quiet: bool = True, make_sim=None,
+                realtime: bool = False, ground_live: int | None = None) -> dict:
     """make_sim(mission, seed, limits, dt, horizon) -> a sim; default FastSim.
     A sim with realtime = True (Gazebo) runs the pilot in a thread while the
     drone flies, and the latency is the real one."""
@@ -91,11 +100,20 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     wake_s, min_gap, horizon = float(dc["wake_s"]), float(dc["min_gap_s"]), mission.horizon_s
     rng = np.random.default_rng(seed + 7)
     limits, dt = copy.deepcopy(mission.limits), float(agent_cfg.get("control_dt", 0.1))
+    ground_cfg = dict(mission.raw.get("ground") or {})
     sim = (make_sim(mission, seed, limits, dt, horizon + 60) if make_sim else
-           FastSim(mission.world, seed, limits, mission.extras["critical_pct"], dt=dt, horizon_s=horizon + 60))
+           FastSim(mission.world, seed, limits, mission.extras["critical_pct"], dt=dt, horizon_s=horizon + 60,
+                   ground=ground_cfg, realtime=realtime))
     realtime = bool(getattr(sim, "realtime", False))
+    console = None
+    if ground_live:
+        from avians_sim.ground_live import Console
+        console = Console(sim.ground, lambda: _console_state(sim, ex_holder[0]), lambda: sim.t, port=ground_live)
+        print(f"ground station console: {console.url}")
+    ex_holder = [None]
     pool = ThreadPoolExecutor(1) if realtime else None
     ex = Executor(sim)
+    ex_holder[0] = ex
     mon = OnlineMonitor(mission.spec, mission.extras["monitor_max_speed"],
                         float(agent_cfg["monitor"]["every_s"]), str(agent_cfg["monitor"]["policy"]))
     memory = Memory(int(dc["history"]), int(dc["max_notes_chars"]))
@@ -204,6 +222,11 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     stl_log.close()
     if pool is not None:
         pool.shutdown(wait=False, cancel_futures=True)
+    if console is not None:
+        console.close()
+    with open(out / "messages.jsonl", "w") as f:
+        for m in sim.ground.summary():
+            f.write(json.dumps(m, default=str) + "\n")
     tr = mon.trace()
     score = mission.spec.score(tr)
     summary = {"episode": ep_id, "seed": seed, "end": end_reason, "t_end": round(sim.t, 1),

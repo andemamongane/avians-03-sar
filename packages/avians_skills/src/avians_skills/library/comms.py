@@ -8,8 +8,9 @@ NUM = {"type": "number"}
 
 class Report(Skill):
     name, category, instant = "report", "comms", True
-    summary = ("Radio a report. kind person_found dispatches the rescue crew to the given "
-               "position (default: the current estimate): a wrong position delays them.")
+    summary = ("Radio a report to the ground station. kind person_found dispatches the rescue crew "
+               "to the given position (default: the current estimate): a wrong position delays "
+               "them. The acknowledgement (and the crew's ETA) comes back as a message.")
     params = {"kind": {"type": "string", "enum": ["person_found", "status", "hazard"]},
               "message": {"type": "string", "default": ""},
               "east": NUM, "north": NUM}
@@ -29,7 +30,8 @@ class Report(Skill):
 
 class RequestHelp(Skill):
     name, category, instant = "request_help", "comms", True
-    summary = "Ask the human operator a question (they may not answer quickly, or at all)."
+    summary = ("Ask the operator at the ground station a question; the answer, if any, arrives "
+               "later as a message (they may be slow, or not answer at all).")
     params = {"question": {"type": "string"}}
     required = ["question"]
 

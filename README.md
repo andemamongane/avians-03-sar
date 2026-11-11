@@ -180,6 +180,25 @@ If something goes wrong, the symptom table in avians-02's
 `docs/running_simulations.md` applies unchanged (AAS not starting, no
 `/Drone1` topics, empty videos, the missing `avians_trajectory` controller).
 
+## The ground station
+
+Every report, status and question the drone sends goes to a `GroundStation`
+(`avians_sim/ground.py`) over a modelled link (latency, loss, range), and
+everything coming back arrives as a radio **message event** that wakes the
+pilot: the crew's acknowledgement with their ETA, an operator's answer to a
+question, tasking, and the scenario's news. The mission file's `ground:`
+block sets the link and scripts the operator (timed tasking, regex-matched
+answers). Questions are asynchronous: `request_help` returns "sent" and the
+answer, if any, comes later.
+
+**Live operator.** `avians fly missions/sar_supply.yaml --ground live
+--realtime` (or `--tier gazebo`) opens a console at http://localhost:8765:
+the drone's state, the radio log, the pilot's pending questions, and a box to
+send tasking, answers or news. Messages typed there reach the drone through
+the same link, so the episode records like any other (`messages.jsonl`).
+The JSON endpoints (`GET /state`, `GET /log`, `POST /message`) let a program,
+such as a second model, play the operator.
+
 ## Decisions, latency and memory
 
 - **Decision points:** any waking event (a skill finished or failed, the

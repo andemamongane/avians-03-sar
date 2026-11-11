@@ -14,6 +14,8 @@
   episode as a visual-only drone.
 - **`simside/avians_gz.py`:** the helper that runs inside AAS's simulation
   container (Gazebo transport only).
+- **`ground.py`, `ground_live.py`:** the ground station (modelled link,
+  scripted operator, scenario news) and its live operator console.
 
 What the fast tier models:
 

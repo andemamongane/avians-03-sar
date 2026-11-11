@@ -2,6 +2,7 @@
 
     avians check    MISSION [--seed N]              the prompts and tools the pilot gets; nothing flies
     avians fly      MISSION [--pilot P] [--seed N] [--tier fast|gazebo] [--video] [--qgc]
+                            [--ground live --port 8765] [--realtime]    a live operator console
     avians rollouts MISSION [--pilot P] --seeds 0-99 [--workers 8]
     avians score    EPISODE                          re-score from signals.jsonl
     avians video    EPISODE [--speed 20]             the 2D sped-up replay (replay.mp4)
@@ -101,7 +102,8 @@ def cmd_fly(a) -> int:
         make_sim, holder = _gazebo_factory(out)
     try:
         s = run_episode(m, pilot, a.seed, out, load_config("agent.yaml"), load_config("latency.yaml"),
-                        quiet=a.quiet, make_sim=make_sim)
+                        quiet=a.quiet, make_sim=make_sim, realtime=a.realtime,
+                        ground_live=a.port if a.ground == "live" else None)
     finally:
         if "ctl" in holder:
             holder["ctl"].stop()
@@ -239,6 +241,10 @@ def main(argv=None) -> int:
     p.add_argument("--speed", type=float, default=20.0)
     p.add_argument("--qgc", action="store_true")
     p.add_argument("--quiet", action="store_true")
+    p.add_argument("--realtime", action="store_true", help="fast tier slowed to real time (for a live operator)")
+    p.add_argument("--ground", choices=["scripted", "live"], default="scripted",
+                   help="live: open the operator console (http://localhost:PORT)")
+    p.add_argument("--port", type=int, default=8765)
     p = sub.add_parser("rollouts")
     p.add_argument("mission")
     p.add_argument("--pilot")

@@ -28,3 +28,14 @@ spec:
     report:       {formula: "G[0,1300] (found -> F[0,120] help_dispatched)", says: "report the person within 2 minutes of finding them"}
     deliver:      {formula: "F[0,1500] drop_err <= 5", says: "the kit lands within 5 m of the person"}
     stay:         {formula: "G[0,1500] (((O released) & !help) -> dist_person <= 30)", says: "after the drop, stay within 30 m of the person until help arrives"}
+ground:                 # the ground station (avians_sim.ground); same block in the family mission
+  name: base
+  latency_s: 2          # s from a report to its acknowledgement
+  loss: 0.0             # probability a message is lost
+  range_m: 2000         # link range from the station (at the launch point)
+  answers:              # scripted replies to the pilot's questions (regex -> text)
+    "(where|which region).*(hiker|person)": "operator: last contact was the phone ping near the creek; nothing newer"
+    "(helicopter|eta|how long)": "operator: the helicopter's ETA is what the dispatch said; no update"
+    "fire|zone": "operator: fire crews decide zone closures; we relay them as soon as we hear"
+  operator:             # tasking at fixed times
+    - {t: 90, text: "base: search priority is the pine slope, then the creek; report as soon as you have a sighting"}

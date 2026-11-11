@@ -39,7 +39,11 @@ critical battery; avoid ever needing it.
 
 You are asked to decide at decision points: when something happens (a skill
 finished or failed, the person was found, a zone changed, the battery crossed
-a mark, the safety layer acted, help arrived) and at least every {wake_s:g} s.
+a mark, the safety layer acted, help arrived, a radio message came in) and at
+least every {wake_s:g} s. The radio: report sends to the ground station; the
+reply (an acknowledgement, the crew's ETA, an operator's answer or tasking)
+arrives later as a message event. The operator may also send news or tasking
+on their own; weigh it like a real tip.
 At each decision call exactly ONE tool. Call keep to let the running skill
 continue. Every tool also takes `reason` (one sentence) and `notes`.
 
