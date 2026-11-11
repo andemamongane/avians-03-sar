@@ -54,15 +54,18 @@ def cmd_check(a) -> int:
     cfg = load_config("agent.yaml")
     sim = FastSim(m.world, a.seed, m.limits, m.extras["critical_pct"])
     print("=" * 30, "SYSTEM PROMPT", "=" * 30)
-    print(system_prompt(m, cfg["decisions"]["wake_s"]))
+    print(system_prompt(m, cfg["decisions"]["wake_s"], sim.world_state.describe()))
     print("=" * 30, "FIRST DECISION PROMPT", "=" * 30)
     print(decision_prompt(sim, Executor(sim), Memory(), None, [], "", m.horizon_s))
     tools = tool_definitions(BENCHMARK_TOOLS)
     print("=" * 30, f"TOOLS ({len(tools)})", "=" * 30)
     for t in tools:
         print(f"- {t['name']}: {t['description'][:90]}")
-    print(f"\nperson (seed {a.seed}): {sim.scenario.person_position(0)}; help delay "
-          f"{sim.scenario.help_delay_s:.0f} s; spec horizon {m.spec.horizon:g} s")
+    sc = sim.scenario
+    print(f"\nscenario (seed {a.seed}): person at {tuple(round(x) for x in sc.person_position(0))} in "
+          f"{sc.person_region} ({sc.motion}); help delay {sc.help_delay_s:.0f} s; wind "
+          f"({sc.wind.east:g}, {sc.wind.north:g}); zone timeline {[(e.t, e.zone, e.safe) for e in sc.timeline]}; "
+          f"{len(sc.decoys)} decoy(s); {len(sc.news)} news item(s); spec horizon {m.spec.horizon:g} s")
     return 0
 
 

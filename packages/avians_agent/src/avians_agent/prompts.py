@@ -65,7 +65,7 @@ Units: metres east/north of the launch point, altitude above ground, seconds
 since the start, battery in percent."""
 
 
-def system_prompt(mission, wake_s: float) -> str:
+def system_prompt(mission, wake_s: float, world_text: str | None = None) -> str:
     used = set()
     for c in mission.spec.clauses:
         used |= c.node.signals()
@@ -73,7 +73,7 @@ def system_prompt(mission, wake_s: float) -> str:
     sig = "Signals used by the spec:\n" + "\n".join(
         f"- {n} ({reg[n].unit}): {reg[n].description}" for n in reg.names() if n in used)
     return SYSTEM.format(wake_s=wake_s, brief=mission.brief, spec=mission.spec.describe(),
-                         signals=sig, world=mission.world.describe())
+                         signals=sig, world=world_text or mission.world.describe())
 
 
 def _battery_to(sim, goal) -> tuple[float, float]:

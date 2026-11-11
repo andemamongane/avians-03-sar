@@ -29,6 +29,18 @@ world.describe(); state.status(t)                # the words the pilot reads
 | `dynamics.help` | delay from the report to arrival (mean, std), and the penalty for a wrong position |
 | `wind`, `bounds`, `max_alt`, `origin` | mean wind and gust std; the operating area (geofence); lat/lon of the launch point |
 
+## Families (what varies between episodes)
+
+A `family:` block declares ranges; `WorldSpec.sample(seed)` draws one member
+into the `Scenario`: the zone-safety timeline, region descriptions, the
+person's prior, motion and position, decoys, wind, the help delay, and news
+(ground-station messages during the mission that may rewrite a region's
+description). `WorldState` reads the scenario, not the file, so the pilot
+sees that member's world. A world file can `extends:` another and override
+keys: `worlds/sar_valley_family` is the benchmark valley as a family;
+`worlds/sar_valley` stays one fixed environment. The format is documented in
+`family.py`.
+
 ## What exists (a working reference; change it freely)
 
 - `world.py`: loading and validation, the scenario draw (seeded), the
@@ -52,9 +64,10 @@ world.describe(); state.status(t)                # the words the pilot reads
 3. **The payload in Gazebo:** a kit model attached to the x500 with Gazebo's
    DetachableJoint system, and released on a topic. `avians_sim.gazebo`
    currently only places a kit where the drop model says it landed.
-4. **Variety:** procedural variants of sar_valley (person priors, zone
-   timelines, decoys, wind), all from seeds, so that rollouts cover more than
-   one layout. Keep `sar_valley` itself fixed: it is the benchmark.
+4. **Variety:** the family mechanism exists (above). Extend it with layout
+   variation: region shapes and positions, obstacle placement, extra stations,
+   drawn per seed, so that rollouts cover more than one map. Keep
+   `sar_valley` itself fixed: it is the benchmark.
 5. **Descriptions:** make region and hazard descriptions useful to a pilot
    (terrain, visibility, where a hiker would go). The pilot reads
    `describe()` and `status()` at every decision.

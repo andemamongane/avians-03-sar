@@ -228,9 +228,9 @@ class GazeboControl:
         self._plain = list(scenery)
 
     # -- during
-    def start(self, horizon_s: float, follow_model: str | None = None, seed: int = 0) -> None:
+    def start(self, horizon_s: float, follow_model: str | None = None, seed: int = 0, wind=None) -> None:
         self._t_start = time.time()
-        w = self._world.wind
+        w = wind or self._world.wind
         if w.east or w.north or w.gust_std:
             sched = wind_schedule(w, horizon_s, seed=seed)
             (self.episode / "wind.json").write_text(json.dumps(sched))

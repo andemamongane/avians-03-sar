@@ -56,8 +56,8 @@ packages/                    each one installable on its own (pip install -e pac
   avians_adp/        [McGlashan] Agent Data Protocol recording; SFT and router datasets (to do)
   avians_agent/      the pilot loop: decision points, simulated latency, memory, pilots, router, `avians` CLI
   avians_viz/        2D sped-up replays, QGroundControl .tlog and KML exports
-worlds/sar_valley/   the benchmark world (world.yaml)
-missions/            sar_supply.yaml: brief + STL spec
+worlds/sar_valley/   the benchmark world (world.yaml); sar_valley_family/: the same map as a family
+missions/            sar_supply.yaml: brief + STL spec; sar_supply_family.yaml: the same on the family
 configs/             limits (envelope), agent (decision loop), latency (per model), pilots, aas (Gazebo tier)
 docker/              the avians container for the Gazebo tier; aas/: avians' patch to AAS (trajectory controller)
 scripts/             install.sh, up_remote.sh, shell.sh, aas_plan_ahead.sh

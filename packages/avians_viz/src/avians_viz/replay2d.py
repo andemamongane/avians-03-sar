@@ -38,6 +38,15 @@ COLOURS = {"search": "#2e9d3a", "no_fly": "#d13b3b", "hazard": "#f08a1c", "landi
            "other": "#8a8781"}
 
 
+def _timeline(ep, world):
+    """The episode's own zone timeline (a family member's), else the world's."""
+    sc = ep.meta.get("scenario") or {}
+    if sc.get("timeline") is not None:
+        from avians_env import SafetyEvent
+        return [SafetyEvent(**e) for e in sc["timeline"]]
+    return world.safety_timeline
+
+
 def draw_world(ax, world, t: float | None = None, timeline=None):
     for r in world.regions.values():
         c = COLOURS.get(r.kind, COLOURS["other"])
@@ -90,7 +99,7 @@ def render(ep_dir: str | Path, world, out: str | Path | None = None, speed: floa
     ax_d.set_xlim(0, t[-1])
     cur_b = ax_b.axvline(0, color="k", lw=0.8)
     cur_d = ax_d.axvline(0, color="k", lw=0.8)
-    timeline = world.safety_timeline
+    timeline = _timeline(ep, world)
     trail, = ax.plot([], [], color="#222", lw=1.0)
     drone, = ax.plot([], [], marker="o", color="#000", ms=6)
     est, = ax.plot([], [], marker="+", color="#c0392b", ms=10, mew=2)
@@ -154,7 +163,7 @@ def summary_png(ep_dir, world, out=None) -> Path:
     ep = Episode.load(ep_dir)
     out = Path(out or Path(ep_dir) / "summary.png")
     fig, ax = plt.subplots(figsize=(8, 7))
-    draw_world(ax, world, ep.t[-1], world.safety_timeline)
+    draw_world(ax, world, ep.t[-1], _timeline(ep, world))
     ax.plot(ep.sig["east"], ep.sig["north"], color="#222", lw=0.8)
     if ep.meta.get("person"):
         ax.plot(*ep.meta["person"], marker="x", color="#c0392b", ms=9)

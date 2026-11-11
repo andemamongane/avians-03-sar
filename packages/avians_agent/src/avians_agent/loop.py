@@ -39,7 +39,7 @@ from .pilots import Decision, DecisionRequest, snapshot
 from .prompts import decision_prompt, system_prompt, tool_definitions
 from .router import features
 
-FACT_KINDS = {"found", "kit_landed", "zone", "help", "reflex", "released"}
+FACT_KINDS = {"found", "kit_landed", "zone", "help", "reflex", "released", "news"}
 PRICES = {"claude-haiku-5-5": (0.10, 0.50), "claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0)}
 
 
@@ -101,7 +101,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     memory = Memory(int(dc["history"]), int(dc["max_notes_chars"]))
     tool_names = list(BENCHMARK_TOOLS) + (["escalate"] if router is not None else [])
     tools = tool_definitions(tool_names)
-    system = system_prompt(mission, wake_s)
+    system = system_prompt(mission, wake_s, sim.world_state.describe())
     pilots = {"local": pilot, "escalate": remote_pilot or pilot}
     lat = {k: LatencyModel.for_model(latency_cfg, getattr(p, "name", "scripted")) for k, p in pilots.items()}
     lat_router = LatencyModel.for_model(latency_cfg, "onboard-router")
@@ -113,7 +113,8 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
             "tier": "gazebo" if realtime else "fast",
             "envelope": mission.extras["envelope"], "horizon_s": horizon, "wake_s": wake_s,
             "latency": {k: asdict(v) for k, v in lat.items()},
-            "person": sim.scenario.person_position(0), "help_delay_s": sim.scenario.help_delay_s}
+            "person": sim.scenario.person_position(0), "help_delay_s": sim.scenario.help_delay_s,
+            "scenario": sim.scenario.summary()}
     rec = EpisodeRecorder(out, ep_id, meta, float(agent_cfg["recording"]["signals_hz"]))
     rec.brief(system, tools)
     with open(out / "system_prompt.txt", "w") as f:

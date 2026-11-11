@@ -203,6 +203,7 @@ class WorldSpec:
     help: HelpSpec = field(default_factory=HelpSpec)
     wind: Wind = field(default_factory=Wind)
     kit: Kit = field(default_factory=Kit)
+    family: object = None                    # avians_env.family.Family, or None: one fixed environment
     source: Path | None = None
 
     # ------------------------------------------------------------ loading
@@ -211,7 +212,16 @@ class WorldSpec:
         path = Path(path)
         if path.is_dir():
             path = path / "world.yaml"
-        w = cls.from_dict(yaml.safe_load(path.read_text()))
+        d = yaml.safe_load(path.read_text())
+        if d.get("extends"):                       # a variant of another world: top-level keys override
+            base = yaml.safe_load((path.parent / d["extends"]).read_text())
+            base_dir = (path.parent / d["extends"]).parent
+            while base.get("extends"):
+                nxt = base_dir / base.pop("extends")
+                deeper = yaml.safe_load(nxt.read_text())
+                base, base_dir = {**deeper, **base}, nxt.parent
+            d = {**base, **{k: v for k, v in d.items() if k != "extends"}}
+        w = cls.from_dict(d)
         w.source = path
         return w
 
@@ -268,6 +278,9 @@ class WorldSpec:
             safety_timeline=timeline, help=help_,
             wind=Wind(float(wd.get("east", 0)), float(wd.get("north", 0)), float(wd.get("gust_std", 0))),
             kit=Kit(float(kd.get("mass", 1.0)), float(kd.get("cd_area", 0.03)), float(kd.get("rho", 1.225))))
+        if d.get("family"):
+            from .family import Family
+            w.family = Family.from_dict(d["family"])
         errors = w.validate()
         if errors:
             raise WorldError("; ".join(errors))
@@ -323,8 +336,12 @@ class WorldSpec:
     def sample(self, seed: int, horizon_s: float = 3600.0) -> "Scenario":
         return Scenario.draw(self, seed, horizon_s)
 
-    def describe(self) -> str:
-        """The static map, in words, for the pilot's prompt."""
+    def describe(self, descriptions: dict[str, str] | None = None,
+                 region_weights: dict[str, float] | None = None) -> str:
+        """The static map, in words, for the pilot's prompt (a scenario passes
+        its own region descriptions and prior)."""
+        descriptions = descriptions or {}
+        weights = region_weights if region_weights is not None else self.person.region_weights
         lines = [f"WORLD {self.name}: {self.description}".strip(),
                  f"Coordinates are metres east/north of the launch point (0, 0); max altitude "
                  f"{self.max_alt:g} m."]
@@ -335,7 +352,7 @@ class WorldSpec:
             (w, h), (cx, cy) = r.size, r.centroid
             band = f", altitude {r.altitude[0]:g}-{r.altitude[1]:g} m" if r.altitude else ""
             lines.append(f"- {r.id} ({r.kind}) '{r.name}': {w:.0f} x {h:.0f} m centred at "
-                         f"({cx:.0f}, {cy:.0f}){band}. {r.description}".rstrip())
+                         f"({cx:.0f}, {cy:.0f}){band}. {descriptions.get(r.id, r.description)}".rstrip())
         for o in self.obstacles.values():
             c = o.shape.centroid
             lines.append(f"- obstacle {o.id} '{o.name}': {o.height:g} m tall at ({c.x:.0f}, {c.y:.0f}), "
@@ -350,9 +367,8 @@ class WorldSpec:
                          f"medical kit(s), {d.load_s:g} s to load. {d.description}".rstrip())
         if self.person.description:
             lines.append(f"Missing person: {self.person.description}")
-        if self.person.region_weights:
-            prior = ", ".join(f"{k} {v:.0%}" for k, v in sorted(self.person.region_weights.items(),
-                                                              key=lambda kv: -kv[1]))
+        if weights:
+            prior = ", ".join(f"{k} {v:.0%}" for k, v in sorted(weights.items(), key=lambda kv: -kv[1]))
             lines.append(f"Where they probably are (prior): {prior}.")
         return "\n".join(lines)
 
@@ -360,24 +376,49 @@ class WorldSpec:
 # ---------------------------------------------------------------- one draw
 @dataclass
 class Scenario:
+    """One member of the world's family, for one seed: everything that varies
+    between episodes. A world without a family draws the person and the help
+    delay only; the rest copies the file."""
     world: WorldSpec
     seed: int
     person_track: np.ndarray        # (k, 3): t, east, north, 1 s apart
     help_delay_s: float
+    timeline: list = field(default_factory=list)          # SafetyEvent, sorted
+    descriptions: dict = field(default_factory=dict)      # region id -> text
+    decoys: list = field(default_factory=list)
+    wind: Wind = field(default_factory=Wind)
+    region_weights: dict = field(default_factory=dict)
+    motion: str = "static"
+    speed: float = 0.0
+    news: list = field(default_factory=list)              # family.News, sorted by t
+    person_region: str = ""
 
     @classmethod
     def draw(cls, w: WorldSpec, seed: int, horizon_s: float = 3600.0) -> "Scenario":
         rng = np.random.default_rng(seed)
-        start = _sample_person(w, rng)
+        weights = dict(w.person.region_weights) or {r.id: 1.0 for r in w.search_regions()}
+        motion, speed = w.person.motion, w.person.speed
+        timeline, descriptions = list(w.safety_timeline), {r.id: r.description for r in w.regions.values()}
+        decoys, wind, help_mean, news = list(w.decoys), w.wind, w.help.delay_mean_s, []
+        if w.family is not None:
+            # the prior is drawn first so the person can be placed from it; the family's
+            # other draws use the same stream, so the whole member follows from the seed
+            pre = w.family.draw(w, np.random.default_rng(seed + 10_000), horizon_s, "")
+            weights, motion, speed = pre.region_weights, pre.motion, pre.speed
+        start, region = _sample_person(w, rng, weights)
+        if w.family is not None:
+            d = w.family.draw(w, np.random.default_rng(seed + 10_000), horizon_s, region)
+            timeline, descriptions, decoys, wind, help_mean, news = (
+                d.timeline, d.descriptions, d.decoys, d.wind, d.help_delay_mean_s, d.news)
         n = int(horizon_s) + 1
         track = np.zeros((n, 3))
         track[:, 0] = np.arange(n)
         track[0, 1:] = start
-        if w.person.motion == "random_walk" and w.person.speed > 0:
+        if motion == "random_walk" and speed > 0:
             heading = rng.uniform(0, 2 * math.pi)
             for k in range(1, n):
                 heading += rng.normal(0, 0.3)
-                step = w.person.speed * np.array([math.cos(heading), math.sin(heading)])
+                step = speed * np.array([math.cos(heading), math.sin(heading)])
                 nxt = track[k - 1, 1:] + step
                 if not _free(w, nxt):
                     heading += math.pi
@@ -385,13 +426,23 @@ class Scenario:
                 track[k, 1:] = nxt
         else:
             track[:, 1:] = start
-        delay = max(60.0, rng.normal(w.help.delay_mean_s, w.help.delay_std_s))
-        return cls(w, seed, track, float(delay))
+        delay = max(60.0, rng.normal(help_mean, w.help.delay_std_s))
+        return cls(w, seed, track, float(delay), timeline, descriptions, decoys, wind, weights,
+                   motion, speed, news, region)
 
     def person_position(self, t: float) -> tuple[float, float]:
         tr = self.person_track
         k = min(max(t, 0.0), tr[-1, 0])
         return (float(np.interp(k, tr[:, 0], tr[:, 1])), float(np.interp(k, tr[:, 0], tr[:, 2])))
+
+    def summary(self) -> dict:
+        """What varied, for meta.json (ground truth: never shown to the pilot)."""
+        return {"person": self.person_position(0), "person_region": self.person_region,
+                "help_delay_s": self.help_delay_s, "timeline": [vars(e) for e in self.timeline],
+                "descriptions": self.descriptions,
+                "decoys": [{"id": d.id, "position": d.position, "strength": d.strength} for d in self.decoys],
+                "wind": vars(self.wind), "region_weights": self.region_weights, "motion": self.motion,
+                "speed": self.speed, "news": [vars(n) for n in self.news]}
 
 
 def _free(w: WorldSpec, p) -> bool:
@@ -402,8 +453,8 @@ def _free(w: WorldSpec, p) -> bool:
     return b is None or b.contains(pt)
 
 
-def _sample_person(w: WorldSpec, rng) -> tuple[float, float]:
-    weights = w.person.region_weights or {r.id: 1.0 for r in w.search_regions()}
+def _sample_person(w: WorldSpec, rng, weights: dict[str, float]) -> tuple[tuple[float, float], str]:
+    """A position for the person, drawn from the prior: ((east, north), region id)."""
     ids = sorted(weights)
     p = np.array([weights[i] for i in ids], float)
     region = w.regions[ids[rng.choice(len(ids), p=p / p.sum())]]
@@ -412,7 +463,7 @@ def _sample_person(w: WorldSpec, rng) -> tuple[float, float]:
     for _ in range(1000):
         e, n = rng.uniform(x0, x1), rng.uniform(y0, y1)
         if inner.contains(Point(e, n)) and _free(w, (e, n)):
-            return (float(e), float(n))
+            return (float(e), float(n)), region.id
     raise WorldError(f"could not place the person in {region.id}")
 
 
@@ -432,14 +483,17 @@ class WorldState:
     def __init__(self, scenario: Scenario):
         self.scenario = scenario
         self.world = scenario.world
+        self.timeline = scenario.timeline
         self.help = HelpStatus()
+        self.descriptions = dict(scenario.descriptions)
+        self.news_seen: list = []
 
     def person_position(self, t: float) -> tuple[float, float]:
         return self.scenario.person_position(t)
 
     def zone_safe(self, zone: str, t: float) -> bool:
         safe = True
-        for e in self.world.safety_timeline:
+        for e in self.timeline:
             if e.zone == zone and e.t <= t:
                 safe = e.safe
         return safe
@@ -449,7 +503,17 @@ class WorldState:
 
     def changes(self, t0: float, t1: float) -> list[SafetyEvent]:
         """Safety changes in (t0, t1]."""
-        return [e for e in self.world.safety_timeline if t0 < e.t <= t1]
+        return [e for e in self.timeline if t0 < e.t <= t1]
+
+    def news(self, t0: float, t1: float) -> list:
+        """News (ground-station messages from the scenario) due in (t0, t1];
+        applies their description changes."""
+        out = [n for n in self.scenario.news if t0 < n.t <= t1]
+        for n in out:
+            self.news_seen.append(n)
+            if n.about in self.descriptions and n.description:
+                self.descriptions[n.about] = n.description
+        return out
 
     def report_found(self, t: float, east: float, north: float) -> str:
         """The drone reports the person at (east, north). Dispatches help the
@@ -478,16 +542,16 @@ class WorldState:
         return out
 
     def describe(self) -> str:
-        return self.world.describe()
+        """The map as the pilot should read it now: this scenario's descriptions
+        (updated by any news so far) and prior."""
+        return self.world.describe(self.descriptions, self.scenario.region_weights)
 
     def status(self, t: float) -> str:
         """What is true now that the static map does not say."""
         lines = []
         for z in self.world.hazard_zones():
-            since = max((e.t for e in self.world.safety_timeline if e.zone == z.id and e.t <= t),
-                        default=None)
-            notes = [e.note for e in self.world.safety_timeline
-                     if e.zone == z.id and e.t <= t and e.note]
+            since = max((e.t for e in self.timeline if e.zone == z.id and e.t <= t), default=None)
+            notes = [e.note for e in self.timeline if e.zone == z.id and e.t <= t and e.note]
             state = "SAFE" if self.zone_safe(z.id, t) else "UNSAFE (do not enter)"
             lines.append(f"- {z.id}: {state}" + (f" since t={since:.0f} s" if since else "")
                          + (f" ({notes[-1]})" if notes else ""))
@@ -499,4 +563,6 @@ class WorldState:
                          f"{max(0.0, h.arrival_t - t) / 60:.0f} min")
         else:
             lines.append(f"- help: ARRIVED at t={h.arrival_t:.0f} s")
+        for n in self.news_seen[-3:]:
+            lines.append(f"- news t={n.t:.0f} s: {n.text}")
         return "\n".join(lines)

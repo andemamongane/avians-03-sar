@@ -108,7 +108,7 @@ class FastActuators:
 
     def wind_estimate(self) -> tuple[float, float]:
         """What the drone infers from its tilt while holding: the wind plus noise."""
-        w, rng = self.sim.world.wind, self.sim.rng
+        w, rng = self.sim.scenario.wind, self.sim.rng
         return (w.east + rng.normal(0, 0.3), w.north + rng.normal(0, 0.3))
 
     def report(self, kind: str, east, north, message: str) -> str:
@@ -125,7 +125,7 @@ class FastActuators:
     def capture(self, note: str) -> str:
         sim = self.sim
         v = sim.vehicle.s
-        dets = sim.detector.frame(sim.t, v.pos, sim.world_state.person_position(sim.t), sim.world.decoys)
+        dets = sim.detector.frame(sim.t, v.pos, sim.world_state.person_position(sim.t), sim.scenario.decoys)
         sim.images.append({"t": sim.t, "note": note, "pos": v.pos, "detections": len(dets)})
         r = sim.camera.footprint(v.alt)
         if not dets:
@@ -175,7 +175,7 @@ class FastSim:
     def release_payload(self) -> str:
         v = self.vehicle.s
         v.payload = False
-        w, kit = self.world.wind, self.world.kit.params()
+        w, kit = self.scenario.wind, self.world.kit.params()
         gust = self.rng.normal(0, w.gust_std, 2) if w.gust_std > 0 else np.zeros(2)
         kit["cd_area"] *= self.rng.normal(1.0, 0.1)                # tumbling: the drag area varies
         (le, ln), tf = landing(v.pos, (v.ve, v.vn, v.vu), (w.east + gust[0], w.north + gust[1]), **kit)
@@ -199,7 +199,7 @@ class FastSim:
         if t + 1e-9 >= self._next_frame:
             self._next_frame = t + 1.0 / self.camera.rate_hz
             person = self.world_state.person_position(t)
-            dets = self.detector.frame(t, v.pos, person, self.world.decoys) if not v.landed else []
+            dets = self.detector.frame(t, v.pos, person, self.scenario.decoys) if not v.landed else []
             r = self.camera.footprint(v.alt)
             b = self.tracker.update(t, dets, (v.east, v.north, r) if not v.landed else None)
             if not v.landed:
@@ -221,6 +221,9 @@ class FastSim:
         # world timeline
         for e in self.world_state.changes(t0, t):
             ctx.emit("zone", f"{e.zone} is now {'SAFE' if e.safe else 'CLOSED'}" + (f": {e.note}" if e.note else ""))
+        for n in self.world_state.news(t0, t):
+            ctx.emit("news", f"ground station: {n.text}" + (f" (the description of {n.about} is updated)"
+                                                          if n.description else ""))
         h = self.world_state.help
         if h.arrival_t is not None and t0 < h.arrival_t <= t:
             ctx.emit("help", f"{self.world.help.description} has arrived at the person")

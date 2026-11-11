@@ -1,0 +1,46 @@
+# The benchmark valley as a FAMILY: the same map, with the things that change
+# between real callouts drawn per seed. sar_valley itself stays fixed.
+extends: ../sar_valley/world.yaml
+name: sar_valley_family
+family:
+  zone_safety:
+    zone_fire:
+      p_close: 0.8
+      t_close: [150, 800]
+      duration: [240, 900]
+      p_reopen: 0.4
+      notes:
+        - Fire crews closed the zone; the fire is spreading east
+        - Smoke over the west ridge; crews closed the zone as a precaution
+        - A helicopter is water-bombing the scrub; the zone is closed to all aircraft
+  descriptions:
+    r1:
+      - Open grass, good visibility. The trail starts here.
+      - Tall wet grass after the rain; a person lying down would be hard to see from above 25 m.
+      - Mown meadow with a picnic area; day hikers start here.
+    r2:
+      - Rocky creek bed; the phone's last ping. Grey boulders look like people from above.
+      - The creek is in spate; the banks are muddy and a fall here is likely. The phone's last ping.
+      - Dry creek bed with scattered driftwood; the phone's last ping was here.
+    r3:
+      - Steep slope with a stand of tall pines; the likeliest place to fall.
+      - Pine slope with loose scree; the trail crosses it and is easy to lose in fog.
+      - Dense pines; the canopy hides the ground except along the trail and the clearings.
+    r4:
+      - Clearing on the ridge with a campsite.
+      - Ridge clearing with a campsite; an orange tent is pitched there.
+      - Windy ridge clearing; a shelter hut stands at its north end.
+  person:
+    region_weights: {dirichlet: 3.0}
+    motion: {static: 0.7, random_walk: 0.3}
+    speed: [0.2, 0.6]
+    description: Adult hiker, probably injured.
+  decoys: {count: [1, 4], strength: [0.2, 0.5]}
+  wind: {speed: [0, 5], gust_std: [0, 1.5]}
+  help: {delay_mean_s: [420, 780]}
+  news:
+    - {p: 0.5, t: [120, 500], about: zone_fire, text: "Rangers report smoke drifting over {name}; it may be closed soon"}
+    - {p: 0.4, t: [60, 400], about: person_region, text: "The hiker's phone pinged once more, roughly near {name}",
+       description: "{old} A phone ping was reported here during the search."}
+    - {p: 0.3, t: [200, 700], about: r2, text: "A fisherman saw someone in a red jacket near {name} this morning",
+       description: "{old} A witness saw a red jacket here this morning (may be stale)."}
