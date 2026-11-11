@@ -63,14 +63,23 @@ class PathPlanner:
         """Shortest polyline from start to goal avoiding the forbidden set.
         Raises SkillError when the goal is forbidden or unreachable. A start
         inside a forbidden polygon (e.g. a zone just closed around the drone)
-        is allowed out by ignoring that polygon."""
+        first leaves it by the shortest way, then plans from there with the
+        polygon respected."""
         polys = self.forbidden(alt, unsafe)
         why = self.blocked_by(goal[0], goal[1], alt, unsafe)
         if why:
             raise SkillError(f"the goal ({goal[0]:.0f}, {goal[1]:.0f}) is inside {why} "
                              f"(margin {self.margin:g} m)")
         sp = Point(start)
-        polys = [(i, p) for i, p in polys if not p.contains(sp)]
+        around = [p for _, p in polys if p.contains(sp)]
+        if around:
+            from shapely.ops import nearest_points
+            grown = unary_union(around).buffer(1.0, quad_segs=2)
+            exit_pt = nearest_points(grown.exterior, sp)[0]
+            exit_xy = (float(exit_pt.x), float(exit_pt.y))
+            if math.dist(exit_xy, goal) < 1.0:
+                return [start, goal]
+            return [start] + self.plan(exit_xy, goal, alt, unsafe)
         if not polys:
             return [start, goal]
         union = unary_union([p for _, p in polys])

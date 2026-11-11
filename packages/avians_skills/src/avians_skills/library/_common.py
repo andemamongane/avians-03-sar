@@ -57,7 +57,7 @@ class Transit:
             if rest is not None and any(rest.intersects(z.shape.buffer(ctx.planner.margin))
                                         for z in closed):
                 self._plan(ctx)                  # SkillError propagates: no way through
-                ctx.emit("replanned", f"replanned around {', '.join(sorted(now - self.unsafe))}",
+                ctx.emit("replanned", f"replanned around {', '.join(z.id for z in closed)}",
                          wake=False)
             self.unsafe = now
         carrot, vel, v = self.follower.step(ctx.state.pos)

@@ -30,12 +30,12 @@ from shapely import affinity
 from shapely.geometry import LineString, Polygon
 
 
-def _lanes(poly: Polygon, spacing: float):
+def _lanes(poly: Polygon, spacing: float, rotate: float = 0.0):
     rect = poly.minimum_rotated_rectangle
     xs, ys = rect.exterior.coords.xy
     edges = [((xs[i], ys[i]), (xs[i + 1], ys[i + 1])) for i in range(4)]
     (a, b) = max(edges, key=lambda e: math.dist(*e))
-    angle = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+    angle = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])) + rotate
     c = poly.centroid
     rot = affinity.rotate(poly, -angle, origin=c)
     x0, y0, x1, y1 = rot.bounds
@@ -56,7 +56,7 @@ def _lanes(poly: Polygon, spacing: float):
 
 
 def lawnmower(poly: Polygon, spacing: float, start: tuple[float, float],
-              forbidden: list[Polygon] = ()) -> list[tuple[float, float]]:
+              forbidden: list[Polygon] = (), rotate: float = 0.0) -> list[tuple[float, float]]:
     """Waypoints of a boustrophedon over poly (minus forbidden), nearest corner first."""
     area = poly.buffer(-spacing / 2) if poly.buffer(-spacing / 2).area > 0 else poly
     for f in forbidden:
@@ -66,7 +66,7 @@ def lawnmower(poly: Polygon, spacing: float, start: tuple[float, float],
     polys = [area] if isinstance(area, Polygon) else [g for g in area.geoms if isinstance(g, Polygon)]
     best = None
     for p in polys:
-        lanes = _lanes(p, spacing)
+        lanes = _lanes(p, spacing, rotate)
         if not lanes:
             continue
         for rev_order in (False, True):

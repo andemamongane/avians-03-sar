@@ -102,6 +102,7 @@ class ScriptedPilot:
 
     def __init__(self):
         self.searched: dict[str, float] = {}
+        self.charged = False          # charged to full once, with the kit aboard
 
     def decide(self, req: DecisionRequest) -> Decision:
         s = req.state
@@ -130,11 +131,29 @@ class ScriptedPilot:
                     return Decision("keep")
                 if skill == "pick_up" and running:
                     return Decision("keep")
-                if bat < 85 and skill != "recharge":
-                    return Decision("recharge", {"station": "pad_charge", "until_pct": 98},
-                                    reason="top up before the long wait with the person")
                 return Decision("pick_up", {"depot": "base"}, reason="get the kit")
-            if skill in ("deliver", "inspect") and running:
+            # with the kit: charge to full at base (a recharge the reflex interrupted is retried),
+            # then, since the battery cannot hover through a 10-minute wait, wait on the ground
+            # until help is about 5 minutes out, then fly, drop and stay
+            if skill == "recharge" and running:
+                return Decision("keep")
+            if skill == "recharge" and status == "succeeded":
+                self.charged = True
+            if bat < 90 and not self.charged:
+                return Decision("recharge", {"station": "pad_charge", "until_pct": 100},
+                                reason="charge to full before the wait with the person")
+            eta = s["help_eta_t"]
+            if eta is not None and eta - s["t"] > 300 and not s["released"]:
+                if skill in ("precision_land", "wait_until") and running:
+                    return Decision("keep")
+                if not s["landed"]:
+                    return Decision("precision_land", {"place": "base"},
+                                    reason=f"help is {(eta - s['t']) / 60:.0f} min out: wait on the ground to save battery")
+                return Decision("wait_until", {"condition": "time", "value": eta - 300, "timeout_s": 1500},
+                                reason="wait on the pad until help is 5 minutes out")
+            if s["landed"]:
+                return Decision("takeoff", {"alt": 30}, reason="help is close: go deliver")
+            if skill in ("deliver", "inspect", "takeoff") and running:
                 return Decision("keep")
             if "deliver" in s["rejected"]:
                 return Decision("track_person", {"until": "help_arrived"},
@@ -192,6 +211,7 @@ def snapshot(sim, executor) -> dict:
         "belief": {"east": b.east, "north": b.north, "sigma": b.sigma, "conf": b.conf,
                    "found": b.found, "source": b.source},
         "help_dispatched": sim.world_state.help.dispatched_t is not None,
+        "help_eta_t": sim.world_state.help.arrival_t,
         "help_arrived": sim.world_state.help_arrived(sim.t),
         "battery_needed_home": sim.energy.cost(math.dist(home, (v.east, v.north)),
                                                sim.ctx.limits.cruise_speed, v.payload),

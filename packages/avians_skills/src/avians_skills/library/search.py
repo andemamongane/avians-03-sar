@@ -16,11 +16,12 @@ NUM = {"type": "number"}
 class SearchRegion(Skill):
     name, category = "search_region", "search"
     summary = ("Search a region with a standard pattern: lawnmower (parallel tracks over the whole "
-               "region), expanding_square or sector (around the region centre or a datum). Lane "
+               "region), crosshatch (lawnmower twice, the second pass perpendicular: slower, best "
+               "detection), expanding_square or sector (around the region centre or a datum). Lane "
                "spacing comes from the camera footprint at the altitude. Finishes when the "
                "pattern is flown; a sighting does not stop it (you decide).")
     params = {"region": {"type": "string", "description": "a search region id"},
-              "pattern": {"type": "string", "enum": ["lawnmower", "expanding_square", "sector"],
+              "pattern": {"type": "string", "enum": ["lawnmower", "crosshatch", "expanding_square", "sector"],
                           "default": "lawnmower"},
               "alt": {**NUM, "description": "m (lower: better detection, narrower lanes)", "default": 30.0},
               "overlap": {**NUM, "description": "lane overlap fraction", "default": 0.2},
@@ -47,6 +48,10 @@ class SearchRegion(Skill):
         st = ctx.state
         if a["pattern"] == "lawnmower":
             pts = lawnmower(r.shape, self.spacing, (st.east, st.north), forbidden)
+        elif a["pattern"] == "crosshatch":
+            pts = lawnmower(r.shape, self.spacing, (st.east, st.north), forbidden)
+            if pts:
+                pts += lawnmower(r.shape, self.spacing, pts[-1], forbidden, rotate=90.0)
         else:
             datum = (a.get("datum_east"), a.get("datum_north"))
             datum = r.centroid if None in datum else datum

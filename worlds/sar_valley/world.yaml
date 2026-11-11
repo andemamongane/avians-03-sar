@@ -93,6 +93,7 @@ decoys:
     description: Boulder in the creek bed.
 
 wind: {east: 2.0, north: -1.0, gust_std: 0.8}
+kit: {mass: 1.0, cd_area: 0.03}   # the dropped medical kit: point mass with quadratic drag
 
 dynamics:
   zone_safety:

@@ -26,17 +26,21 @@ from avians_env import WorldState
 from avians_perception import CameraModel, PersonTracker, SimulatedDetector
 from avians_safety import Reflex
 from avians_skills import BatteryModel, Context, CoverageMap, Limits, PathPlanner, Setpoint, VehicleState
-from avians_skills.library.payload import fall_time
-
-G = 9.81
+from avians_skills.ballistics import landing
+from avians_skills.reference import ReferenceGenerator
 
 
 class FastVehicle:
-    def __init__(self, limits: Limits, battery: BatteryModel, launch=(0.0, 0.0), dt: float = 0.1,
-                 kp: float = 1.0):
-        self.lim, self.bat, self.dt, self.kp = limits, battery, dt, kp
+    """The reference generator (Ruckig, avians_skills.reference) plus ground
+    contact, battery and heading. In the fast tier the drone IS its reference:
+    the tracking error PX4 adds is left to the Gazebo tier."""
+
+    def __init__(self, limits: Limits, battery: BatteryModel, launch=(0.0, 0.0), dt: float = 0.1):
+        self.lim, self.bat, self.dt = limits, battery, dt
         self.s = VehicleState(east=launch[0], north=launch[1])
         self.sp = Setpoint("idle")
+        self.ref = ReferenceGenerator(limits, dt)
+        self.ref.reset((launch[0], launch[1], 0.0))
 
     def state(self) -> VehicleState:
         return self.s
@@ -46,51 +50,23 @@ class FastVehicle:
             self.sp = sp
 
     def step(self) -> None:
-        s, sp, lim, dt = self.s, self.sp, self.lim, self.dt
+        s, sp, dt = self.s, self.sp, self.dt
+        if any(abs(a - b) > 1e-9 for a, b in zip(self.ref.pos, (s.east, s.north, s.alt))):
+            self.ref.reset((s.east, s.north, s.alt), (s.ve, s.vn, s.vu))   # state set from outside
         if s.landed and (sp.mode != "position" or sp.pos is None or sp.pos[2] < 0.3):
             s.ve = s.vn = s.vu = 0.0
+            self.ref.reset((s.east, s.north, 0.0))
             s.t += dt
             return
-        if sp.mode == "position" and sp.pos is not None:
-            pe, pn, pa = sp.pos
-            fe, fn, fu = sp.vel
-            vmax = min(sp.max_speed or lim.max_speed, lim.max_speed)
-            de, dn = pe - s.east, pn - s.north
-            d = math.hypot(de, dn)
-            # P on position, braking-feasible (v <= sqrt(2 a d)), plus feed-forward
-            vp = min(self.kp * d, math.sqrt(2 * lim.max_accel * 0.9 * d))
-            ve = fe + (vp * de / d if d > 1e-6 else 0.0)
-            vn = fn + (vp * dn / d if d > 1e-6 else 0.0)
-            vh = math.hypot(ve, vn)
-            if vh > vmax:
-                ve, vn = ve * vmax / vh, vn * vmax / vh
-            vu = max(-lim.max_descent, min(lim.max_climb, fu + 1.0 * (pa - s.alt)))
-        elif sp.mode == "land":
-            if sp.pos is not None:
-                ve, vn = 0.8 * (sp.pos[0] - s.east), 0.8 * (sp.pos[1] - s.north)
-                vh = math.hypot(ve, vn)
-                if vh > 2.0:
-                    ve, vn = ve * 2.0 / vh, vn * 2.0 / vh
-            else:
-                ve = vn = 0.0
-            vu = -min(lim.max_descent, 0.7 if s.alt < 2.0 else lim.max_descent)
-        else:                                            # idle in the air: hold
-            ve = vn = 0.0
-            vu = 0.0
-        # acceleration limit (horizontal), then integrate
-        dve, dvn = ve - s.ve, vn - s.vn
-        dv = math.hypot(dve, dvn)
-        amax = lim.max_accel * dt
-        if dv > amax:
-            dve, dvn = dve * amax / dv, dvn * amax / dv
-        s.ve, s.vn = s.ve + dve, s.vn + dvn
-        s.vu = s.vu + max(-amax, min(amax, vu - s.vu))
-        s.east += s.ve * dt
-        s.north += s.vn * dt
-        s.alt += s.vu * dt
+        if sp.mode == "land" and s.alt < 2.0:          # the last metres: slow, straight down
+            sp = Setpoint("land", (s.east, s.north, 0.0))
+        pos, vel, _ = self.ref.step(sp)
+        s.east, s.north, s.alt = pos[0], pos[1], max(0.0, pos[2])
+        s.ve, s.vn, s.vu = vel[0], vel[1], vel[2]
         s.landed = False
         if s.alt <= 0.02 and (sp.mode == "land" or s.vu < 0):
             s.alt, s.ve, s.vn, s.vu, s.landed = 0.0, 0.0, 0.0, 0.0, True
+            self.ref.reset((s.east, s.north, 0.0))
         if not s.landed:
             s.battery = max(0.0, s.battery - self.bat.drain(s.speed, s.vu, s.payload) * dt)
         if s.speed > 0.3:
@@ -199,13 +175,12 @@ class FastSim:
     def release_payload(self) -> str:
         v = self.vehicle.s
         v.payload = False
-        w = self.world.wind
-        tf = fall_time(v.alt, drag=self.rng.normal(1.25, 0.05))
+        w, kit = self.world.wind, self.world.kit.params()
         gust = self.rng.normal(0, w.gust_std, 2) if w.gust_std > 0 else np.zeros(2)
-        k = self.rng.normal(0.6, 0.05)
-        noise = self.rng.normal(0, 0.4 + 0.08 * v.alt, 2)
-        land = (v.east + v.ve * tf + k * (w.east + gust[0]) * tf + noise[0],
-                v.north + v.vn * tf + k * (w.north + gust[1]) * tf + noise[1])
+        kit["cd_area"] *= self.rng.normal(1.0, 0.1)                # tumbling: the drag area varies
+        (le, ln), tf = landing(v.pos, (v.ve, v.vn, v.vu), (w.east + gust[0], w.north + gust[1]), **kit)
+        noise = self.rng.normal(0, 0.3 + 0.03 * v.alt, 2)          # release jitter, bounce
+        land = (le + noise[0], ln + noise[1])
         self.kits.append({"t_release": self.t, "t_land": self.t + tf, "at": land, "landed": False,
                           "err": None})
         return f"(falls for ~{tf:.1f} s)"

@@ -1,13 +1,12 @@
 """The medical kit: pick it up at a depot, deliver it to the person."""
 from __future__ import annotations
 
-import math
 
+from ..ballistics import release_point
 from ..base import Setpoint, Skill, SkillError
 from ._common import LandAt, TakeOff, Transit
 
 NUM = {"type": "number"}
-G = 9.81
 
 
 class PickUp(Skill):
@@ -45,16 +44,12 @@ class PickUp(Skill):
         return sp
 
 
-def fall_time(h: float, drag: float = 1.25) -> float:
-    """Seconds for the kit to fall h metres (vacuum time x a drag factor)."""
-    return drag * math.sqrt(2 * max(h, 0.0) / G)
-
-
 class Deliver(Skill):
     name, category = "deliver", "payload"
     summary = ("Drop the kit next to the person: fly over the estimate (or a point), descend to "
-               "the drop altitude, aim upwind by the estimated drift, release, climb back. "
-               "Refuses when the estimate is too uncertain: inspect first.")
+               "the drop altitude, hold at the computed release point (ballistic drop with drag "
+               "and the estimated wind), release, climb back. Refuses when the estimate is too "
+               "uncertain: inspect first.")
     params = {"target": {"type": "string", "enum": ["person", "point"], "default": "person"},
               "east": NUM, "north": NUM,
               "drop_alt": {**NUM, "description": "release altitude, m", "default": 8.0},
@@ -82,10 +77,10 @@ class Deliver(Skill):
         self.transit = Transit(ctx, self._aim(ctx), ctx.limits.cruise_alt)
 
     def _aim(self, ctx):
-        we, wn = ctx.actuators.wind_estimate()
-        tf = fall_time(self.args["drop_alt"])
-        k = 0.6                                  # the kit drifts at about this fraction of the wind
-        return (self.target[0] - k * we * tf, self.target[1] - k * wn * tf)
+        """Release point for a hovering drop: inverts the ballistic model with the wind estimate."""
+        wind = ctx.actuators.wind_estimate()
+        return release_point(self.target, self.args["drop_alt"], (0.0, 0.0, 0.0), wind,
+                             **ctx.world.kit.params())
 
     def tick(self, ctx, dt):
         st = ctx.state

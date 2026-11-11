@@ -68,6 +68,24 @@ class TrackPerson(Skill):
         v = a["speed"]
         tgt = (b.east + r * math.cos(ang), b.north + r * math.sin(ang), a["alt"])
         vel = (-v * math.sin(ang) + b.ve, v * math.cos(ang) + b.vn, 0.0)
+        blocked = lambda th: ctx.planner.blocked_by(b.east + r * math.cos(th), b.north + r * math.sin(th),  # noqa: E731
+                                                  a["alt"], ctx.unsafe_zones())
+        if blocked(ang):
+            # part of the circle is forbidden (a closed zone next to the person): hold at the
+            # nearest free point of the circle instead of orbiting through it
+            here = math.atan2(st.north - b.north, st.east - b.east)
+            free = [here + k * math.pi / 18 * sgn for k in range(0, 36) for sgn in (1, -1)
+                    if not blocked(here + k * math.pi / 18 * sgn)]
+            if not free:
+                self.fail(ctx, "no free standoff around the person: every point of the orbit is forbidden")
+                return Setpoint("position", st.pos, max_speed=2.0)
+            th = free[0]
+            if not getattr(self, "_held", False):
+                self._held = True
+                ctx.emit("progress", "the orbit would enter a forbidden area: holding beside the person instead",
+                         wake=False)
+            return Setpoint("position", (b.east + r * math.cos(th), b.north + r * math.sin(th), a["alt"]),
+                            max_speed=v + 2.0, yaw=math.atan2(b.north - st.north, b.east - st.east))
         return Setpoint("position", tgt, vel, max_speed=v + 2.0,
                         yaw=math.atan2(b.north - st.north, b.east - st.east))
 

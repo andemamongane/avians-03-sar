@@ -7,9 +7,12 @@ handling, and the plan-ahead patch's `avians_trajectory` controller (built by
 scripts/aas_plan_ahead.sh), which tracks a trajectory streamed on
 /DroneN/avians/trajectory. What is new is how skills drive it:
 
-    position setpoint   airborne: stream a 2-sample trajectory every tick,
-                        [now: pos, vel] and [+1 s: pos + vel, vel]; the
-                        controller tracks it and holds its last point
+    position setpoint   airborne: the shared reference generator (Ruckig, the
+                        same one the fast tier flies) advances one tick and
+                        its state is streamed as a 2-sample trajectory [now,
+                        +1 s]; the controller tracks it and holds its last
+                        point. The reference is re-seeded from the measured
+                        state when PX4 falls more than 3 m behind it
                         on the ground: AAS takeoff action to the setpoint's
                         altitude, then offboard
     land                end offboard (patched px4_interface), AAS land action
@@ -28,12 +31,13 @@ import threading
 import time
 
 from avians_skills import Setpoint, VehicleState
+from avians_skills.reference import ReferenceGenerator
 
 from .fast import FastSim
 
 
 class AASVehicle:
-    def __init__(self, cfg: dict):
+    def __init__(self, cfg: dict, limits=None, dt: float = 0.1):
         import rclpy
         from rclpy.action import ActionClient
         from rclpy.node import Node
@@ -54,6 +58,7 @@ class AASVehicle:
         traj_qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, durability=DurabilityPolicy.TRANSIENT_LOCAL,
                               history=HistoryPolicy.KEEP_LAST, depth=1)
         self.cfg = cfg
+        self.ref = ReferenceGenerator(limits, dt) if limits is not None else None
         self.s = VehicleState()
         self._lock = threading.Lock()
         self._raw = (0.0, 0.0, 0.0)
@@ -128,12 +133,18 @@ class AASVehicle:
 
     def _stream(self, sp: Setpoint) -> None:
         ox, oy, oz = self.origin
-        e, n, a = sp.pos
-        ve, vn, vu = sp.vel
-        v = math.sqrt(ve * ve + vn * vn + vu * vu)
-        cap = sp.max_speed or v
-        if v > cap > 0:
-            ve, vn, vu = ve * cap / v, vn * cap / v, vu * cap / v
+        if self.ref is not None:
+            s = self.s
+            if math.dist(self.ref.pos, s.pos) > 3.0:
+                self.ref.reset(s.pos, (s.ve, s.vn, s.vu))
+            (e, n, a), (ve, vn, vu), _ = self.ref.step(sp)
+        else:
+            e, n, a = sp.pos
+            ve, vn, vu = sp.vel
+            v = math.sqrt(ve * ve + vn * vn + vu * vu)
+            cap = sp.max_speed or v
+            if v > cap > 0:
+                ve, vn, vu = ve * cap / v, vn * cap / v, vu * cap / v
         data = []
         for t in (0.0, 1.0):
             data += [t, n + vn * t + ox, e + ve * t + oy, oz - (a + vu * t), vn, ve, -vu]
@@ -179,7 +190,7 @@ class GazeboSim(FastSim):
     def __init__(self, world, seed, limits, critical_pct, aas_cfg: dict, control, **kw):
         super().__init__(world, seed, limits, critical_pct, **kw)
         self.control = control
-        self.vehicle = AASVehicle(aas_cfg)
+        self.vehicle = AASVehicle(aas_cfg, limits, self.dt)
         self.vehicle.connect(float(aas_cfg.get("connect_timeout_s", 60)))
         self.ctx.vehicle = self.vehicle
         self._wall_next = time.monotonic()

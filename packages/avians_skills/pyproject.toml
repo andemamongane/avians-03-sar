@@ -7,7 +7,7 @@ name = "avians-skills"
 version = "0.3.0"
 description = "AVIANS skill library: the high-level tools the pilot calls, built on standard algorithms"
 requires-python = ">=3.10"
-dependencies = ["numpy", "shapely>=2", "networkx", "scipy", "avians-env"]
+dependencies = ["numpy", "shapely>=2", "networkx", "scipy", "ruckig", "avians-env"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

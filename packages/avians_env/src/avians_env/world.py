@@ -173,6 +173,17 @@ class Wind:
     gust_std: float = 0.0
 
 
+@dataclass
+class Kit:
+    """The medical kit as a dropped object (avians_skills.ballistics)."""
+    mass: float = 1.0          # kg
+    cd_area: float = 0.03      # drag coefficient x frontal area, m^2
+    rho: float = 1.225         # air density, kg/m^3
+
+    def params(self) -> dict:
+        return {"mass": self.mass, "cd_area": self.cd_area, "rho": self.rho}
+
+
 # ---------------------------------------------------------------- the file
 @dataclass
 class WorldSpec:
@@ -191,6 +202,7 @@ class WorldSpec:
     safety_timeline: list[SafetyEvent] = field(default_factory=list)
     help: HelpSpec = field(default_factory=HelpSpec)
     wind: Wind = field(default_factory=Wind)
+    kit: Kit = field(default_factory=Kit)
     source: Path | None = None
 
     # ------------------------------------------------------------ loading
@@ -244,6 +256,7 @@ class WorldSpec:
                          float(h.get("wrong_location_m", 30)), float(h.get("search_penalty_s", 180)),
                          h.get("description", "Rescue crew"))
         wd = d.get("wind", {})
+        kd = d.get("kit", {})
         o = d.get("origin", {})
         w = cls(
             name=d["name"], regions=regions, description=d.get("description", ""),
@@ -253,7 +266,8 @@ class WorldSpec:
             bounds=[pos(b) for b in d.get("bounds", [])], max_alt=float(d.get("max_alt", 60)),
             obstacles=obstacles, stations=stations, depots=depots, person=person, decoys=decoys,
             safety_timeline=timeline, help=help_,
-            wind=Wind(float(wd.get("east", 0)), float(wd.get("north", 0)), float(wd.get("gust_std", 0))))
+            wind=Wind(float(wd.get("east", 0)), float(wd.get("north", 0)), float(wd.get("gust_std", 0))),
+            kit=Kit(float(kd.get("mass", 1.0)), float(kd.get("cd_area", 0.03)), float(kd.get("rho", 1.225))))
         errors = w.validate()
         if errors:
             raise WorldError("; ".join(errors))

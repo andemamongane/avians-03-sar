@@ -15,7 +15,7 @@ Stage 2 (avians-02-aas) flew single waypoints and trajectories. Stage 3 adds:
 
 - **Skills:** search a region, track or intercept the person, pick up and
   deliver a kit, recharge or swap the battery, report, and more. Each is built
-  on a standard algorithm.
+  on a standard algorithm; the list is `docs/action_space.md`.
 - **The benchmark:** a search-and-rescue mission.
 - **Pilot memory.**
 - **Decisions under simulated latency**, not lockstep.
@@ -40,7 +40,7 @@ takeoff.
 
 | Pilot | Satisfied | Notes |
 |---|---|---|
-| `scripted` (rule-based baseline) | 37 / 40 seeds | 2 battery failures: it delivers too early to last until help arrives; 1 obstacle-clearance failure |
+| `scripted` (rule-based baseline) | 39 / 40 seeds | the miss is a person not detected on the first pass over their region |
 | `haiku` (the teacher, Claude Haiku 5.5) | 1 / 1 (seed 3) | 38 decisions, $0.018, 110 s of wall time |
 
 ## Layout

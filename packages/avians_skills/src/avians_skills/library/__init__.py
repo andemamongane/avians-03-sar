@@ -1,2 +1,2 @@
 """The skill library: importing it registers every skill."""
-from . import comms, energy, movement, payload, search, swarm, targets  # noqa: F401
+from . import comms, energy, movement, payload, routes, search, swarm, targets  # noqa: F401

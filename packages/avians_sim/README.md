@@ -17,11 +17,13 @@
 
 What the fast tier models:
 
-- **Vehicle:** PX4's position-controller structure (P on position plus
-  velocity feed-forward, speed, acceleration and climb limits).
+- **Vehicle:** the shared Ruckig reference (`avians_skills.reference`):
+  jerk-limited motion under the envelope's speed, acceleration and climb
+  limits. In the fast tier the drone is its reference; in Gazebo PX4 tracks it.
 - **Ground:** take-off and landing.
 - **Battery:** the avians battery model.
 - **Camera:** the simulated detector at 4 Hz, feeding the tracker.
 - **Coverage:** the search grid.
-- **Kits:** they fall with drag and drift with the wind.
+- **Kits:** a point mass with quadratic drag in the wind plus gusts
+  (`avians_skills.ballistics`).
 - **The world's timeline:** zone closures and help.
