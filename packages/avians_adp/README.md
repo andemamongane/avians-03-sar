@@ -22,7 +22,7 @@ export for which can be added later). Each decision point is four steps:
 
 | ADP step | avians meaning | `details` |
 |---|---|---|
-| `TextObservation(source="environment")` | the decision prompt: self-contained (state, events, memory, notes, last decisions) | `t`, `decision` |
+| `TextObservation(source="environment")` | the decision prompt: self-contained (state, events, memory, notes, last decisions) | `t`, `decision`, `events` (kinds since the previous prompt: the router's input) |
 | `MessageAction` | the pilot's visible text; `reasoning_content` = its thinking summary | `t`, `decision` |
 | `ApiAction(function, kwargs, description, tool_call_id)` | the tool call: a skill or `keep`; description = its reason | `t_obs`, `t_apply`, `latency_s`, `wall_s`, `model`, `usage`, `by` (local/escalate), `route`, `state` (structured snapshot), `notes`, `decision` |
 | `TextObservation(source="environment", tool_call_id)` | what the skill replied (accepted / rejected and why); the id links it to its call | `accepted`, `decision` |
@@ -62,8 +62,9 @@ tools and the decision prompt in; the teacher's tool call out, with
    from a hash of the seed alone: every episode of a seed (any pilot) lands
    in the same split, and adding episodes never moves an old seed.
 4. **Decisions.** Dropped by default, each counted: keeps the teacher never
-   chose (`api_error`, `no_tool_call`, `router_commit`), `rejected` calls and
-   `unanswered` ones (the episode ended first). `--allow rejected,...` keeps
+   chose (`api_error`, `no_tool_call`, `router_commit`), decisions the
+   student made in an episode flown with a router (`student`), `rejected`
+   calls and `unanswered` ones (the episode ended first). `--allow rejected,...` keeps
    some anyway; `--model claude-haiku-5-5` keeps only that model's calls.
 5. **Thin (train only).** In a run of consecutive `keep` decisions with the
    same skill, skill status, mission facts, closed regions and battery band
@@ -88,6 +89,49 @@ tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision
 prompt about 0.9k), and the target is only about 25 tokens at the very end.
 Set `cutoff_len` (LLaMA-Factory) or `max_length` (TRL) to at least 8192: the
 common 2048 truncates the target away and trains on nothing.
+
+## Router set (System One)
+
+At each decision point the router chooses `commit` (keep the current skill,
+no model), `local` (the onboard student) or `escalate` (the remote teacher).
+Labels come from a teacher episode plus a student run offline on the same
+prompts:
+
+```bash
+python -m avians_adp.student_calls data/episodes/sar_supply/haiku --pilot <student>   # writes student_calls.jsonl per episode
+python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/v1            # now also writes router/
+```
+
+| Label | When |
+|---|---|
+| `commit` | the teacher called `keep` |
+| `local` | the student's call matches the teacher's: same tool, same arguments ignoring `reason`/`notes`, numbers within `routing.TOLERANCES` (e.g. 10 m for positions, 5 m for altitudes) |
+| `escalate` | anything else: a different tool or arguments, the student escalated, or it has no call |
+
+`router/<split>.jsonl` holds `id`, `text`, `label` and `options`; `text` is
+`avians_agent.router.features(state, events)`, the exact string the live
+router reads (a test flies an episode with a recording router and compares).
+`router/<split>.meta.jsonl` holds the teacher and student calls, the reason
+for the label, the state and the events. Keeps the teacher never chose (API
+errors, no tool call, router commits) are skipped; keeps are not thinned.
+Same episodes and seed splits as the pilot set.
+
+Notes:
+- `student_calls` makes a fresh pilot for each episode: a pilot may remember
+  earlier decisions (the scripted one remembers the regions it searched).
+  It asks the student only where the label depends on it (the teacher's
+  real non-keep calls, about 40 % of decisions) and gives it the `escalate`
+  tool it has in flight. Each row names its episode; the build ignores a file
+  written for another episode.
+- A failed student call (an API error) is recorded as an error and skipped
+  when labelling; a reply with no tool call is labelled `escalate`.
+- A pilot that calls an API costs money for every decision it is asked.
+- Real labels need the student model, which is still open. Until then, a
+  scripted student gives `commit` and `local` only, since it is a copy of
+  the scripted teacher.
+- The training layout for Kev or Laya depends on the System One API
+  reference (open in the notebook log). The rows are plain classification
+  data so they can be reshaped.
 
 ## Your tasks
 
@@ -114,5 +158,5 @@ common 2048 truncates the target away and trains on nothing.
 6. **Scale:** `avians rollouts ... --pilot haiku --seeds 0-999 --workers 16`
    costs about $0.02 per episode. Coordinate with Andema before large runs.
 
-The skipped tests in `tests/test_todo.py` mark tasks 2 and 4. Turn them into
-real tests as you implement them.
+Tasks 2 and 4 are tested in `tests/test_sft.py` and `tests/test_routing.py`
+(the skipped placeholders in `tests/test_todo.py` are gone).

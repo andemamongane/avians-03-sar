@@ -15,10 +15,15 @@ Pipeline, in this order:
                     <out>/pilot/<split>.meta.jsonl     id + meta per row, same order
                     <out>/pilot_lf/<split>.jsonl       LLaMA-Factory sharegpt
                     <out>/pilot_lf/dataset_info.json   avians_pilot_train / _val / _test
+    router      for episodes with a student_calls.jsonl (student_calls.py), with the
+                same episodes and splits; never thinned, no decision filter beyond
+                skipping keeps the teacher never chose (routing.py):
+                    <out>/router/<split>.jsonl         id, text (the router's features), label, options
+                    <out>/router/<split>.meta.jsonl    id + teacher/student calls, why, state, events
 
 The output folder must not contain the episodes, and must be empty unless
---force is given (which removes only pilot/ and pilot_lf/). The router set
-(Phase 4) and the manifest (Phase 5) build on this.
+--force is given (which removes only pilot/, pilot_lf/ and router/). The
+manifest (Phase 5) builds on this.
 """
 from __future__ import annotations
 
@@ -32,13 +37,15 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from .filters import BATTERY_BAND, DROPPABLE, Counts, DecisionFilter, EpisodeFilter, thin_keeps
-from .formats import write_pilot, write_sharegpt_info
+from .formats import write_jsonl, write_pilot, write_sharegpt_info
+from .routing import TOLERANCES, router_examples
 from .schema import Trajectory
 from .sft import pilot_examples
 from .splits import SPLITS, check_seed, parse_ratios, split_of
+from .student_calls import read_calls
 from .validation import validate
 
-OWNED = ("pilot", "pilot_lf")       # the only things a build writes, and the only things --force removes
+OWNED = ("pilot", "pilot_lf", "router")       # the only things a build writes, and the only things --force removes
 
 
 @dataclass
@@ -50,12 +57,14 @@ class BuildConfig:
     battery_band: float = BATTERY_BAND
     include_text: bool = False
     include_thinking: bool = False
+    tolerances: dict[str, float] = field(default_factory=lambda: dict(TOLERANCES))
 
 
 @dataclass
 class Loaded:
     trajectories: list[Trajectory] = field(default_factory=list)
     skipped: dict[str, str] = field(default_factory=dict)     # episode dir -> why
+    dirs: dict[str, Path] = field(default_factory=dict)       # episode id -> its folder
 
 
 def find_episodes(root: str | Path) -> list[Path]:
@@ -75,7 +84,24 @@ def load_valid(root: str | Path) -> Loaded:
             out.skipped[str(ep)] = "invalid: " + "; ".join(problems[:3])
             continue
         out.trajectories.append(tj)
+        out.dirs.setdefault(tj.id, ep)
     return out
+
+
+def _router_features():
+    """The live router's feature function, or None without avians_agent."""
+    try:
+        from avians_agent.router import features
+    except ImportError:
+        return None
+    return features
+
+
+def _read_events(ep: Path) -> list[dict]:
+    p = ep / "events.jsonl"
+    if not p.exists():
+        return []
+    return [json.loads(line) for line in p.read_text().splitlines() if line.strip()]
 
 
 def _check_out(episodes: Path, out: Path, force: bool) -> None:
@@ -143,18 +169,61 @@ def build(episodes: str | Path, out_dir: str | Path, config: BuildConfig | None 
             kept, counts.thinned = thin_keeps(kept, cfg.keep_every, cfg.battery_band)
         examples[split] = kept
 
+    router: dict[str, list[dict]] = {s: [] for s in SPLITS}
+    router_skipped: dict[str, int] = {}
+    router_warnings: list[str] = []
+    with_calls = {t.id: read_calls(loaded.dirs[t.id]) for s in SPLITS for t in by_split[s]}
+    with_calls = {k: v for k, v in with_calls.items() if v is not None}
+    for ep_id, calls in list(with_calls.items()):       # calls written for another (re-flown) episode
+        stale = {c["episode"] for c in calls if c.get("episode") not in (None, ep_id)}
+        if stale:
+            router_warnings.append(f"{ep_id}: student_calls.jsonl belongs to {sorted(stale)}; ignored "
+                                   "(rerun student_calls with --force)")
+            del with_calls[ep_id]
+    features = _router_features() if with_calls else None
+    if with_calls and features is None:
+        router_warnings.append("avians_agent is not installed: router examples have no `text`")
+    for split, trajs in by_split.items():
+        for tj in trajs:
+            calls = with_calls.get(tj.id)
+            if calls is None:
+                continue
+            exs, skipped = router_examples(tj, calls, features=features, tolerances=cfg.tolerances,
+                                           events=_read_events(loaded.dirs[tj.id]), models=cfg.decisions.models)
+            router[split].extend(exs)
+            for k, v in skipped.items():
+                router_skipped[k] = router_skipped.get(k, 0) + v
+    inexact = sum(1 for s in SPLITS for e in router[s] if not e["meta"]["events_exact"])
+    if inexact:
+        router_warnings.append(f"{inexact} router examples rebuilt their events from a time window "
+                               "(records made before the recorder stored them): the text may differ")
+
     _clear_out(out)
     written = {}
     for split in SPLITS:
         written.update(write_pilot(out, split, examples[split], include_text=cfg.include_text,
                                    include_thinking=cfg.include_thinking))
     write_sharegpt_info(out, list(SPLITS))
+    if with_calls:
+        for split in SPLITS:
+            p = out / "router" / f"{split}.jsonl"
+            written[str(p)] = write_jsonl(p, ({"id": e["id"], "text": e["text"], "label": e["label"],
+                                               "options": e["options"]} for e in router[split]))
+            p = out / "router" / f"{split}.meta.jsonl"
+            written[str(p)] = write_jsonl(p, ({"id": e["id"], **e["meta"], "state": e["state"],
+                                               "events": e["events"]} for e in router[split]))
 
     warnings = [f"split {s!r} is empty" for s, r in zip(SPLITS, cfg.ratios) if r > 0 and not examples[s]]
+    warnings += router_warnings
     return {
         "episodes": {s: [t.id for t in by_split[s]] for s in SPLITS},
         "examples": {s: len(examples[s]) for s in SPLITS},
         "removed": {"episodes": counts.episodes, "decisions": counts.decisions, "thinned": counts.thinned},
+        "router": {"episodes": len(with_calls),
+                   "examples": {s: len(router[s]) for s in SPLITS},
+                   "labels": {lab: sum(1 for s in SPLITS for e in router[s] if e["label"] == lab)
+                              for lab in ("commit", "local", "escalate")},
+                   "skipped": router_skipped},
         "skipped": loaded.skipped,
         "warnings": warnings,
         "written": written,
@@ -208,7 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     for w in r["warnings"]:
         print(f"warning: {w}", file=sys.stderr)
     print(json.dumps({"episodes": {s: len(v) for s, v in r["episodes"].items()}, "examples": r["examples"],
-                      "removed": r["removed"], "skipped": len(r["skipped"])}, indent=1))
+                      "removed": r["removed"], "router": r["router"], "skipped": len(r["skipped"])}, indent=1))
     return 0 if sum(r["examples"].values()) else 1
 
 

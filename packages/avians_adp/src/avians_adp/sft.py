@@ -17,7 +17,7 @@ Two datasets come out of the same trajectories:
    (Phase 3) need: error, model, accepted, robustness, ...
 
 2. Router examples (System One: commit / local / escalate):
-   `router_examples`. TODO (Phase 4).
+   `router_examples`, implemented in routing.py.
 """
 from __future__ import annotations
 
@@ -71,19 +71,26 @@ def target_arguments(kwargs: dict, reason: str, notes: str | None) -> dict[str, 
     return args
 
 
-def decision_kind(function: str, reason: str, details: dict) -> str:
-    """Whether the recorded call is one the pilot really made.
+def decision_kind(function: str, reason: str, details: dict, routed: bool = False) -> str:
+    """Whether the recorded call is one the teacher really made.
 
         call            a real tool call (including a real `keep`)
         api_error       the API failed; the loop recorded keep
-        no_tool_call    the model replied without calling a tool; the loop recorded keep
         router_commit   the router chose commit; no model was asked
+        student         the episode was flown with a router and the router
+                        chose local: the onboard student made this call
+        no_tool_call    the model replied without calling a tool; the loop recorded keep
     Only "call" is the teacher's behaviour; Phase 3 filters on this.
+    `routed`: the episode's meta names a router (loop.run_episode with
+    router=...). Then `by` says who decided: "escalate" the teacher, "local"
+    the student, "commit" nobody.
     (Matches avians_agent.pilots.AnthropicPilot.decide and loop._decide.)"""
     if details.get("error"):
         return "api_error"
     if function == "keep" and (details.get("model") == "router" or details.get("by") == "commit"):
         return "router_commit"
+    if routed and details.get("by") == "local":
+        return "student"
     if function == "keep" and reason == "no tool call":
         return "no_tool_call"
     return "call"
@@ -106,6 +113,7 @@ def pilot_examples(traj: Trajectory) -> list[dict]:
     summary = d.get("summary", {})
     score = d.get("score", {})
     robustness = summary.get("robustness", score.get("robustness"))
+    routed = bool(meta_ep.get("router"))
     satisfied = summary.get("satisfied", score.get("satisfied"))
     out = []
     for dec in decisions(traj):
@@ -127,7 +135,7 @@ def pilot_examples(traj: Trajectory) -> list[dict]:
             "state": det.get("state"),          # for keep-thinning; never written to a file
             "meta": {
                 "episode": traj.id, "seed": meta_ep.get("seed"), "pilot": meta_ep.get("pilot"),
-                "kind": decision_kind(a.function, reason, det),
+                "kind": decision_kind(a.function, reason, det, routed),
                 "model": det.get("model"), "t": det.get("t_obs", det.get("t")), "decision": n,
                 "by": det.get("by"), "error": det.get("error") or "",
                 "stop": (det.get("usage") or {}).get("stop"), "accepted": dec.accepted,
@@ -137,5 +145,9 @@ def pilot_examples(traj: Trajectory) -> list[dict]:
     return out
 
 
-def router_examples(teacher: Trajectory, student_calls: list[dict]) -> list[dict]:
-    raise NotImplementedError("McGlashan: router labels from teacher/student comparisons (Phase 4)")
+def router_examples(teacher: Trajectory, student_calls: list[dict], **kw) -> list[dict]:
+    """Router examples (commit / local / escalate) for one teacher episode.
+    See routing.router_examples for the labels and keyword arguments; this
+    returns the examples only."""
+    from .routing import router_examples as _router_examples
+    return _router_examples(teacher, student_calls, **kw)[0]

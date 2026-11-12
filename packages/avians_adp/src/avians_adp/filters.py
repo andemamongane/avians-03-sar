@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 
 from .schema import Trajectory
 
-DROPPABLE = ("api_error", "no_tool_call", "router_commit", "rejected", "unanswered")
+DROPPABLE = ("api_error", "no_tool_call", "router_commit", "student", "rejected", "unanswered")
 
 
 def number(v) -> float | None:

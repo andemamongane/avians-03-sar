@@ -28,6 +28,12 @@ the contract; the file follows ADP 1.3.1 (schema.py):
     - the thinking summary is the action's reasoning_content
     - the action carries the decision number of its prompt
     - available_apis lists the tool names from brief()
+    - each decision prompt carries `events`: the kinds of the events
+      recorded since the previous prompt, in order. The loop calls event()
+      exactly when it adds to its own `since` list and observation() when it
+      empties it, so this is the event list the router was given; a time
+      window over events.jsonl cannot reproduce it (an event stamped at a
+      decision's time may belong to either side).
 finish() always writes the files first, then validates and warns: a flight's
 record is never lost to a validation bug.
 """
@@ -53,6 +59,7 @@ class EpisodeRecorder:
         self._n_calls = 0
         self._open_call: str | None = None     # the action still waiting for its result
         self._decision: int | None = None      # the latest prompt's decision number
+        self._since: list[str] = []            # event kinds since the latest prompt
         (self.dir / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
 
     def brief(self, system: str, tools: list[dict]) -> None:
@@ -63,6 +70,8 @@ class EpisodeRecorder:
     def observation(self, text: str, t: float, source: str = "environment", **details) -> None:
         if source == "environment" and "decision" in details:
             self._decision = details["decision"]
+            details.setdefault("events", self._since)
+            self._since = []
         self.traj.content.append(TextObservation(source=source, content=text, details={"t": t, **details}))
 
     def message(self, text: str, t: float, **details) -> None:
@@ -95,6 +104,7 @@ class EpisodeRecorder:
         self._sig.write(json.dumps({"t": round(t, 2), **{k: _num(v) for k, v in values.items()}}) + "\n")
 
     def event(self, t: float, kind: str, text: str, **data) -> None:
+        self._since.append(kind)
         self._ev.write(json.dumps({"t": round(t, 2), "kind": kind, "text": text, **data}, default=str) + "\n")
 
     def finish(self, score: dict, summary: dict) -> None:
