@@ -105,8 +105,15 @@ must not contain the episodes, and must be empty unless `--force` is given.
 **Sequence length.** With the Qwen3 tokenizer an example is 6.1k–7.1k
 tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision
 prompt about 0.9k), and the target is only about 25 tokens at the very end.
-Set `cutoff_len` (LLaMA-Factory) or `max_length` (TRL) to at least 8192: the
-common 2048 truncates the target away and trains on nothing.
+Set `cutoff_len` (LLaMA-Factory) or `max_length` (TRL) to at least 8192. At the
+common 2048, LLaMA-Factory keeps the target and silently cuts the prompt to
+fit: the student then learns the right call after a prompt missing its state,
+memory and "Decide" lines.
+
+**TRL and `datasets` versions.** Load `pilot/*.jsonl` with `datasets` 5.x.
+`datasets` 4.x (which LLaMA-Factory 0.9.5 pins) pads each tool's schema with
+the other tools' properties as nulls when it loads the `tools` list. The
+LLaMA-Factory files store `tools` as a JSON string and are unaffected.
 
 ## Router set (System One)
 

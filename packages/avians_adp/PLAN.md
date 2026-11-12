@@ -567,6 +567,19 @@ Haiku budget) still to ask Andema. 0.2 (format spike) run on 2026-11-11 in `~/.c
 - `python -m pytest` passes at the root: **yes**.
 - Open: gate 2.6c / 5.5 (real Haiku episodes); real router labels (need the student model).
 
+**Final review (task 3 of the Phase 5 request).** A Fable reviewer checked the whole package against
+the notebook, and edited REPORT.md only. Verdict: the goal is accomplished as the notebook defines it.
+Findings and what was done:
+- D1: the TRL `tools` list is null-padded by `datasets` 4.0.0 (667 nulls/row) but not by 5.2.0 (0;
+  measured both). The earlier gate ran with 5.x before LLaMA-Factory downgraded that venv. Documented in
+  the README and REPORT; the layout choice is left to Austin.
+- D2: `ruff --fix` had rewritten `timezone.utc` as 3.11-only `datetime.UTC`. Fixed; the full root suite
+  now passes on Python 3.10.22 (178 passed, 2 skipped; `venv310`).
+- D3: "2048 trains on nothing" was wrong (LLaMA-Factory cuts the prompt, keeps the target). README
+  corrected.
+- D4 (a missing student row becomes escalate, uncounted) and D5 (the loader test is skipped in `.venv`)
+  are open; see REPORT.md section 7.
+
 ## Setup state
 
 - Branch `mcglashan/adp-datasets` exists; nothing is committed.

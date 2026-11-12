@@ -16,7 +16,7 @@ import dataclasses
 import hashlib
 import subprocess
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .formats import ENCODING
@@ -103,7 +103,7 @@ def make_manifest(*, root: Path, episodes_dir: Path, config, found: int, loaded_
     }
     out = {
         "format": FORMAT,
-        "created": datetime.now(UTC).isoformat(timespec="seconds"),
+        "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "avians_adp": package_version(),
         "adp_schema": {"version": SCHEMA_VERSION, "upstream": UPSTREAM},
         "git": git_info(),

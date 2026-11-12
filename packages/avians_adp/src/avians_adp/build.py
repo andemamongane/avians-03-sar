@@ -42,7 +42,7 @@ import shutil
 import sys
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -175,7 +175,7 @@ def default_out() -> Path:
     """data/datasets/build-<UTC time> under the repository root when the
     package runs from a checkout (data/ is gitignored there), else under the
     current folder."""
-    name = f"build-{datetime.now(UTC):%Y%m%d-%H%M%S}"
+    name = f"build-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / ".git").exists() and (parent / "packages" / "avians_adp").exists():
