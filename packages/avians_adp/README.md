@@ -42,6 +42,33 @@ This is storage option A: the full growing history. The pilot itself sees
 option C: a window plus structured memory. Each prompt already contains
 everything needed, so one decision makes one training example.
 
+## Building datasets
+
+```bash
+python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/pilot_v1
+```
+
+Every `trajectory.json` under the folder is validated; invalid ones are
+skipped and reported. Each decision with an action becomes one example: the
+system prompt, the tools and the decision prompt in; the teacher's tool call
+out, with `reason` (and `notes`) put back into its arguments.
+
+| File | Layout |
+|---|---|
+| `pilot/all.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` |
+| `pilot/all.meta.jsonl` | `id` + `meta` per row (episode, seed, model, error, accepted, robustness, ...), same order |
+| `pilot_lf/all.jsonl`, `pilot_lf/dataset_info.json` | LLaMA-Factory sharegpt: set `dataset_dir` to `pilot_lf`, `dataset: avians_pilot_all`, `template: qwen3` |
+
+`--text` and `--thinking` add the pilot's visible text and thinking summary
+to the TRL layout (the sharegpt `function_call` turn has no place for them).
+The output folder must be empty unless `--force` is given.
+
+**Sequence length.** With the Qwen3 tokenizer an example is 6.1k–7.1k
+tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision
+prompt about 0.9k), and the target is only about 25 tokens at the very end.
+Set `cutoff_len` (LLaMA-Factory) or `max_length` (TRL) to at least 8192: the
+common 2048 truncates the target away and trains on nothing.
+
 ## Your tasks
 
 1. **Schema:** check `schema.py` against the upstream ADP repository (field
