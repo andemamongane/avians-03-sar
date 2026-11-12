@@ -16,12 +16,22 @@ for step in traj.content:
 
 ## What an episode contains (written by `avians_agent.loop`)
 
+The record follows the standardized ADP schema 1.3.1 (`schema.py` mirrors
+`neulab/agent-data-protocol@274f935a`; upstream has since moved to ATIF, an
+export for which can be added later). Each decision point is four steps:
+
 | ADP step | avians meaning | `details` |
 |---|---|---|
 | `TextObservation(source="environment")` | the decision prompt: self-contained (state, events, memory, notes, last decisions) | `t`, `decision` |
-| `MessageAction` | the pilot's visible text | `thinking` (summary), `decision` |
-| `APIAction(function, kwargs, description)` | the tool call: a skill or `keep`; description = its reason | `t_obs`, `t_apply`, `latency_s`, `wall_s`, `model`, `usage`, `by` (local/escalate), `route`, `state` (structured snapshot), `notes` |
-| `TextObservation(source="tool")` | what the skill replied (accepted / rejected and why) | `accepted` |
+| `MessageAction` | the pilot's visible text; `reasoning_content` = its thinking summary | `t`, `decision` |
+| `ApiAction(function, kwargs, description, tool_call_id)` | the tool call: a skill or `keep`; description = its reason | `t_obs`, `t_apply`, `latency_s`, `wall_s`, `model`, `usage`, `by` (local/escalate), `route`, `state` (structured snapshot), `notes`, `decision` |
+| `TextObservation(source="environment", tool_call_id)` | what the skill replied (accepted / rejected and why); the id links it to its call | `accepted`, `decision` |
+
+`Trajectory.available_apis` lists the tool names. `decisions(traj)` groups
+the steps per decision point; `validate(traj)` checks a record (every
+`finish()` runs it and warns), and `python -m avians_adp validate <dir>`
+checks a folder. Records written before `schema_version` existed
+(`source="tool"`, no call ids) are upgraded on load.
 
 `Trajectory.details` holds the system prompt, the tool definitions, the meta
 (seed, pilot, scenario truth), the final STL score and the summary. Next to
