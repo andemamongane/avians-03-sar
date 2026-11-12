@@ -80,9 +80,27 @@ tools and the decision prompt in; the teacher's tool call out, with
 The command prints what each stage removed and warns about an empty split
 (likely with only a few seeds). `--text` and `--thinking` add the pilot's
 visible text and thinking summary to the TRL layout (the sharegpt
-`function_call` turn has no place for them). The output folder must not
-contain the episodes, and must be empty unless `--force` is given, which
-replaces only `pilot/` and `pilot_lf/`.
+`function_call` turn has no place for them).
+
+**Manifest.** Every build writes `manifest.json`. It records:
+- the episodes folder, the episodes skipped and why, and the episode ids per
+  split;
+- the counts per split, tool, pilot and model, and what each filter removed;
+- the full settings, the git commit (and whether the tree had uncommitted
+  changes), the ADP schema version and the file encoding;
+- a sha256 and row count for every file, and a `data_digest` over all of
+  them.
+
+Two builds of the same episodes with the same settings and code have the
+same `data_digest`.
+
+**Output folder.** Without an output folder the build goes to
+`data/datasets/build-<UTC time>` (`data/` is gitignored). Files are written
+to a staging folder and moved into place only when complete, so a failed
+build leaves no half dataset and keeps the previous one. The output folder
+must not contain the episodes, and must be empty unless `--force` is given.
+`--force` replaces only what a build writes (`pilot/`, `pilot_lf/`,
+`router/`, `manifest.json`).
 
 **Sequence length.** With the Qwen3 tokenizer an example is 6.1k–7.1k
 tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision

@@ -21,23 +21,35 @@ Pipeline, in this order:
                     <out>/router/<split>.jsonl         id, text (the router's features), label, options
                     <out>/router/<split>.meta.jsonl    id + teacher/student calls, why, state, events
 
-The output folder must not contain the episodes, and must be empty unless
---force is given (which removes only pilot/, pilot_lf/ and router/). The
-manifest (Phase 5) builds on this.
+    manifest    <out>/manifest.json: sources, settings, git commit, counts, and a
+                sha256 + row count per file (manifest.py)
+
+Everything is written to a staging folder beside <out> and moved into place
+only when complete, so a failed build never leaves half a dataset and never
+costs the previous one. The output folder must not contain the episodes, and
+must be empty unless --force is given (which replaces only pilot/, pilot_lf/,
+router/ and manifest.json). The staging folder lives inside <out>, and the
+swap renames the previous build aside before moving the new one in, so any
+failure restores it. Without <out>, the build goes to
+data/datasets/build-<UTC time> (data/ is gitignored).
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
+import uuid
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from .filters import BATTERY_BAND, DROPPABLE, Counts, DecisionFilter, EpisodeFilter, thin_keeps
 from .formats import write_jsonl, write_pilot, write_sharegpt_info
+from .manifest import MANIFEST, make_manifest
 from .routing import TOLERANCES, router_examples
 from .schema import Trajectory
 from .sft import pilot_examples
@@ -45,7 +57,7 @@ from .splits import SPLITS, check_seed, parse_ratios, split_of
 from .student_calls import read_calls
 from .validation import validate
 
-OWNED = ("pilot", "pilot_lf", "router")       # the only things a build writes, and the only things --force removes
+OWNED = ("pilot", "pilot_lf", "router", MANIFEST)       # the only things a build writes, and the only things --force removes
 
 
 @dataclass
@@ -62,6 +74,7 @@ class BuildConfig:
 
 @dataclass
 class Loaded:
+    found: int = 0
     trajectories: list[Trajectory] = field(default_factory=list)
     skipped: dict[str, str] = field(default_factory=dict)     # episode dir -> why
     dirs: dict[str, Path] = field(default_factory=dict)       # episode id -> its folder
@@ -73,7 +86,9 @@ def find_episodes(root: str | Path) -> list[Path]:
 
 def load_valid(root: str | Path) -> Loaded:
     out = Loaded()
-    for ep in find_episodes(root):
+    eps = find_episodes(root)
+    out.found = len(eps)
+    for ep in eps:
         try:
             tj = Trajectory.model_validate_json((ep / "trajectory.json").read_text())
         except (ValidationError, ValueError, OSError) as e:
@@ -104,29 +119,72 @@ def _read_events(ep: Path) -> list[dict]:
     return [json.loads(line) for line in p.read_text().splitlines() if line.strip()]
 
 
+STAGE, ASIDE = ".building-", ".previous-"     # hidden folders a build uses inside <out>
+
+
 def _check_out(episodes: Path, out: Path, force: bool) -> None:
-    """Refuse an output folder that holds the episodes, is a file, or is not
-    empty (without force). Deletes nothing: see _clear_out."""
+    """Refuse an output folder that holds the episodes or lies inside them, is
+    a file, or is not empty (without force). Deletes nothing."""
     ep, o = episodes.resolve(), out.resolve()
     if ep == o or o in ep.parents:
         raise ValueError(f"the output folder {out} contains the episodes {episodes}; choose another")
+    if ep in o.parents:
+        raise ValueError(f"the output folder {out} is inside the episodes folder {episodes}; choose another")
     if out.exists() and not out.is_dir():
         raise FileExistsError(f"{out} exists and is not a folder")
-    if out.exists() and any(out.iterdir()) and not force:
+    if out.exists() and not force and any(not p.name.startswith(STAGE) for p in out.iterdir()):
         raise FileExistsError(f"{out} is not empty; pass force=True (--force) to replace a previous build")
 
 
-def _clear_out(out: Path) -> None:
-    """With force, remove only what a build writes, never the whole folder
-    (it may hold anything). Called only once every input check has passed,
-    so a bad option never costs the previous build."""
-    for name in OWNED:
-        if (out / name).is_dir():
-            shutil.rmtree(out / name)
+def _install(stage: Path, out: Path) -> None:
+    """Swap the staged build into <out> as one transaction.
+
+    The previous build's items are renamed aside (never deleted first), the
+    new items are renamed in with manifest.json last, and only then is the
+    old copy deleted. Any failure puts the previous build back and removes
+    what was moved in. All renames stay inside <out>, so they never cross a
+    filesystem (an <out> that is a symlink or a mount point works)."""
+    aside = out / f"{ASIDE}{stage.name[len(STAGE):]}"
+    aside.mkdir()
+    moved_aside, moved_in = [], []
+    new = sorted(p.name for p in stage.iterdir())
+    new = [n for n in new if n != MANIFEST] + ([MANIFEST] if MANIFEST in new else [])
+    try:
+        for name in OWNED:
+            if (out / name).exists() or (out / name).is_symlink():
+                os.replace(out / name, aside / name)
+                moved_aside.append(name)
+        for name in new:
+            os.replace(stage / name, out / name)
+            moved_in.append(name)
+    except BaseException:
+        for name in reversed(moved_in):                     # take the new items back out
+            p = out / name
+            if p.is_dir() and not p.is_symlink():
+                shutil.rmtree(p, ignore_errors=True)
+            else:
+                p.unlink(missing_ok=True)
+        for name in moved_aside:                            # and the previous build back in
+            os.replace(aside / name, out / name)
+        shutil.rmtree(aside, ignore_errors=True)
+        raise
+    shutil.rmtree(aside, ignore_errors=True)
+
+
+def default_out() -> Path:
+    """data/datasets/build-<UTC time> under the repository root when the
+    package runs from a checkout (data/ is gitignored there), else under the
+    current folder."""
+    name = f"build-{datetime.now(UTC):%Y%m%d-%H%M%S}"
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / ".git").exists() and (parent / "packages" / "avians_adp").exists():
+            return parent / "data" / "datasets" / name
+    return Path("data") / "datasets" / name
 
 
 def build(episodes: str | Path, out_dir: str | Path, config: BuildConfig | None = None, *,
-          force: bool = False) -> dict:
+          force: bool = False, argv: list[str] | None = None) -> dict:
     cfg = config or BuildConfig()
     if cfg.keep_every < 1:
         raise ValueError("keep_every must be >= 1")
@@ -198,27 +256,49 @@ def build(episodes: str | Path, out_dir: str | Path, config: BuildConfig | None 
         router_warnings.append(f"{inexact} router examples rebuilt their events from a time window "
                                "(records made before the recorder stored them): the text may differ")
 
-    _clear_out(out)
-    written = {}
-    for split in SPLITS:
-        written.update(write_pilot(out, split, examples[split], include_text=cfg.include_text,
-                                   include_thinking=cfg.include_thinking))
-    write_sharegpt_info(out, list(SPLITS))
-    if with_calls:
-        for split in SPLITS:
-            p = out / "router" / f"{split}.jsonl"
-            written[str(p)] = write_jsonl(p, ({"id": e["id"], "text": e["text"], "label": e["label"],
-                                               "options": e["options"]} for e in router[split]))
-            p = out / "router" / f"{split}.meta.jsonl"
-            written[str(p)] = write_jsonl(p, ({"id": e["id"], **e["meta"], "state": e["state"],
-                                               "events": e["events"]} for e in router[split]))
-
     warnings = [f"split {s!r} is empty" for s, r in zip(SPLITS, cfg.ratios) if r > 0 and not examples[s]]
     warnings += router_warnings
+    removed = {"episodes": counts.episodes, "decisions": counts.decisions, "thinned": counts.thinned}
+
+    out.mkdir(parents=True, exist_ok=True)
+    for old in out.glob(f"{STAGE}*"):                    # left by a killed build: incomplete, never installed
+        shutil.rmtree(old, ignore_errors=True)
+    leftovers = sorted(p.name for p in out.glob(f"{ASIDE}*"))
+    if leftovers:                                        # a build killed mid-swap: may hold the only old copy
+        warnings.append(f"{out} holds {leftovers} from an interrupted build; check and delete them")
+    stage = out / f"{STAGE}{uuid.uuid4().hex[:8]}"       # inside <out>: an unwritable <out> fails here,
+    stage.mkdir()                                        # before anything is touched
+    try:
+        for split in SPLITS:
+            write_pilot(stage, split, examples[split], include_text=cfg.include_text,
+                        include_thinking=cfg.include_thinking)
+        write_sharegpt_info(stage, list(SPLITS))
+        if with_calls:
+            for split in SPLITS:
+                write_jsonl(stage / "router" / f"{split}.jsonl",
+                            ({"id": e["id"], "text": e["text"], "label": e["label"], "options": e["options"]}
+                             for e in router[split]))
+                write_jsonl(stage / "router" / f"{split}.meta.jsonl",
+                            ({"id": e["id"], **e["meta"], "state": e["state"], "events": e["events"]}
+                             for e in router[split]))
+        manifest = make_manifest(
+            root=stage, episodes_dir=Path(episodes), config=cfg, found=loaded.found,
+            loaded_ids=[t.id for t in loaded.trajectories], skipped=loaded.skipped,
+            by_split={s: [t.id for t in by_split[s]] for s in SPLITS}, examples=examples, removed=removed,
+            router=router if with_calls else None, router_skipped=router_skipped, warnings=warnings, argv=argv)
+        (stage / MANIFEST).write_text(json.dumps(manifest, indent=1) + "\n", encoding="utf-8")
+        _install(stage, out)                   # only now: every check passed and every file is written
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
+
+    written = {str(out / k): v.get("rows") for k, v in manifest["files"].items()}
     return {
+        "out": str(out),
         "episodes": {s: [t.id for t in by_split[s]] for s in SPLITS},
         "examples": {s: len(examples[s]) for s in SPLITS},
-        "removed": {"episodes": counts.episodes, "decisions": counts.decisions, "thinned": counts.thinned},
+        "removed": removed,
+        "manifest": str(out / MANIFEST),
+        "data_digest": manifest["data_digest"],
         "router": {"episodes": len(with_calls),
                    "examples": {s: len(router[s]) for s in SPLITS},
                    "labels": {lab: sum(1 for s in SPLITS for e in router[s] if e["label"] == lab)
@@ -247,8 +327,8 @@ def config_from_args(a: argparse.Namespace) -> BuildConfig:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m avians_adp.build", description="Build pilot SFT sets.")
     ap.add_argument("episodes", help="folder searched recursively for trajectory.json")
-    ap.add_argument("out", help="output folder (must be empty unless --force)")
-    ap.add_argument("--force", action="store_true", help="replace a previous build (only pilot/ and pilot_lf/)")
+    ap.add_argument("out", nargs="?", help="output folder, empty unless --force (default data/datasets/build-<time>)")
+    ap.add_argument("--force", action="store_true", help="replace a previous build (only pilot/, pilot_lf/, router/, manifest.json)")
     g = ap.add_argument_group("episodes")
     g.add_argument("--satisfied", action="store_true", help="only episodes that satisfied the whole spec")
     g.add_argument("--min-robustness", type=float, help="only episodes with robustness >= this")
@@ -268,7 +348,8 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--thinking", action="store_true", help="TRL layout: include the thinking summary")
     a = ap.parse_args(argv)
     try:
-        r = build(a.episodes, a.out, config_from_args(a), force=a.force)
+        r = build(a.episodes, a.out or default_out(), config_from_args(a), force=a.force,
+                  argv=["python", "-m", "avians_adp.build", *(argv if argv is not None else sys.argv[1:])])
     except (OSError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
@@ -276,7 +357,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"skipped {ep}: {why}", file=sys.stderr)
     for w in r["warnings"]:
         print(f"warning: {w}", file=sys.stderr)
-    print(json.dumps({"episodes": {s: len(v) for s, v in r["episodes"].items()}, "examples": r["examples"],
+    print(json.dumps({"out": r["out"], "data_digest": r["data_digest"],
+                      "episodes": {s: len(v) for s, v in r["episodes"].items()}, "examples": r["examples"],
                       "removed": r["removed"], "router": r["router"], "skipped": len(r["skipped"])}, indent=1))
     return 0 if sum(r["examples"].values()) else 1
 
