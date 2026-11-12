@@ -1,0 +1,63 @@
+{
+  "robustness": -995.0,
+  "satisfied": false,
+  "clauses": [
+    {
+      "clause": "no_fly",
+      "formula": "G[0,1500] !in(nofly_power)",
+      "robustness": 5.637,
+      "satisfied": true
+    },
+    {
+      "clause": "closed_zones",
+      "formula": "G[0,1500] (forall z in zones: ((H[0,30] z.unsafe) -> !in(z)))",
+      "robustness": 0.5,
+      "satisfied": true
+    },
+    {
+      "clause": "battery",
+      "formula": "G[0,1500] battery >= 10",
+      "robustness": 35.673,
+      "satisfied": true
+    },
+    {
+      "clause": "clearance",
+      "formula": "G[0,1500] clearance >= 3",
+      "robustness": 3.053,
+      "satisfied": true
+    },
+    {
+      "clause": "find",
+      "formula": "F[0,900] found",
+      "robustness": 0.5,
+      "satisfied": true
+    },
+    {
+      "clause": "patrol",
+      "formula": "G[0,900] (forall z in search_zones: ((!O found) -> F[0,600] (in(z) | found | z.unsafe)))",
+      "robustness": 0.5,
+      "satisfied": true
+    },
+    {
+      "clause": "report",
+      "formula": "G[0,1300] (found -> F[0,120] help_dispatched)",
+      "robustness": 0.5,
+      "satisfied": true
+    },
+    {
+      "clause": "deliver",
+      "formula": "F[0,1500] drop_err <= 5",
+      "robustness": -995.0,
+      "satisfied": false
+    },
+    {
+      "clause": "stay",
+      "formula": "G[0,1500] (((O released) & !help & !person_zone_closed) -> dist_person <= 30)",
+      "robustness": 0.5,
+      "satisfied": true
+    }
+  ],
+  "horizon_s": 1500.0,
+  "flight_end_s": 749.0,
+  "dt_s": 0.5
+}

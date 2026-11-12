@@ -125,6 +125,15 @@ the branch's release or shared separately), is two Claude Haiku 5.5 pilots
 flying `sar_supply_2drones` seed 3: all 13 promises kept, kit 0.9 m from the
 hiker, 52 decisions, $0.028 of model calls.
 
+## Testing on the Linux machine (start here)
+
+`docs/linux_test.md` is the step-by-step: clone the branch, start AAS, start
+the container, then `./scripts/linux_demo.sh`. That script replays the
+committed example episodes (`examples/episodes/`: one drone in a storm, two
+Haiku pilots in a storm) in AAS's Gazebo with chase and overview video, writes
+QGroundControl logs and 2D replays, optionally flies live through PX4
+(`LIVE=1`), and packs everything into one archive.
+
 ## Flying and recording in Gazebo (Linux GPU machine)
 
 The Gazebo tier flies the same pilot loop, skills and reflex layer against

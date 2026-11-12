@@ -1,0 +1,298 @@
+{
+  "episode": "sar_supply_2drones_claude-haiku-5-5_s0037",
+  "mission": "sar_supply_2drones",
+  "world": "sar_valley",
+  "seed": 37,
+  "pilot": "claude-haiku-5-5",
+  "remote_pilot": null,
+  "router": null,
+  "tier": "fast",
+  "drones": [
+    "d1",
+    "d2"
+  ],
+  "envelope": "standard",
+  "horizon_s": 1500.0,
+  "wake_s": 45.0,
+  "person": [
+    293.7998430951986,
+    220.15775621830434
+  ],
+  "help_delay_s": 639.5218605761038,
+  "scenario": {
+    "person": [
+      293.7998430951986,
+      220.15775621830434
+    ],
+    "person_region": "r3",
+    "help_delay_s": 639.5218605761038,
+    "timeline": [
+      {
+        "t": 20.4,
+        "zone": "north_scree",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 20.4,
+        "zone": "r4",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 25.4,
+        "zone": "r4",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 30.4,
+        "zone": "summit",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 90.4,
+        "zone": "north_scree",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 170.4,
+        "zone": "summit",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 251.5,
+        "zone": "east_ridge",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 251.5,
+        "zone": "summit",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 281.5,
+        "zone": "east_ridge",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 286.5,
+        "zone": "summit",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 428.5,
+        "zone": "r1",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 428.5,
+        "zone": "r2",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 428.5,
+        "zone": "r3",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 428.5,
+        "zone": "saddle",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 483.5,
+        "zone": "boulder_field",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 488.5,
+        "zone": "east_ridge",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 493.5,
+        "zone": "saddle",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 503.5,
+        "zone": "r1",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 538.5,
+        "zone": "creek_mouth",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 538.5,
+        "zone": "lower_creek",
+        "safe": false,
+        "note": "Storm cell overhead: zone closed until it passes"
+      },
+      {
+        "t": 553.5,
+        "zone": "lower_creek",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 554.8,
+        "zone": "fire_scrub",
+        "safe": false,
+        "note": "Fire crews closed the zone: the fire is spreading"
+      },
+      {
+        "t": 563.5,
+        "zone": "r3",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 578.5,
+        "zone": "east_ridge",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 588.5,
+        "zone": "r2",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 698.5,
+        "zone": "boulder_field",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      },
+      {
+        "t": 698.5,
+        "zone": "creek_mouth",
+        "safe": true,
+        "note": "the storm has passed; zone reopened"
+      }
+    ],
+    "descriptions": {
+      "home_base": "Launch pad, charging pad and the kit depot. A hangar: storms never close it.",
+      "trailhead": "Car park and the trail's first bend; open gravel.",
+      "lower_creek": "The creek runs into a gorge; steep banks.",
+      "creek_mouth": "Marshy flats where the creek leaves the valley.",
+      "west_woods": "Dense mixed woods; the canopy hides the ground.",
+      "r1": "Open grass, good visibility. The trail crosses it.",
+      "r2": "Rocky creek bed; the phone's last ping. Grey boulders look like people from above.",
+      "boulder_field": "Jumbled boulders east of the creek.",
+      "nofly_power": "High-voltage line. Never cross it; go around its west end.",
+      "fire_scrub": "Dry scrub; fire crews may close it.",
+      "saddle": "Grassy saddle between the meadow and the ridge; the forward swap station.",
+      "r3": "Steep slope with a stand of tall pines; the likeliest place to fall.",
+      "east_ridge": "Exposed ridge; storms come in from here.",
+      "west_ridge": "Dry ridge top above the scrub.",
+      "r4": "Clearing on the ridge with a campsite.",
+      "north_scree": "Loose scree under the summit.",
+      "summit": "Bare summit; strong winds."
+    },
+    "decoys": [
+      {
+        "id": "tent",
+        "position": [
+          110.0,
+          400.0
+        ],
+        "strength": 0.35
+      },
+      {
+        "id": "boulder",
+        "position": [
+          300.0,
+          90.0
+        ],
+        "strength": 0.25
+      }
+    ],
+    "wind": {
+      "east": 2.0,
+      "north": -1.0,
+      "gust_std": 0.8
+    },
+    "region_weights": {
+      "r1": 0.1,
+      "r2": 0.25,
+      "r3": 0.45,
+      "r4": 0.2
+    },
+    "motion": "static",
+    "speed": 0.0,
+    "news": [],
+    "storms": [
+      {
+        "id": "storm1",
+        "t0": 20.43,
+        "t1": 651.34,
+        "x0": 253.43,
+        "y0": 506.11,
+        "vx": 2.21,
+        "vy": -0.72,
+        "radius": 63.85
+      },
+      {
+        "id": "storm2",
+        "t0": 251.5,
+        "t1": 799.45,
+        "x0": 525.64,
+        "y0": 363.84,
+        "vx": 2.69,
+        "vy": 0.44,
+        "radius": 96.37
+      },
+      {
+        "id": "storm3",
+        "t0": 428.52,
+        "t1": 930.5,
+        "x0": 180.01,
+        "y0": 200.62,
+        "vx": 1.61,
+        "vy": -0.56,
+        "radius": 87.59
+      }
+    ],
+    "fires": [
+      {
+        "zone": "fire_scrub",
+        "t": 554.8,
+        "from": null
+      }
+    ]
+  },
+  "latency": {
+    "d1": {
+      "local": {
+        "median_s": 2.5,
+        "sigma": 0.45,
+        "floor_s": 0.3
+      },
+      "escalate": {
+        "median_s": 2.5,
+        "sigma": 0.45,
+        "floor_s": 0.3
+      }
+    }
+  }
+}

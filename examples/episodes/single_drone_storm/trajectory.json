@@ -1,0 +1,4057 @@
+{
+ "id": "sar_supply_scripted_s0000",
+ "content": [
+  {
+   "details": {
+    "t": 0.0,
+    "decision": 1
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=0.0 s of 1500 s\nDRONE at (0, 0) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 100.0 % (~12.2 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: no skill has run yet\nLAST RESULT: (none)\nEVENTS since the last decision:\n- (none)\nPERSON: not found; no credible candidate (0 weak track(s))\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 0% seen, never, P 10%; r2 0% seen, never, P 25%; r3 0% seen, never, P 45%; r4 0% seen, never, P 20%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 20 m, ~0 %; pad_swap (swap) 304 m, ~4 %; depot base 10 m, ~0 % (1 kit(s) left)\nMISSION MEMORY:\n(none yet)\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n(none yet)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 0.0,
+    "notes": null,
+    "t_obs": 0.0,
+    "t_apply": 0.0,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 0.0,
+     "east": 0.0,
+     "north": 0.0,
+     "alt": 0.0,
+     "battery": 100.0,
+     "landed": true,
+     "payload": false,
+     "released": false,
+     "skill": null,
+     "skill_status": null,
+     "skill_args": {},
+     "rejected": [],
+     "belief": {
+      "east": 229.4951730279504,
+      "north": 247.6491028080405,
+      "sigma": 117.095600199308,
+      "conf": 0.0,
+      "found": false,
+      "source": "prior",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 0.27411111111111114,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "takeoff",
+   "kwargs": {
+    "alt": 30
+   },
+   "description": "start the search"
+  },
+  {
+   "details": {
+    "t": 0.0,
+    "accepted": true,
+    "decision": 1
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started takeoff(alt=30.0)"
+  },
+  {
+   "details": {
+    "t": 11.399999999999975,
+    "decision": 2
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=11.4 s of 1500 s\nDRONE at (0, 0) alt 30 m, speed 0.0 m/s, flying; battery 98.3 % (~11.9 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: last skill takeoff(alt=30.0) succeeded: at 30 m\nLAST RESULT: (decided at t=0, applied at t=0) takeoff(alt=30): started takeoff(alt=30.0)\nEVENTS since the last decision:\n- t=11 skill_done: takeoff: at 30 m\nPERSON: not found; no credible candidate (0 weak track(s))\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 0% seen, never, P 10%; r2 0% seen, never, P 25%; r3 0% seen, never, P 45%; r4 0% seen, never, P 20%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 20 m, ~0 %; pad_swap (swap) 304 m, ~4 %; depot base 10 m, ~0 % (1 kit(s) left)\nMISSION MEMORY:\n(none yet)\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=0 takeoff(alt=30) -> started takeoff(alt=30.0)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 11.399999999999975,
+    "notes": null,
+    "t_obs": 11.4,
+    "t_apply": 11.4,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 11.4,
+     "east": 0.0,
+     "north": 0.0,
+     "alt": 29.98987005572352,
+     "battery": 98.31224695518293,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "takeoff",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "alt": 30.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 229.4951730279504,
+      "north": 247.6491028080405,
+      "sigma": 117.095600199308,
+      "conf": 0.0,
+      "found": false,
+      "source": "prior",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 0.27411111111111114,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_region",
+   "kwargs": {
+    "region": "r3",
+    "alt": 30
+   },
+   "description": "search r3 (prior 45%)"
+  },
+  {
+   "details": {
+    "t": 11.399999999999975,
+    "accepted": true,
+    "decision": 2
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s"
+  },
+  {
+   "details": {
+    "t": 56.40000000000053,
+    "decision": 3
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=56.4 s of 1500 s\nDRONE at (207, 284) alt 30 m, speed 8.8 m/s, flying; battery 92.9 % (~11.2 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\nLAST RESULT: (decided at t=11, applied at t=11) search_region(region=r3, alt=30): started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s\nEVENTS since the last decision:\n- (none)\nPERSON: not found; no credible candidate (0 weak track(s))\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 7 s ago, P 7%; r2 0% seen, never, P 28%; r3 16% seen, last 0 s ago, P 42%; r4 0% seen, never, P 22%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 363 m, ~5 %; pad_swap (swap) 77 m, ~1 %; depot base 343 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n(none yet)\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=0 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=11 search_region(region=r3, alt=30) -> started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 56.40000000000053,
+    "notes": null,
+    "t_obs": 56.4,
+    "t_apply": 56.4,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 56.4,
+     "east": 206.78022263872302,
+     "north": 283.6448728397036,
+     "alt": 29.999999999237307,
+     "battery": 92.89865038303297,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "search_region",
+     "skill_status": "running",
+     "skill_args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 229.4951730279504,
+      "north": 247.6491028080405,
+      "sigma": 117.095600199308,
+      "conf": 0.0,
+      "found": false,
+      "source": "prior",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 4.977281206688755,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 56.40000000000053,
+    "accepted": true,
+    "decision": 3
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left"
+  },
+  {
+   "details": {
+    "t": 90.09999999999916,
+    "decision": 4
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=90.1 s of 1500 s\nDRONE at (331, 217) alt 30 m, speed 7.1 m/s, flying; battery 88.9 % (~10.7 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\nLAST RESULT: (decided at t=56, applied at t=56) keep(): kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\nEVENTS since the last decision:\n- t=76 progress: search of r3: 25% of the pattern flown, 44% of the region seen\n- t=90 message: radio from operator [tasking]: base: search priority is the pine slope, then the creek; report as soon as you have a sighting\nPERSON: not found; no credible candidate (1 weak track(s))\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 41 s ago, P 10%; r2 0% seen, never, P 36%; r3 62% seen, last 0 s ago, P 25%; r4 0% seen, never, P 29%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 413 m, ~6 %; pad_swap (swap) 209 m, ~3 %; depot base 390 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n(none yet)\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=0 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=11 search_region(region=r3, alt=30) -> started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s\n- t=56 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 90.09999999999916,
+    "notes": null,
+    "t_obs": 90.1,
+    "t_apply": 90.1,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 90.1,
+     "east": 331.15029278277075,
+     "north": 216.83553652370145,
+     "alt": 30.00000000000001,
+     "battery": 88.88396276204321,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "search_region",
+     "skill_status": "running",
+     "skill_args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 229.4951730279504,
+      "north": 247.6491028080405,
+      "sigma": 117.095600199308,
+      "conf": 0.000028444243660931967,
+      "found": false,
+      "source": "prior",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 5.656330732422491,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 90.09999999999916,
+    "accepted": true,
+    "decision": 4
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left"
+  },
+  {
+   "details": {
+    "t": 135.1999999999966,
+    "decision": 5
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=135.2 s of 1500 s\nDRONE at (247, 255) alt 30 m, speed 8.8 m/s, flying; battery 83.5 % (~9.9 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\nLAST RESULT: (decided at t=90, applied at t=90) keep(): kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\nEVENTS since the last decision:\n- t=102 progress: search of r3: 50% of the pattern flown, 75% of the region seen\n- t=130 progress: search of r3: 75% of the pattern flown, 83% of the region seen\nPERSON: not found; no credible candidate (2 weak track(s))\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 31 s ago, P 12%; r2 0% seen, never, P 44%; r3 90% seen, last 0 s ago, P 8%; r4 0% seen, never, P 35%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 369 m, ~5 %; pad_swap (swap) 118 m, ~2 %; depot base 347 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n(none yet)\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=0 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=11 search_region(region=r3, alt=30) -> started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s\n- t=56 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\n- t=90 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 135.1999999999966,
+    "notes": null,
+    "t_obs": 135.2,
+    "t_apply": 135.2,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 135.2,
+     "east": 246.5341437701584,
+     "north": 254.84709373083905,
+     "alt": 30.00000000000001,
+     "battery": 83.49932432904957,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "search_region",
+     "skill_status": "running",
+     "skill_args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 229.4951730279504,
+      "north": 247.6491028080405,
+      "sigma": 117.095600199308,
+      "conf": 0.00021214432842699574,
+      "found": false,
+      "source": "prior",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 5.054126699731793,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 135.1999999999966,
+    "accepted": true,
+    "decision": 5
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left"
+  },
+  {
+   "details": {
+    "t": 156.69999999999538,
+    "decision": 6
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=156.7 s of 1500 s\nDRONE at (291, 281) alt 30 m, speed 3.4 m/s, flying; battery 81.0 % (~9.6 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 145 s: 100% of the pattern flown, 99% of r3 seen, about 0 s left\nLAST RESULT: (decided at t=135, applied at t=135) keep(): kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\nEVENTS since the last decision:\n- t=157 found: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\nPERSON: FOUND (t=157 s). Estimate (303.6, 272.5) +/- 1.4 m, confidence 0.94; you are 15 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 53 s ago, P 13%; r2 0% seen, never, P 48%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 38%\nWORLD NOW:\n- every zone is open\n- help: not dispatched (report the person's location to dispatch it)\nDISTANCES (battery to get there): pad_charge (charge) 419 m, ~6 %; pad_swap (swap) 161 m, ~2 %; depot base 398 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=11 search_region(region=r3, alt=30) -> started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 154 s\n- t=56 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\n- t=90 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\n- t=135 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 156.69999999999538,
+    "notes": null,
+    "t_obs": 156.7,
+    "t_apply": 156.7,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 156.7,
+     "east": 291.3223056663012,
+     "north": 280.78355053930665,
+     "alt": 30.00000000000001,
+     "battery": 80.96353460668114,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "search_region",
+     "skill_status": "running",
+     "skill_args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.6440662692518,
+      "north": 272.51800715243354,
+      "sigma": 1.4000000000000004,
+      "conf": 0.9408591777624741,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.0,
+      "vn": 0.0
+     },
+     "help_dispatched": false,
+     "help_eta_t": null,
+     "help_arrived": false,
+     "battery_needed_home": 5.7458975396798095,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "report",
+   "kwargs": {
+    "kind": "person_found"
+   },
+   "description": "dispatch the helicopter"
+  },
+  {
+   "details": {
+    "t": 156.69999999999538,
+    "accepted": true,
+    "decision": 6
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))"
+  },
+  {
+   "details": {
+    "t": 157.79999999999532,
+    "decision": 7
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=157.8 s of 1500 s\nDRONE at (293, 281) alt 30 m, speed 0.1 m/s, flying; battery 80.9 % (~9.6 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: last skill search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) succeeded: pattern over r3 flown in 146 s; 99% of the region seen\nLAST RESULT: (decided at t=157, applied at t=157) report(kind=person_found): report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\nEVENTS since the last decision:\n- t=157 skill_done: search_region: pattern over r3 flown in 146 s; 99% of the region seen\nPERSON: FOUND (t=157 s). Estimate (303.5, 272.4) +/- 1.0 m, confidence 0.99; you are 13 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 54 s ago, P 13%; r2 0% seen, never, P 48%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 38%\nWORLD NOW:\n- every zone is open\n- help: dispatched at t=157 s, arriving in about 9 min\nDISTANCES (battery to get there): pad_charge (charge) 420 m, ~6 %; pad_swap (swap) 163 m, ~2 %; depot base 399 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=56 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 7% of the pattern flown, 16% of r3 seen, about 106 s left\n- t=90 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\n- t=135 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\n- t=157 report(kind=person_found) -> report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 157.79999999999532,
+    "notes": null,
+    "t_obs": 157.8,
+    "t_apply": 157.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 157.8,
+     "east": 292.9914912201213,
+     "north": 280.6179586357963,
+     "alt": 30.00747129889634,
+     "battery": 80.85766414837492,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "search_region",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.46464243380063,
+      "north": 272.4494636087031,
+      "sigma": 1.0019117872149326,
+      "conf": 0.9931059771543945,
+      "found": true,
+      "source": "track 6",
+      "ve": -0.0006037951184053374,
+      "vn": -0.00023066197976734688
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 5.7613909461857,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "inspect",
+   "kwargs": {
+    "alt": 20,
+    "seconds": 12
+   },
+   "description": "watch them briefly: are they moving?"
+  },
+  {
+   "details": {
+    "t": 157.79999999999532,
+    "accepted": true,
+    "decision": 7
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started inspect(alt=20.0, seconds=12.0)"
+  },
+  {
+   "details": {
+    "t": 158.89999999999526,
+    "decision": 8
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=158.9 s of 1500 s\nDRONE at (293, 279) alt 29 m, speed 3.5 m/s, flying; battery 80.8 % (~9.6 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running inspect(alt=20.0, seconds=12.0) for 1 s\nLAST RESULT: (decided at t=158, applied at t=158) inspect(alt=20, seconds=12): started inspect(alt=20.0, seconds=12.0)\nEVENTS since the last decision:\n- t=159 message: radio from ground [ack]: Rescue helicopter from the regional base dispatched to (304, 273); ETA about 9 min\nPERSON: FOUND (t=157 s). Estimate (303.8, 272.5) +/- 0.9 m, confidence 1.00; you are 12 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 55 s ago, P 13%; r2 0% seen, never, P 48%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 38%\nWORLD NOW:\n- every zone is open\n- help: dispatched at t=157 s, arriving in about 9 min\nDISTANCES (battery to get there): pad_charge (charge) 420 m, ~6 %; pad_swap (swap) 163 m, ~2 %; depot base 398 m, ~5 % (1 kit(s) left)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=90 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 79 s: 38% of the pattern flown, 62% of r3 seen, about 70 s left\n- t=135 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\n- t=157 report(kind=person_found) -> report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=158 inspect(alt=20, seconds=12) -> started inspect(alt=20.0, seconds=12.0)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 158.89999999999526,
+    "notes": null,
+    "t_obs": 158.9,
+    "t_apply": 158.9,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 158.9,
+     "east": 293.4113540089173,
+     "north": 279.17584113069637,
+     "alt": 29.22634865696201,
+     "battery": 80.75170689439666,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "inspect",
+     "skill_status": "running",
+     "skill_args": {
+      "alt": 20.0,
+      "seconds": 12.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.77545866596984,
+      "north": 272.51061989000505,
+      "sigma": 0.8553624778306502,
+      "conf": 0.9972090183469146,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.006267858979882089,
+      "vn": 0.0011265476833100785
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 5.7525112670843095,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 158.89999999999526,
+    "accepted": true,
+    "decision": 8
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running inspect(alt=20.0, seconds=12.0) for 1 s"
+  },
+  {
+   "details": {
+    "t": 176.09999999999428,
+    "decision": 9
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=176.1 s of 1500 s\nDRONE at (303, 272) alt 20 m, speed 0.0 m/s, flying; battery 79.1 % (~9.3 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: last skill inspect(alt=20.0, seconds=12.0) succeeded: looked at the estimate for 12 s: confidence 0.99 -> 1.00\nLAST RESULT: (decided at t=159, applied at t=159) keep(): kept: running inspect(alt=20.0, seconds=12.0) for 1 s\nEVENTS since the last decision:\n- t=176 skill_done: inspect: looked at the estimate for 12 s: confidence 0.99 -> 1.00\nPERSON: FOUND (t=157 s). Estimate (303.6, 272.9) +/- 0.4 m, confidence 1.00; you are 1 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 34% seen, last 72 s ago, P 13%; r2 0% seen, never, P 48%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 38%\nWORLD NOW:\n- every zone is open\n- help: dispatched at t=157 s, arriving in about 8 min\nDISTANCES (battery to get there): pad_charge (charge) 423 m, ~6 %; pad_swap (swap) 173 m, ~2 %; depot base 401 m, ~5 % (1 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=135 keep() -> kept: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 124 s: 80% of the pattern flown, 90% of r3 seen, about 22 s left\n- t=157 report(kind=person_found) -> report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=158 inspect(alt=20, seconds=12) -> started inspect(alt=20.0, seconds=12.0)\n- t=159 keep() -> kept: running inspect(alt=20.0, seconds=12.0) for 1 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 176.09999999999428,
+    "notes": null,
+    "t_obs": 176.1,
+    "t_apply": 176.1,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 176.1,
+     "east": 303.46464243380063,
+     "north": 272.4494636087031,
+     "alt": 20.0,
+     "battery": 79.10148514165235,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "inspect",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "alt": 20.0,
+      "seconds": 12.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.5718978765101,
+      "north": 272.9497754769426,
+      "sigma": 0.3824065443652152,
+      "conf": 0.9999340230486368,
+      "found": true,
+      "source": "track 6",
+      "ve": -0.010766047557833149,
+      "vn": -0.02894541157939535
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 5.796301035375572,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "pick_up",
+   "kwargs": {
+    "depot": "base"
+   },
+   "description": "get the kit"
+  },
+  {
+   "details": {
+    "t": 176.09999999999428,
+    "accepted": true,
+    "decision": 9
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started pick_up(depot=base)"
+  },
+  {
+   "details": {
+    "t": 220.59999999999175,
+    "decision": 10
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=220.6 s of 1500 s\nDRONE at (27, 37) alt 30 m, speed 8.8 m/s, flying; battery 73.6 % (~8.6 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running pick_up(depot=base) for 44 s\nLAST RESULT: (decided at t=176, applied at t=176) pick_up(depot=base): started pick_up(depot=base)\nEVENTS since the last decision:\n- t=221 zone: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\nPERSON: FOUND (t=157 s). Estimate (303.7, 273.5) +/- 4.0 m, confidence 1.00; you are 364 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 4 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 27 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 8 min\nDISTANCES (battery to get there): pad_charge (charge) 60 m, ~1 %; pad_swap (swap) 260 m, ~4 %; depot base 38 m, ~1 % (1 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=157 report(kind=person_found) -> report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=158 inspect(alt=20, seconds=12) -> started inspect(alt=20.0, seconds=12.0)\n- t=159 keep() -> kept: running inspect(alt=20.0, seconds=12.0) for 1 s\n- t=176 pick_up(depot=base) -> started pick_up(depot=base)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 220.59999999999175,
+    "notes": null,
+    "t_obs": 220.6,
+    "t_apply": 220.6,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 220.6,
+     "east": 26.808152790885092,
+     "north": 36.89232346414998,
+     "alt": 29.999999999999982,
+     "battery": 73.55212390618892,
+     "landed": false,
+     "payload": false,
+     "released": false,
+     "skill": "pick_up",
+     "skill_status": "running",
+     "skill_args": {
+      "depot": "base"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7142630258896,
+      "north": 273.4713077500662,
+      "sigma": 4.0408847674711605,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.0013040266263377007,
+      "vn": 0.003979066901266651
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.8168380836327215,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 220.59999999999175,
+    "accepted": true,
+    "decision": 10
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running pick_up(depot=base) for 44 s"
+  },
+  {
+   "details": {
+    "t": 261.79999999999103,
+    "decision": 11
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=261.8 s of 1500 s\nDRONE at (0, 10) alt 30 m, speed 0.0 m/s, flying; battery 69.5 % (~7.0 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill pick_up(depot=base) succeeded: kit loaded at base, back at 30 m\nLAST RESULT: (decided at t=221, applied at t=221) keep(): kept: running pick_up(depot=base) for 44 s\nEVENTS since the last decision:\n- t=221 replanned: replanned around west_woods\n- t=262 skill_done: pick_up: kit loaded at base, back at 30 m\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.6) +/- 8.2 m, confidence 1.00; you are 402 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 45 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 68 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 7 min\nDISTANCES (battery to get there): pad_charge (charge) 22 m, ~0 %; pad_swap (swap) 295 m, ~5 %; depot base 0 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=158 inspect(alt=20, seconds=12) -> started inspect(alt=20.0, seconds=12.0)\n- t=159 keep() -> kept: running inspect(alt=20.0, seconds=12.0) for 1 s\n- t=176 pick_up(depot=base) -> started pick_up(depot=base)\n- t=221 keep() -> kept: running pick_up(depot=base) for 44 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 261.79999999999103,
+    "notes": null,
+    "t_obs": 261.8,
+    "t_apply": 261.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 261.8,
+     "east": 1.519200731463362e-16,
+     "north": 10.000000000000002,
+     "alt": 29.98987005572352,
+     "battery": 69.46375126265713,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "pick_up",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "depot": "base"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7530637985832,
+      "north": 273.5897032392768,
+      "sigma": 8.234424210232905,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.000657347081442261,
+      "vn": 0.0020058087477531072
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.35243536975365436,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "recharge",
+   "kwargs": {
+    "station": "pad_charge",
+    "until_pct": 100
+   },
+   "description": "charge to full before the wait with the person"
+  },
+  {
+   "details": {
+    "t": 261.79999999999103,
+    "accepted": true,
+    "decision": 11
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started recharge(until_pct=100.0, station=pad_charge), about 38 s"
+  },
+  {
+   "details": {
+    "t": 302.70000000000033,
+    "decision": 12
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=302.7 s of 1500 s\nDRONE at (-20, -0) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 82.9 % (~8.6 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\nLAST RESULT: (decided at t=262, applied at t=262) recharge(station=pad_charge, until_pct=100): started recharge(until_pct=100.0, station=pad_charge), about 38 s\nEVENTS since the last decision:\n- t=303 zone: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.6) +/- 12.1 m, confidence 1.00; you are 424 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 86 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 109 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- creek_mouth (Creek mouth): CLOSED (do not enter) since t=303 s: Storm cell overhead: zone closed until it passes\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- lower_creek (Lower creek): open, CAUTION: storm cell 45 m away, moving east at 2.8 m/s\n- help: dispatched at t=157 s, arriving in about 6 min\nDISTANCES (battery to get there): pad_charge (charge) 0 m, ~0 %; pad_swap (swap) 313 m, ~5 %; depot base 22 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=159 keep() -> kept: running inspect(alt=20.0, seconds=12.0) for 1 s\n- t=176 pick_up(depot=base) -> started pick_up(depot=base)\n- t=221 keep() -> kept: running pick_up(depot=base) for 44 s\n- t=262 recharge(station=pad_charge, until_pct=100) -> started recharge(until_pct=100.0, station=pad_charge), about 38 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 302.70000000000033,
+    "notes": null,
+    "t_obs": 302.7,
+    "t_apply": 302.7,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 302.7,
+     "east": -20.000000000000004,
+     "north": -8.959918577456818e-13,
+     "alt": 0.0,
+     "battery": 82.87397335495484,
+     "landed": true,
+     "payload": true,
+     "released": false,
+     "skill": "recharge",
+     "skill_status": "running",
+     "skill_args": {
+      "until_pct": 100.0,
+      "station": "pad_charge"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7725232313894,
+      "north": 273.6490811564391,
+      "sigma": 12.050599972035153,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00033302320134052634,
+      "vn": 0.0010161767950471147
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 1.4122187125561494e-14,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 302.70000000000033,
+    "accepted": true,
+    "decision": 12
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left"
+  },
+  {
+   "details": {
+    "t": 335.6000000000078,
+    "decision": 13
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=335.6 s of 1500 s\nDRONE at (-20, -0) alt 30 m, speed 0.0 m/s, flying; battery 98.1 % (~10.3 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill recharge(until_pct=100.0, station=pad_charge) succeeded: battery 67 -> 98 % in 53 s on pad_charge; airborne\nLAST RESULT: (decided at t=303, applied at t=303) keep(): kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\nEVENTS since the last decision:\n- t=336 skill_done: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 14.8 m, confidence 1.00; you are 424 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 119 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 142 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- creek_mouth (Creek mouth): CLOSED (do not enter) since t=303 s: Storm cell overhead: zone closed until it passes\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 6 min\nDISTANCES (battery to get there): pad_charge (charge) 0 m, ~0 %; pad_swap (swap) 313 m, ~5 %; depot base 22 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=176 pick_up(depot=base) -> started pick_up(depot=base)\n- t=221 keep() -> kept: running pick_up(depot=base) for 44 s\n- t=262 recharge(station=pad_charge, until_pct=100) -> started recharge(until_pct=100.0, station=pad_charge), about 38 s\n- t=303 keep() -> kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 335.6000000000078,
+    "notes": null,
+    "t_obs": 335.6,
+    "t_apply": 335.6,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 335.6,
+     "east": -20.000000000000004,
+     "north": -8.959918577456818e-13,
+     "alt": 29.98987005572352,
+     "battery": 98.05908399846075,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "recharge",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "until_pct": 100.0,
+      "station": "pad_charge"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.78097636309775,
+      "north": 273.6748747835889,
+      "sigma": 14.816252527093145,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00019213767286569585,
+      "vn": 0.0005862830092154119
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 1.4122187125561494e-14,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "precision_land",
+   "kwargs": {
+    "place": "base"
+   },
+   "description": "help is 6 min out: wait on the ground to save battery"
+  },
+  {
+   "details": {
+    "t": 335.6000000000078,
+    "accepted": true,
+    "decision": 13
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started precision_land(place=base)"
+  },
+  {
+   "details": {
+    "t": 356.80000000001263,
+    "decision": 14
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=356.8 s of 1500 s\nDRONE at (0, 10) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 95.7 % (~10.1 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill precision_land(place=base) succeeded: landed at (0, 10)\nLAST RESULT: (decided at t=336, applied at t=336) precision_land(place=base): started precision_land(place=base)\nEVENTS since the last decision:\n- t=357 skill_done: precision_land: landed at (0, 10)\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 16.5 m, confidence 1.00; you are 402 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 140 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 164 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- creek_mouth (Creek mouth): CLOSED (do not enter) since t=303 s: Storm cell overhead: zone closed until it passes\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 5 min\nDISTANCES (battery to get there): pad_charge (charge) 22 m, ~0 %; pad_swap (swap) 295 m, ~5 %; depot base 0 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=221 keep() -> kept: running pick_up(depot=base) for 44 s\n- t=262 recharge(station=pad_charge, until_pct=100) -> started recharge(until_pct=100.0, station=pad_charge), about 38 s\n- t=303 keep() -> kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\n- t=336 precision_land(place=base) -> started precision_land(place=base)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 356.80000000001263,
+    "notes": null,
+    "t_obs": 356.8,
+    "t_apply": 356.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 356.8,
+     "east": 7.656009395603051e-13,
+     "north": 10.038635122581892,
+     "alt": 0.0,
+     "battery": 95.70934305803009,
+     "landed": true,
+     "payload": true,
+     "released": false,
+     "skill": "precision_land",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "place": "base"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7844213134506,
+      "north": 273.68538659956573,
+      "sigma": 16.45963890184546,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.0001347218336533117,
+      "vn": 0.0004110860762662211
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.3527081179592443,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "wait_until",
+   "kwargs": {
+    "condition": "time",
+    "value": 380.7747117372322,
+    "timeout_s": 1500
+   },
+   "description": "wait on the pad until help is 5 minutes out"
+  },
+  {
+   "details": {
+    "t": 356.80000000001263,
+    "accepted": true,
+    "decision": 14
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)"
+  },
+  {
+   "details": {
+    "t": 357.80000000001286,
+    "decision": 15
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=357.8 s of 1500 s\nDRONE at (0, 10) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 95.7 % (~10.1 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\nLAST RESULT: (decided at t=357, applied at t=357) wait_until(condition=time, value=380.7747117372322, timeout_s=1500): started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)\nEVENTS since the last decision:\n- t=358 zone: creek_mouth is now SAFE: the storm has passed; zone reopened\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 16.5 m, confidence 1.00; you are 402 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 141 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 164 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- creek_mouth (Creek mouth): open, CAUTION: storm cell 4 m away, moving east at 2.8 m/s\n- help: dispatched at t=157 s, arriving in about 5 min\nDISTANCES (battery to get there): pad_charge (charge) 22 m, ~0 %; pad_swap (swap) 295 m, ~5 %; depot base 0 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=262 recharge(station=pad_charge, until_pct=100) -> started recharge(until_pct=100.0, station=pad_charge), about 38 s\n- t=303 keep() -> kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\n- t=336 precision_land(place=base) -> started precision_land(place=base)\n- t=357 wait_until(condition=time, value=380.7747117372322, timeout_s=1500) -> started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 357.80000000001286,
+    "notes": null,
+    "t_obs": 357.8,
+    "t_apply": 357.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 357.8,
+     "east": 7.656009395603051e-13,
+     "north": 10.038635122581892,
+     "alt": 0.0,
+     "battery": 95.70934305803009,
+     "landed": true,
+     "payload": true,
+     "released": false,
+     "skill": "wait_until",
+     "skill_status": "running",
+     "skill_args": {
+      "value": 380.7747117372322,
+      "timeout_s": 1500.0,
+      "condition": "time"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7845416582584,
+      "north": 273.6857538160257,
+      "sigma": 16.52681445576937,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00013271608685709458,
+      "vn": 0.0004049658019344283
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.3527081179592443,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 357.80000000001286,
+    "accepted": true,
+    "decision": 15
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s"
+  },
+  {
+   "details": {
+    "t": 380.9000000000181,
+    "decision": 16
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=380.9 s of 1500 s\nDRONE at (0, 10) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 95.7 % (~10.1 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) succeeded: time after 24 s\nLAST RESULT: (decided at t=358, applied at t=358) keep(): kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\nEVENTS since the last decision:\n- t=381 skill_done: wait_until: time after 24 s\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 18.2 m, confidence 1.00; you are 402 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 164 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 188 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 5 min\nDISTANCES (battery to get there): pad_charge (charge) 22 m, ~0 %; pad_swap (swap) 295 m, ~5 %; depot base 0 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=303 keep() -> kept: running recharge(until_pct=100.0, station=pad_charge) for 41 s, about 21 s left\n- t=336 precision_land(place=base) -> started precision_land(place=base)\n- t=357 wait_until(condition=time, value=380.7747117372322, timeout_s=1500) -> started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)\n- t=358 keep() -> kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 380.9000000000181,
+    "notes": null,
+    "t_obs": 380.9,
+    "t_apply": 380.9,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 380.9,
+     "east": 7.656009395603051e-13,
+     "north": 10.038635122581892,
+     "alt": 0.0,
+     "battery": 95.70934305803009,
+     "landed": true,
+     "payload": true,
+     "released": false,
+     "skill": "wait_until",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "value": 380.7747117372322,
+      "timeout_s": 1500.0,
+      "condition": "time"
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7870862187259,
+      "north": 273.6935182098879,
+      "sigma": 18.19268764538429,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00009030674573648557,
+      "vn": 0.00027555923756735916
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.3527081179592443,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "takeoff",
+   "kwargs": {
+    "alt": 30
+   },
+   "description": "help is close: go deliver"
+  },
+  {
+   "details": {
+    "t": 380.9000000000181,
+    "accepted": true,
+    "decision": 16
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started takeoff(alt=30.0)"
+  },
+  {
+   "details": {
+    "t": 392.3000000000207,
+    "decision": 17
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=392.3 s of 1500 s\nDRONE at (0, 10) alt 30 m, speed 0.0 m/s, flying; battery 93.8 % (~9.8 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill takeoff(alt=30.0) succeeded: at 30 m\nLAST RESULT: (decided at t=381, applied at t=381) takeoff(alt=30): started takeoff(alt=30.0)\nEVENTS since the last decision:\n- t=392 skill_done: takeoff: at 30 m\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 19.0 m, confidence 1.00; you are 402 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 175 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 199 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 5 min\nDISTANCES (battery to get there): pad_charge (charge) 22 m, ~0 %; pad_swap (swap) 295 m, ~5 %; depot base 0 m, ~0 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=336 precision_land(place=base) -> started precision_land(place=base)\n- t=357 wait_until(condition=time, value=380.7747117372322, timeout_s=1500) -> started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)\n- t=358 keep() -> kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\n- t=381 takeoff(alt=30) -> started takeoff(alt=30.0)\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 392.3000000000207,
+    "notes": null,
+    "t_obs": 392.3,
+    "t_apply": 392.3,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 392.3,
+     "east": 7.656009395603051e-13,
+     "north": 10.038635122581892,
+     "alt": 29.98987005572352,
+     "battery": 93.76842705649084,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "takeoff",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "alt": 30.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.78802382417547,
+      "north": 273.6963791904351,
+      "sigma": 18.975905022757495,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00007467998824348441,
+      "vn": 0.000227876228448787
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 0.3527081179592443,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 19 m): datum search"
+  },
+  {
+   "details": {
+    "t": 392.3000000000207,
+    "accepted": true,
+    "decision": 17
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 59 s"
+  },
+  {
+   "details": {
+    "t": 402.60000000002304,
+    "decision": 18
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=402.6 s of 1500 s\nDRONE at (68, 53) alt 25 m, speed 8.7 m/s, flying; battery 92.4 % (~9.7 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) interrupted: heading into closed zone west_woods: braked\nLAST RESULT: (decided at t=392, applied at t=392) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 59 s\nEVENTS since the last decision:\n- t=403 reflex: safety reflex: heading into closed zone west_woods: braked\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 19.7 m, confidence 1.00; you are 323 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 36% seen, last 0 s ago, P 12%; r2 0% seen, never, P 48%; r3 99% seen, last 209 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 5 min\nDISTANCES (battery to get there): pad_charge (charge) 103 m, ~2 %; pad_swap (swap) 230 m, ~4 %; depot base 81 m, ~1 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=357 wait_until(condition=time, value=380.7747117372322, timeout_s=1500) -> started wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time)\n- t=358 keep() -> kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\n- t=381 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=392 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 59 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 402.60000000002304,
+    "notes": null,
+    "t_obs": 402.6,
+    "t_apply": 402.6,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 402.6,
+     "east": 67.9500859335181,
+     "north": 53.34630446350461,
+     "alt": 24.863157550186205,
+     "battery": 92.36628111795586,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "interrupted",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7887243307549,
+      "north": 273.6985166947531,
+      "sigma": 19.656566336044598,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00006300487858485699,
+      "vn": 0.0001922511564809142
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 1.6212828254991805,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 20 m): datum search"
+  },
+  {
+   "details": {
+    "t": 402.60000000002304,
+    "accepted": true,
+    "decision": 18
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 48 s"
+  },
+  {
+   "details": {
+    "t": 447.6000000000333,
+    "decision": 19
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=447.6 s of 1500 s\nDRONE at (276, 251) alt 25 m, speed 5.8 m/s, flying; battery 86.2 % (~8.9 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\nLAST RESULT: (decided at t=403, applied at t=403) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 48 s\nEVENTS since the last decision:\n- (none)\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 22.5 m, confidence 1.00; you are 35 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 19 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 4 min\nDISTANCES (battery to get there): pad_charge (charge) 389 m, ~6 %; pad_swap (swap) 148 m, ~2 %; depot base 367 m, ~6 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=358 keep() -> kept: running wait_until(value=380.7747117372322, timeout_s=1500.0, condition=time) for 1 s\n- t=381 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=392 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 59 s\n- t=403 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 48 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 447.6000000000333,
+    "notes": null,
+    "t_obs": 447.6,
+    "t_apply": 447.6,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 447.6,
+     "east": 276.42498914893184,
+     "north": 251.3462934883298,
+     "alt": 24.999999999999986,
+     "battery": 86.15315550270435,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "running",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7907189396317,
+      "north": 273.7046029831789,
+      "sigma": 22.45830974826244,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00002976139730299014,
+      "vn": 0.00009081301604734765
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 6.125540321997125,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 447.6000000000333,
+    "accepted": true,
+    "decision": 19
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left"
+  },
+  {
+   "details": {
+    "t": 449.30000000003366,
+    "decision": 20
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=449.3 s of 1500 s\nDRONE at (276, 246) alt 25 m, speed 0.2 m/s, flying; battery 86.0 % (~8.9 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) succeeded: square to 40 m around (304, 274) flown; best confidence 1.00\nLAST RESULT: (decided at t=448, applied at t=448) keep(): kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\nEVENTS since the last decision:\n- t=449 skill_done: search_around: square to 40 m around (304, 274) flown; best confidence 1.00\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 22.6 m, confidence 1.00; you are 39 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 21 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 4 min\nDISTANCES (battery to get there): pad_charge (charge) 385 m, ~6 %; pad_swap (swap) 149 m, ~2 %; depot base 364 m, ~6 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=381 takeoff(alt=30) -> started takeoff(alt=30.0)\n- t=392 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 59 s\n- t=403 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 48 s\n- t=448 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 449.30000000003366,
+    "notes": null,
+    "t_obs": 449.3,
+    "t_apply": 449.3,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 449.3,
+     "east": 276.4234250316228,
+     "north": 246.34779257275537,
+     "alt": 25.0,
+     "battery": 85.9600444800441,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.79077171456476,
+      "north": 273.7047640189931,
+      "sigma": 22.564234039866438,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.00002888181508484921,
+      "vn": 0.00008812908581121693
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 6.0748670738583055,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 23 m): datum search"
+  },
+  {
+   "details": {
+    "t": 449.30000000003366,
+    "accepted": true,
+    "decision": 20
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 35 s"
+  },
+  {
+   "details": {
+    "t": 486.3000000000421,
+    "decision": 21
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=486.3 s of 1500 s\nDRONE at (359, 328) alt 25 m, speed 0.3 m/s, flying; battery 81.0 % (~8.3 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) succeeded: square to 45 m around (304, 274) flown; best confidence 1.00\nLAST RESULT: (decided at t=449, applied at t=449) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 35 s\nEVENTS since the last decision:\n- t=486 skill_done: search_around: square to 45 m around (304, 274) flown; best confidence 1.00\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 24.6 m, confidence 1.00; you are 77 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 58 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 3 min\nDISTANCES (battery to get there): pad_charge (charge) 501 m, ~8 %; pad_swap (swap) 235 m, ~4 %; depot base 480 m, ~8 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=392 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 59 s\n- t=403 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 48 s\n- t=448 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\n- t=449 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 35 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 486.3000000000421,
+    "notes": null,
+    "t_obs": 486.3,
+    "t_apply": 486.3,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 486.3,
+     "east": 358.52171861947454,
+     "north": 328.41694568534297,
+     "alt": 25.0,
+     "battery": 81.03354916237308,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.79156774204785,
+      "north": 273.7071929928708,
+      "sigma": 24.646135990496628,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 0.000015614690365628867,
+      "vn": 0.0000476461878557614
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 7.898585090476604,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 25 m): datum search"
+  },
+  {
+   "details": {
+    "t": 486.3000000000421,
+    "accepted": true,
+    "decision": 21
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 39 s"
+  },
+  {
+   "details": {
+    "t": 525.800000000051,
+    "decision": 22
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=525.8 s of 1500 s\nDRONE at (359, 328) alt 25 m, speed 0.2 m/s, flying; battery 75.7 % (~7.7 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) succeeded: square to 49 m around (304, 274) flown; best confidence 1.00\nLAST RESULT: (decided at t=486, applied at t=486) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 39 s\nEVENTS since the last decision:\n- t=526 skill_done: search_around: square to 49 m around (304, 274) flown; best confidence 1.00\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 26.7 m, confidence 1.00; you are 77 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 98 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 3 min\nDISTANCES (battery to get there): pad_charge (charge) 501 m, ~8 %; pad_swap (swap) 235 m, ~4 %; depot base 480 m, ~8 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=403 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 48 s\n- t=448 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\n- t=449 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 35 s\n- t=486 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 525.800000000051,
+    "notes": null,
+    "t_obs": 525.8,
+    "t_apply": 525.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 525.8,
+     "east": 358.52251462687684,
+     "north": 328.41981324685423,
+     "alt": 25.0,
+     "battery": 75.71522560866968,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.79202039505645,
+      "north": 273.7085742043953,
+      "sigma": 26.714194523159534,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 8.070473553148787e-6,
+      "vn": 0.00002462599577668887
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 7.898624186527394,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 27 m): datum search"
+  },
+  {
+   "details": {
+    "t": 525.800000000051,
+    "accepted": true,
+    "decision": 22
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 39 s"
+  },
+  {
+   "details": {
+    "t": 565.30000000006,
+    "decision": 23
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=565.3 s of 1500 s\nDRONE at (359, 328) alt 25 m, speed 0.2 m/s, flying; battery 70.4 % (~7.1 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) succeeded: square to 53 m around (304, 274) flown; best confidence 1.00\nLAST RESULT: (decided at t=526, applied at t=526) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 39 s\nEVENTS since the last decision:\n- t=565 skill_done: search_around: square to 53 m around (304, 274) flown; best confidence 1.00\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 28.6 m, confidence 1.00; you are 77 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 137 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 2 min\nDISTANCES (battery to get there): pad_charge (charge) 501 m, ~8 %; pad_swap (swap) 235 m, ~4 %; depot base 480 m, ~8 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=448 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 1 s left\n- t=449 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 35 s\n- t=486 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=526 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 565.30000000006,
+    "notes": null,
+    "t_obs": 565.3,
+    "t_apply": 565.3,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 565.3,
+     "east": 358.5229672795829,
+     "north": 328.4212040559148,
+     "alt": 25.000000000000004,
+     "battery": 70.39690073745508,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7922543493681,
+      "north": 273.70928808541504,
+      "sigma": 28.6403005666603,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 4.1712350259243055e-6,
+      "vn": 0.000012727978780366727
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 7.898643941315724,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 29 m): datum search"
+  },
+  {
+   "details": {
+    "t": 565.30000000006,
+    "accepted": true,
+    "decision": 23
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 67 s"
+  },
+  {
+   "details": {
+    "t": 610.3000000000702,
+    "decision": 24
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=610.3 s of 1500 s\nDRONE at (303, 328) alt 25 m, speed 8.8 m/s, flying; battery 64.3 % (~6.4 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\nLAST RESULT: (decided at t=565, applied at t=565) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 67 s\nEVENTS since the last decision:\n- (none)\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 30.7 m, confidence 1.00; you are 55 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 182 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 1 min\nDISTANCES (battery to get there): pad_charge (charge) 461 m, ~7 %; pad_swap (swap) 181 m, ~3 %; depot base 440 m, ~7 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=449 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 35 s\n- t=486 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=526 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=565 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 610.3000000000702,
+    "notes": null,
+    "t_obs": 610.3,
+    "t_apply": 610.3,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 610.3,
+     "east": 303.16566109416635,
+     "north": 328.4406677643579,
+     "alt": 24.99999999999999,
+     "battery": 64.28546761319149,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "running",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.79238640235485,
+      "north": 273.7096910278545,
+      "sigma": 30.686657556251202,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 1.970351909868115e-6,
+      "vn": 6.012271459841613e-6
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 7.262380697272735,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 610.3000000000702,
+    "accepted": true,
+    "decision": 24
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left"
+  },
+  {
+   "details": {
+    "t": 630.7000000000749,
+    "decision": 25
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=630.7 s of 1500 s\nDRONE at (249, 219) alt 25 m, speed 0.3 m/s, flying; battery 61.5 % (~6.1 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: last skill search_around(around=person, alt=25.0) succeeded: square to 57 m around (304, 274) flown; best confidence 1.00\nLAST RESULT: (decided at t=610, applied at t=610) keep(): kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\nEVENTS since the last decision:\n- t=631 skill_done: search_around: square to 57 m around (304, 274) flown; best confidence 1.00\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 31.6 m, confidence 1.00; you are 77 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 202 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 1 min\nDISTANCES (battery to get there): pad_charge (charge) 347 m, ~5 %; pad_swap (swap) 132 m, ~2 %; depot base 325 m, ~5 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=486 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=526 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=565 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\n- t=610 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 630.7000000000749,
+    "notes": null,
+    "t_obs": 630.7,
+    "t_apply": 630.7,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 630.7,
+     "east": 249.0613096418764,
+     "north": 218.99880170010883,
+     "alt": 24.999999999999993,
+     "battery": 61.5096434892164,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "succeeded",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7924204771881,
+      "north": 273.7097950027582,
+      "sigma": 31.57142787107325,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 1.4024380148426472e-6,
+      "vn": 4.2793563975075694e-6
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 5.467963229084849,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_around",
+   "kwargs": {
+    "around": "person",
+    "alt": 25
+   },
+   "description": "the estimate has drifted (+/- 32 m): datum search"
+  },
+  {
+   "details": {
+    "t": 630.7000000000749,
+    "accepted": true,
+    "decision": 25
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_around(around=person, alt=25.0), about 67 s"
+  },
+  {
+   "details": {
+    "t": 675.7000000000851,
+    "decision": 26
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=675.7 s of 1500 s\nDRONE at (313, 328) alt 25 m, speed 8.8 m/s, flying; battery 55.4 % (~5.3 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running search_around(around=person, alt=25.0) for 45 s, about 22 s left\nLAST RESULT: (decided at t=631, applied at t=631) search_around(around=person, alt=25): started search_around(around=person, alt=25.0), about 67 s\nEVENTS since the last decision:\n- (none)\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 33.4 m, confidence 1.00; you are 55 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 248 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: dispatched at t=157 s, arriving in about 0 min\nDISTANCES (battery to get there): pad_charge (charge) 467 m, ~7 %; pad_swap (swap) 190 m, ~3 %; depot base 446 m, ~7 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=526 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 39 s\n- t=565 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\n- t=610 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\n- t=631 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 675.7000000000851,
+    "notes": null,
+    "t_obs": 675.7,
+    "t_apply": 675.7,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 675.7,
+     "east": 312.66333269808695,
+     "north": 328.4425509620676,
+     "alt": 25.000000000000007,
+     "battery": 55.43705536080024,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "running",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.79246487557987,
+      "north": 273.7099304786523,
+      "sigma": 33.44130502186794,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 6.624648105040631e-7,
+      "vn": 2.021424829440522e-6
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": false,
+     "battery_needed_home": 7.368165295097654,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 675.7000000000851,
+    "accepted": true,
+    "decision": 26
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running search_around(around=person, alt=25.0) for 45 s, about 22 s left"
+  },
+  {
+   "details": {
+    "t": 680.8000000000862,
+    "decision": 27
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=680.8 s of 1500 s\nDRONE at (268, 328) alt 25 m, speed 8.8 m/s, flying; battery 54.7 % (~5.3 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running search_around(around=person, alt=25.0) for 50 s, about 16 s left\nLAST RESULT: (decided at t=676, applied at t=676) keep(): kept: running search_around(around=person, alt=25.0) for 45 s, about 22 s left\nEVENTS since the last decision:\n- t=681 help: Rescue helicopter from the regional base has arrived at the person\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 33.6 m, confidence 1.00; you are 66 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 39% seen, last 253 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 0 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: ARRIVED at t=681 s\nDISTANCES (battery to get there): pad_charge (charge) 437 m, ~7 %; pad_swap (swap) 148 m, ~2 %; depot base 416 m, ~7 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\n- t=681: Rescue helicopter from the regional base has arrived at the person\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=565 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\n- t=610 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\n- t=631 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\n- t=676 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 22 s left\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 680.8000000000862,
+    "notes": null,
+    "t_obs": 680.8,
+    "t_apply": 680.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 680.8,
+     "east": 267.6813328203802,
+     "north": 328.4407419419568,
+     "alt": 25.000000000000007,
+     "battery": 54.72019201170008,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "search_around",
+     "skill_status": "running",
+     "skill_args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "rejected": [],
+     "belief": {
+      "east": 303.7924681145446,
+      "north": 273.70994036192985,
+      "sigma": 33.646718265393055,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 6.084820664316542e-7,
+      "vn": 1.8567035378352047e-6
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": true,
+     "battery_needed_home": 6.881680685637036,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "rtl",
+   "kwargs": {},
+   "description": "help is here"
+  },
+  {
+   "details": {
+    "t": 680.8000000000862,
+    "accepted": true,
+    "decision": 27
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started rtl()"
+  },
+  {
+   "details": {
+    "t": 725.8000000000965,
+    "decision": 28
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=725.8 s of 1500 s\nDRONE at (41, 32) alt 30 m, speed 8.8 m/s, flying; battery 48.4 % (~4.5 min of cruise above the 10 % reserve); carrying the medical kit; cruise 9 m/s at 30 m\nSKILL: running rtl() for 45 s\nLAST RESULT: (decided at t=681, applied at t=681) rtl(): started rtl()\nEVENTS since the last decision:\n- (none)\nPERSON: FOUND (t=157 s). Estimate (303.8, 273.7) +/- 35.4 m, confidence 1.00; you are 357 m away\nSEARCH COVERAGE (P = where the person probably is, given the search so far): r1 40% seen, last 3 s ago, P 12%; r2 0% seen, never, P 49%; r3 99% seen, last 27 s ago, P 1%; r4 0% seen, never, P 39%\nWORLD NOW:\n- west_woods (West woods): CLOSED (do not enter) since t=220 s: Fire crews closed the zone: the fire is spreading\n- help: ARRIVED at t=681 s\nDISTANCES (battery to get there): pad_charge (charge) 69 m, ~1 %; pad_swap (swap) 259 m, ~4 %; depot base 47 m, ~1 % (0 kit(s) left)\nSPEC, decided so far:\n- find: SATISFIED (decided at t=160 s)\n- patrol: SATISFIED (decided at t=160 s)\n- report: SATISFIED (decided at t=160 s)\n- stay: SATISFIED (decided at t=685 s)\nMISSION MEMORY:\n- t=157: person found: estimate (304, 273) +/- 1.4 m, confidence 0.94\n- t=157: report: sent; the crew will acknowledge (still running: search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3))\n- t=157: search_region: pattern over r3 flown in 146 s; 99% of the region seen\n- t=221: west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading\n- t=262: pick_up: kit loaded at base, back at 30 m\n- t=303: creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes\n- t=336: recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne\n- t=358: creek_mouth is now SAFE: the storm has passed; zone reopened\n- t=403: safety reflex: heading into closed zone west_woods: braked\n- t=681: Rescue helicopter from the regional base has arrived at the person\nYOUR NOTES:\n(empty)\nRECENT DECISIONS:\n- t=610 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 21 s left\n- t=631 search_around(around=person, alt=25) -> started search_around(around=person, alt=25.0), about 67 s\n- t=676 keep() -> kept: running search_around(around=person, alt=25.0) for 45 s, about 22 s left\n- t=681 rtl() -> started rtl()\nDecide: call one tool."
+  },
+  {
+   "details": {
+    "t": 725.8000000000965,
+    "notes": null,
+    "t_obs": 725.8,
+    "t_apply": 725.8,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "me": "drone1",
+     "others": [],
+     "claims": {},
+     "t": 725.8,
+     "east": 41.093858983231726,
+     "north": 31.774738510678315,
+     "alt": 30.000000000000018,
+     "battery": 48.36638204724716,
+     "landed": false,
+     "payload": true,
+     "released": false,
+     "skill": "rtl",
+     "skill_status": "running",
+     "skill_args": {},
+     "rejected": [],
+     "belief": {
+      "east": 303.7924873778742,
+      "north": 273.70999914146347,
+      "sigma": 35.40782200141152,
+      "conf": 0.9999877116885465,
+      "found": true,
+      "source": "track 6",
+      "ve": 2.8742657612500215e-7,
+      "vn": 8.770446496291156e-7
+     },
+     "help_dispatched": true,
+     "help_eta_t": 680.7747117372322,
+     "help_arrived": true,
+     "battery_needed_home": 1.0853743308239998,
+     "regions": [
+      {
+       "id": "r1",
+       "prior": 0.1,
+       "closed": false
+      },
+      {
+       "id": "r2",
+       "prior": 0.25,
+       "closed": false
+      },
+      {
+       "id": "r3",
+       "prior": 0.45,
+       "closed": false
+      },
+      {
+       "id": "r4",
+       "prior": 0.2,
+       "closed": false
+      }
+     ]
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "keep",
+   "kwargs": {},
+   "description": ""
+  },
+  {
+   "details": {
+    "t": 725.8000000000965,
+    "accepted": true,
+    "decision": 28
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "kept: running rtl() for 45 s"
+  }
+ ],
+ "details": {
+  "meta": {
+   "episode": "sar_supply_scripted_s0000",
+   "mission": "sar_supply",
+   "world": "sar_valley",
+   "seed": 0,
+   "pilot": "scripted",
+   "remote_pilot": null,
+   "router": null,
+   "tier": "fast",
+   "drones": [
+    "drone1"
+   ],
+   "envelope": "standard",
+   "horizon_s": 1500.0,
+   "wake_s": 45.0,
+   "person": [
+    303.7796498642032,
+    272.98937676895264
+   ],
+   "help_delay_s": 524.0747117372368,
+   "scenario": {
+    "person": [
+     303.7796498642032,
+     272.98937676895264
+    ],
+    "person_region": "r3",
+    "help_delay_s": 524.0747117372368,
+    "timeline": [
+     {
+      "t": 220.5,
+      "zone": "west_woods",
+      "safe": false,
+      "note": "Fire crews closed the zone: the fire is spreading"
+     },
+     {
+      "t": 302.7,
+      "zone": "creek_mouth",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 357.7,
+      "zone": "creek_mouth",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 910.2,
+      "zone": "fire_scrub",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1040.2,
+      "zone": "r1",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1075.2,
+      "zone": "trailhead",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1080.2,
+      "zone": "fire_scrub",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 1175.2,
+      "zone": "lower_creek",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1180.2,
+      "zone": "r2",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1275.2,
+      "zone": "r1",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 1275.2,
+      "zone": "r2",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 1310.2,
+      "zone": "creek_mouth",
+      "safe": false,
+      "note": "Storm cell overhead: zone closed until it passes"
+     },
+     {
+      "t": 1345.2,
+      "zone": "trailhead",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 1435.2,
+      "zone": "lower_creek",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     },
+     {
+      "t": 1450.2,
+      "zone": "creek_mouth",
+      "safe": true,
+      "note": "the storm has passed; zone reopened"
+     }
+    ],
+    "descriptions": {
+     "home_base": "Launch pad, charging pad and the kit depot. A hangar: storms never close it.",
+     "trailhead": "Car park and the trail's first bend; open gravel.",
+     "lower_creek": "The creek runs into a gorge; steep banks.",
+     "creek_mouth": "Marshy flats where the creek leaves the valley.",
+     "west_woods": "Dense mixed woods; the canopy hides the ground.",
+     "r1": "Open grass, good visibility. The trail crosses it.",
+     "r2": "Rocky creek bed; the phone's last ping. Grey boulders look like people from above.",
+     "boulder_field": "Jumbled boulders east of the creek.",
+     "nofly_power": "High-voltage line. Never cross it; go around its west end.",
+     "fire_scrub": "Dry scrub; fire crews may close it.",
+     "saddle": "Grassy saddle between the meadow and the ridge; the forward swap station.",
+     "r3": "Steep slope with a stand of tall pines; the likeliest place to fall.",
+     "east_ridge": "Exposed ridge; storms come in from here.",
+     "west_ridge": "Dry ridge top above the scrub.",
+     "r4": "Clearing on the ridge with a campsite.",
+     "north_scree": "Loose scree under the summit.",
+     "summit": "Bare summit; strong winds."
+    },
+    "decoys": [
+     {
+      "id": "tent",
+      "position": [
+       110.0,
+       400.0
+      ],
+      "strength": 0.35
+     },
+     {
+      "id": "boulder",
+      "position": [
+       300.0,
+       90.0
+      ],
+      "strength": 0.25
+     }
+    ],
+    "wind": {
+     "east": 2.0,
+     "north": -1.0,
+     "gust_std": 0.8
+    },
+    "region_weights": {
+     "r1": 0.1,
+     "r2": 0.25,
+     "r3": 0.45,
+     "r4": 0.2
+    },
+    "motion": "static",
+    "speed": 0.0,
+    "news": [],
+    "storms": [
+     {
+      "id": "storm2",
+      "t0": 302.69,
+      "t1": 764.09,
+      "x0": 465.45,
+      "y0": -131.96,
+      "vx": 2.65,
+      "vy": 0.91,
+      "radius": 87.79
+     },
+     {
+      "id": "storm1",
+      "t0": 910.19,
+      "t1": 1483.92,
+      "x0": -169.59,
+      "y0": 250.04,
+      "vx": 1.06,
+      "vy": -0.78,
+      "radius": 90.92
+     }
+    ],
+    "fires": [
+     {
+      "zone": "west_woods",
+      "t": 220.5,
+      "from": null
+     }
+    ]
+   },
+   "latency": {
+    "drone1": {
+     "local": {
+      "median_s": 0.0,
+      "sigma": 0.0,
+      "floor_s": 0.0
+     },
+     "escalate": {
+      "median_s": 0.0,
+      "sigma": 0.0,
+      "floor_s": 0.0
+     }
+    }
+   }
+  },
+  "system": "You are the pilot of a search-and-rescue drone.\n\nYou fly by calling skills (the tools). A skill runs on its own until it\nfinishes, fails or you replace it: it plans paths around no-fly zones, closed\nzones and obstacles, holds altitude and speed, and reports back. Starting a new\nskill replaces the running one (instant skills such as report or set_speed do\nnot). A safety layer under you brakes before no-fly zones and lands on a\ncritical battery; avoid ever needing it.\n\nYou are asked to decide at decision points: when something happens (a skill\nfinished or failed, the person was found, a zone changed, the battery crossed\na mark, the safety layer acted, help arrived, a radio message came in) and at\nleast every 45 s. The radio: report sends to the ground station; the\nreply (an acknowledgement, the crew's ETA, an operator's answer or tasking)\narrives later as a message event. The operator may also send news or tasking\non their own; weigh it like a real tip.\nAt each decision call exactly ONE tool. Call keep to let the running skill\ncontinue. Every tool also takes `reason` (one sentence) and `notes`.\n\nYour decision takes effect only after your thinking time, and the drone keeps\nflying meanwhile: prefer decisions that stay right for a while. Each decision\nprompt is complete on its own: you will not see earlier prompts. Use `notes`\nfor anything you want to remember (plans, suspicions, what is left to do).\n\nMISSION\nA hiker is missing in the valley. Find them. As soon as you are sure it is them, report their position: that dispatches the rescue helicopter (about 10 minutes out; a wrong position delays it). Pick up the medical kit at the base depot and drop it within 5 m of them. Then stay with them (within 30 m) until the helicopter arrives. Until they are found, keep every search zone fresh: each one visited at least once every 10 minutes (a zone that is closed meanwhile is excused). Storm cells drift across the valley and fires can start in the dry west: a zone they reach is closed; get out within 30 s and stay out until it reopens. Keep at least 10 % battery: the charging pad is at base, the swap station is on the saddle.\n\nThe mission is scored by signal temporal logic: every clause below must hold\nover the whole flight, and robustness (how much margin you keep) is the\nreward. The spec's signals are listed after it.\n\nSPEC (signal temporal logic; all clauses must hold; times in s from takeoff command; horizon 1500 s):\n- no_fly: G[0,1500] !in(nofly_power)   -- never enter the power line corridor\n- closed_zones: G[0,1500] (forall z in zones: ((H[0,30] z.unsafe) -> !in(z)))   -- once a zone has been closed for 30 s, never be in it\n- battery: G[0,1500] battery >= 10   -- keep at least 10 % battery\n- clearance: G[0,1500] clearance >= 3   -- stay 3 m or more from obstacles\n- find: F[0,900] found   -- find the person within 15 minutes\n- patrol: G[0,900] (forall z in search_zones: ((!O found) -> F[0,600] (in(z) | found | z.unsafe)))   -- until found, visit every search zone at least every 10 minutes (closed zones excused)\n- report: G[0,1300] (found -> F[0,120] help_dispatched)   -- report the person within 2 minutes of finding them\n- deliver: F[0,1500] drop_err <= 5   -- the kit lands within 5 m of the person\n- stay: G[0,1500] (((O released) & !help & !person_zone_closed) -> dist_person <= 30)   -- after the drop, stay within 30 m of the person until help arrives (excused while their zone is closed)\n\nSignals used by the spec:\n- east (m): drone position east of launch\n- north (m): drone position north of launch\n- alt (m): drone altitude above ground\n- battery (%): battery remaining\n- clearance (m): distance to the nearest obstacle\n- dist_person (m): true horizontal distance from the drone to the person\n- found (0/1): confidence has reached the found threshold (latched)\n- released (0/1): a kit has been released (latched)\n- drop_err (m): distance from where the closest kit landed to the person (1000 before release)\n- help_dispatched (0/1): help has been dispatched by a report (latched)\n- help (0/1): help has arrived at the person (latched)\n- person_zone_closed (0/1): the zone the person is in is closed (storm or fire)\n- unsafe_trailhead (0/1): zone trailhead is closed (time-varying)\n- unsafe_lower_creek (0/1): zone lower_creek is closed (time-varying)\n- unsafe_creek_mouth (0/1): zone creek_mouth is closed (time-varying)\n- unsafe_west_woods (0/1): zone west_woods is closed (time-varying)\n- unsafe_r1 (0/1): zone r1 is closed (time-varying)\n- unsafe_r2 (0/1): zone r2 is closed (time-varying)\n- unsafe_boulder_field (0/1): zone boulder_field is closed (time-varying)\n- unsafe_fire_scrub (0/1): zone fire_scrub is closed (time-varying)\n- unsafe_saddle (0/1): zone saddle is closed (time-varying)\n- unsafe_r3 (0/1): zone r3 is closed (time-varying)\n- unsafe_east_ridge (0/1): zone east_ridge is closed (time-varying)\n- unsafe_west_ridge (0/1): zone west_ridge is closed (time-varying)\n- unsafe_r4 (0/1): zone r4 is closed (time-varying)\n- unsafe_north_scree (0/1): zone north_scree is closed (time-varying)\n- unsafe_summit (0/1): zone summit is closed (time-varying)\n\nWORLD sar_valley: A wooded valley with a trailhead, a creek, a pine slope and a ridge. A hiker did not come back from a day hike; their phone last pinged near the creek. Storms cross the valley and can close zones; the scrub on the west side can burn.\nCoordinates are metres east/north of the launch point (0, 0); max altitude 60 m.\nOperating area: east -80..520, north -80..480.\n- home_base (landing) 'Base': 149 x 138 m centred at (-11, -12). Launch pad, charging pad and the kit depot. A hangar: storms never close it.\n- trailhead (other) 'Trailhead': 154 x 138 m centred at (127, -13). Car park and the trail's first bend; open gravel.\n- lower_creek (other) 'Lower creek': 148 x 144 m centred at (269, -11). The creek runs into a gorge; steep banks.\n- creek_mouth (other) 'Creek mouth': 183 x 134 m centred at (430, -13). Marshy flats where the creek leaves the valley.\n- west_woods (other) 'West woods': 150 x 159 m centred at (-9, 130). Dense mixed woods; the canopy hides the ground.\n- r1 (search) 'Trailhead meadow': 156 x 157 m centred at (135, 135). Open grass, good visibility. The trail crosses it.\n- r2 (search) 'Creek bed': 147 x 142 m centred at (276, 126). Rocky creek bed; the phone's last ping. Grey boulders look like people from above.\n- boulder_field (other) 'Boulder field': 183 x 138 m centred at (434, 120). Jumbled boulders east of the creek.\n- nofly_power (no_fly) 'Power line corridor': 309 x 24 m centred at (366, 198). High-voltage line. Never cross it; go around its west end.\n- fire_scrub (hazard) 'Fire scrub': 141 x 129 m centred at (-15, 267). Dry scrub; fire crews may close it.\n- saddle (other) 'Saddle': 163 x 125 m centred at (125, 271). Grassy saddle between the meadow and the ridge; the forward swap station.\n- r3 (search) 'Pine slope': 165 x 129 m centred at (274, 269). Steep slope with a stand of tall pines; the likeliest place to fall.\n- east_ridge (other) 'East ridge': 171 x 130 m centred at (434, 268). Exposed ridge; storms come in from here.\n- west_ridge (other) 'West ridge': 128 x 154 m centred at (-16, 404). Dry ridge top above the scrub.\n- r4 (search) 'Ridge clearing': 156 x 152 m centred at (118, 408). Clearing on the ridge with a campsite.\n- north_scree (other) 'North scree': 168 x 157 m centred at (266, 401). Loose scree under the summit.\n- summit (other) 'Summit': 186 x 154 m centred at (431, 407). Bare summit; strong winds.\n- obstacle tower 'Radio tower': 50 m tall at (220, 110), 12 m across. In the creek bed, near the meadow.\n- obstacle pines 'Tall pines': 28 m tall at (318, 292), 33 m across. Inside the pine slope; fly above 35 m over it.\n- station pad_charge (charge) at (-20, 0): charges at 0.8 %/s. At base, next to the depot.\n- station pad_swap (swap) at (130, 275): swaps the battery in 40 s. Forward station on the saddle; a ranger swaps batteries.\n- depot base at (0, 10): 1 medical kit(s), 8 s to load. One medical kit (water, thermal blanket, first aid, radio).\nMissing person: Adult hiker in a red jacket, probably injured and sitting still.\nWhere they probably are (prior): r3 45%, r2 25%, r4 20%, r1 10%.\n\nUnits: metres east/north of the launch point, altitude above ground, seconds\nsince the start, battery in percent.",
+  "tools": [
+   {
+    "name": "capture_image",
+    "description": "Take a photo with the camera and get what the detector sees in it.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "note": {
+       "type": "string",
+       "description": "why (kept with the photo) (default )"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "deliver",
+    "description": "Drop the kit next to the person: fly over the estimate (or a point), descend to the drop altitude, hold at the computed release point (ballistic drop with drag and the estimated wind), release, climb back. Refuses when the estimate is too uncertain: inspect first.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "target": {
+       "type": "string",
+       "enum": [
+        "person",
+        "point"
+       ],
+       "description": "(default person)"
+      },
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "drop_alt": {
+       "type": "number",
+       "description": "release altitude, m (default 8.0)"
+      },
+      "max_sigma": {
+       "type": "number",
+       "description": "refuse above this estimate uncertainty, m (default 8.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "drop_marker",
+    "description": "Mark a spot on the shared map (here, or at a point) with a label, for later or for the crew.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "label": {
+       "type": "string"
+      },
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "label"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "emergency_stop",
+    "description": "Brake now and hover in place (stops whatever was running).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "fly_waypoints",
+    "description": "Fly through a list of waypoints in order (each with optional alt), planning around no-fly zones, closed zones and obstacles between them; stops at the last one.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "waypoints": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "east": {
+          "type": "number"
+         },
+         "north": {
+          "type": "number"
+         },
+         "alt": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "east",
+         "north"
+        ],
+        "additionalProperties": false
+       },
+       "minItems": 1
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise speed)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "waypoints"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "goto",
+    "description": "Fly to a point or a named place (station, depot, region centre, 'launch') on the shortest path around no-fly zones, closed zones and obstacles.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "east": {
+       "type": "number",
+       "description": "m east"
+      },
+      "north": {
+       "type": "number",
+       "description": "m north"
+      },
+      "place": {
+       "type": "string",
+       "description": "a station, depot or region id, or 'launch'"
+      },
+      "alt": {
+       "type": "number",
+       "description": "altitude, m (default: cruise altitude)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise speed)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "hover",
+    "description": "Hold position for some seconds (0: until the next command).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "seconds": {
+       "type": "number",
+       "description": "how long; 0 holds until replaced (default 10.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "inspect",
+    "description": "Fly low over the person estimate (or a point) and hover there to look closely: raises confidence in a real person, lowers it for a decoy.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "east": {
+       "type": "number",
+       "description": "default: the person estimate"
+      },
+      "north": {
+       "type": "number"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default 15.0)"
+      },
+      "seconds": {
+       "type": "number",
+       "description": "how long to look (default 8.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "intercept",
+    "description": "Fly to where a moving person will be (constant-velocity intercept from the tracker's estimate), re-aiming every few seconds; finishes within 5 m of them.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "alt": {
+       "type": "number",
+       "description": "m (default 20.0)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise speed)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "land",
+    "description": "Land where you are (or at a named pad with place).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "place": {
+       "type": "string",
+       "description": "a station or depot id, or 'launch'"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "orbit",
+    "description": "Circle a point (or the person's current estimate) at a radius, altitude and speed; laps 0 circles until replaced.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "around": {
+       "type": "string",
+       "enum": [
+        "point",
+        "person"
+       ],
+       "description": "(default point)"
+      },
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "radius": {
+       "type": "number",
+       "description": "m (default 20.0)"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default: cruise altitude)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s along the circle (default 5.0)"
+      },
+      "laps": {
+       "type": "number",
+       "description": "0: until replaced (default 0.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "path_plan",
+    "description": "Plan a route to a point or place without flying it: returns its length, time and battery cost, and whether anything blocks it. Free: use it to compare options.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "place": {
+       "type": "string",
+       "description": "a station, depot, region id, or 'launch'"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default: cruise altitude)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "pick_up",
+    "description": "Fly to a depot, land, load a medical kit (takes the depot's load time), take off again.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "depot": {
+       "type": "string",
+       "description": "depot id (default base)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "precision_land",
+    "description": "Land exactly on a named pad (station, depot or 'launch'), aligning over it first.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "place": {
+       "type": "string",
+       "description": "a station or depot id, or 'launch'"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "place"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "probability_map",
+    "description": "Where the person probably is now, per search region: the prior updated by what the cameras have covered (search theory). Free.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "recharge",
+    "description": "Fly to a charging pad, land, charge to a target level, take off again.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "station": {
+       "type": "string",
+       "description": "charging station id"
+      },
+      "until_pct": {
+       "type": "number",
+       "description": "charge to this % (default 95.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "station"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "report",
+    "description": "Radio a report to the ground station. kind person_found dispatches the rescue crew to the given position (default: the current estimate): a wrong position delays them. The acknowledgement (and the crew's ETA) comes back as a message.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string",
+       "enum": [
+        "person_found",
+        "status",
+        "hazard"
+       ]
+      },
+      "message": {
+       "type": "string",
+       "description": "(default )"
+      },
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "request_help",
+    "description": "Ask the operator at the ground station a question; the answer, if any, arrives later as a message (they may be slow, or not answer at all).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "question": {
+       "type": "string"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "question"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "rtl",
+    "description": "Return to the launch point at cruise altitude and land.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "scan",
+    "description": "Scan a straight line (a road, a creek, a ridge) at low altitude and slow speed with the camera: from (east, north) to (east2, north2).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "east2": {
+       "type": "number"
+      },
+      "north2": {
+       "type": "number"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default 15.0)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default 4.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "east",
+      "north",
+      "east2",
+      "north2"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "search_around",
+    "description": "Datum search: an expanding square around the person estimate (or a point) out to a radius, for a person who was seen and then lost (their estimate has drifted), or a tip about a place. Lane spacing from the camera footprint at the altitude.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "around": {
+       "type": "string",
+       "enum": [
+        "person",
+        "point"
+       ],
+       "description": "(default person)"
+      },
+      "east": {
+       "type": "number"
+      },
+      "north": {
+       "type": "number"
+      },
+      "radius": {
+       "type": "number",
+       "description": "m (default: 2 x the estimate's uncertainty, at least 40)"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default 25.0)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "search_region",
+    "description": "Search a region with a standard pattern: lawnmower (a lap around the edge, then parallel tracks over the whole region), crosshatch (lawnmower twice, the second pass perpendicular: slower, best detection), expanding_square or sector (around the region centre or a datum). Lane spacing comes from the camera footprint at the altitude. Finishes when the pattern is flown; a sighting does not stop it (you decide).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "region": {
+       "type": "string",
+       "description": "a search region id"
+      },
+      "pattern": {
+       "type": "string",
+       "enum": [
+        "lawnmower",
+        "crosshatch",
+        "expanding_square",
+        "sector"
+       ],
+       "description": "(default lawnmower)"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (lower: better detection, narrower lanes) (default 30.0)"
+      },
+      "overlap": {
+       "type": "number",
+       "description": "lane overlap fraction (default 0.2)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise speed)"
+      },
+      "datum_east": {
+       "type": "number",
+       "description": "pattern centre for square/sector"
+      },
+      "datum_north": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "region"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "set_speed",
+    "description": "Change the cruise speed (and optionally cruise altitude) used by later commands.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "speed": {
+       "type": "number",
+       "description": "m/s"
+      },
+      "alt": {
+       "type": "number",
+       "description": "cruise altitude, m"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "swap_battery",
+    "description": "Fly to a battery swap station, land, get a full battery (fixed time), take off again.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "station": {
+       "type": "string",
+       "description": "swap station id"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "station"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "takeoff",
+    "description": "Arm and climb straight up to the given altitude.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "alt": {
+       "type": "number",
+       "description": "altitude, m (default 30.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "track_person",
+    "description": "Stay with the person: orbit them at a standoff radius (mode orbit) or hover over them (mode follow), following the estimate as it updates. With until=help_arrived it finishes when help arrives; otherwise it runs until replaced.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "mode": {
+       "type": "string",
+       "enum": [
+        "orbit",
+        "follow"
+       ],
+       "description": "(default orbit)"
+      },
+      "standoff": {
+       "type": "number",
+       "description": "orbit radius, m (keep it inside the camera view) (default 10.0)"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default 25.0)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s along the orbit (default 4.0)"
+      },
+      "until": {
+       "type": "string",
+       "enum": [
+        "none",
+        "help_arrived"
+       ],
+       "description": "(default none)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "wait_until",
+    "description": "Hold position (or stay on the ground) until something happens: help arrives, the person is found, a time, or the battery drops below a value.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "condition": {
+       "type": "string",
+       "enum": [
+        "help_arrived",
+        "found",
+        "time",
+        "battery_below"
+       ]
+      },
+      "value": {
+       "type": "number",
+       "description": "the time (s) or battery (%) for time/battery_below (default 0.0)"
+      },
+      "timeout_s": {
+       "type": "number",
+       "description": "give up after this long (default 900.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "condition"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "keep",
+    "description": "Let the running skill continue (or stay idle). Use when nothing needs to change.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   }
+  ],
+  "score": {
+   "robustness": -995.0,
+   "satisfied": false,
+   "clauses": [
+    {
+     "clause": "no_fly",
+     "formula": "G[0,1500] !in(nofly_power)",
+     "robustness": 5.637,
+     "satisfied": true
+    },
+    {
+     "clause": "closed_zones",
+     "formula": "G[0,1500] (forall z in zones: ((H[0,30] z.unsafe) -> !in(z)))",
+     "robustness": 0.5,
+     "satisfied": true
+    },
+    {
+     "clause": "battery",
+     "formula": "G[0,1500] battery >= 10",
+     "robustness": 35.673,
+     "satisfied": true
+    },
+    {
+     "clause": "clearance",
+     "formula": "G[0,1500] clearance >= 3",
+     "robustness": 3.053,
+     "satisfied": true
+    },
+    {
+     "clause": "find",
+     "formula": "F[0,900] found",
+     "robustness": 0.5,
+     "satisfied": true
+    },
+    {
+     "clause": "patrol",
+     "formula": "G[0,900] (forall z in search_zones: ((!O found) -> F[0,600] (in(z) | found | z.unsafe)))",
+     "robustness": 0.5,
+     "satisfied": true
+    },
+    {
+     "clause": "report",
+     "formula": "G[0,1300] (found -> F[0,120] help_dispatched)",
+     "robustness": 0.5,
+     "satisfied": true
+    },
+    {
+     "clause": "deliver",
+     "formula": "F[0,1500] drop_err <= 5",
+     "robustness": -995.0,
+     "satisfied": false
+    },
+    {
+     "clause": "stay",
+     "formula": "G[0,1500] (((O released) & !help & !person_zone_closed) -> dist_person <= 30)",
+     "robustness": 0.5,
+     "satisfied": true
+    }
+   ],
+   "horizon_s": 1500.0,
+   "flight_end_s": 749.0,
+   "dt_s": 0.5
+  },
+  "summary": {
+   "episode": "sar_supply_scripted_s0000",
+   "seed": 0,
+   "end": "help arrived and landed",
+   "t_end": 749.0,
+   "robustness": -995.0,
+   "satisfied": false,
+   "violated": [
+    "deliver"
+   ],
+   "decisions": 28,
+   "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+   },
+   "cost_usd": 0.0,
+   "wall_s": 5.91,
+   "found_t": 156.69999999999538,
+   "help_dispatched_t": 156.69999999999538,
+   "help_arrival_t": 680.7747117372322,
+   "drop_err": null,
+   "battery_end": 45.7,
+   "reports": [
+    {
+     "t": 156.69999999999538,
+     "kind": "person_found",
+     "east": 303.6440662692518,
+     "north": 272.51800715243354,
+     "message": ""
+    }
+   ],
+   "markers": [],
+   "skills": [
+    {
+     "t": 0.0,
+     "skill": "takeoff",
+     "args": {
+      "alt": 30.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 11.399999999999975,
+     "skill": "search_region",
+     "args": {
+      "pattern": "lawnmower",
+      "alt": 30.0,
+      "overlap": 0.2,
+      "region": "r3"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 156.69999999999538,
+     "skill": "report",
+     "args": {
+      "message": "",
+      "kind": "person_found"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 157.79999999999532,
+     "skill": "inspect",
+     "args": {
+      "alt": 20.0,
+      "seconds": 12.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 176.09999999999428,
+     "skill": "pick_up",
+     "args": {
+      "depot": "base"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 261.79999999999103,
+     "skill": "recharge",
+     "args": {
+      "until_pct": 100.0,
+      "station": "pad_charge"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 335.6000000000078,
+     "skill": "precision_land",
+     "args": {
+      "place": "base"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 356.80000000001263,
+     "skill": "wait_until",
+     "args": {
+      "value": 380.7747117372322,
+      "timeout_s": 1500.0,
+      "condition": "time"
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 380.9000000000181,
+     "skill": "takeoff",
+     "args": {
+      "alt": 30.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 392.3000000000207,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 402.60000000002304,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 449.30000000003366,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 486.3000000000421,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 525.800000000051,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 565.30000000006,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 630.7000000000749,
+     "skill": "search_around",
+     "args": {
+      "around": "person",
+      "alt": 25.0
+     },
+     "accepted": true,
+     "warnings": []
+    },
+    {
+     "t": 680.8000000000862,
+     "skill": "rtl",
+     "args": {},
+     "accepted": true,
+     "warnings": []
+    }
+   ]
+  }
+ }
+}

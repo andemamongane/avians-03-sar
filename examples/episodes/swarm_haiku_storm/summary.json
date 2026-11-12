@@ -1,0 +1,556 @@
+{
+  "episode": "sar_supply_2drones_claude-haiku-5-5_s0037",
+  "seed": 37,
+  "end": "help arrived and landed",
+  "t_end": 823.8,
+  "robustness": -0.232,
+  "satisfied": false,
+  "violated": [
+    "battery"
+  ],
+  "decisions": 99,
+  "usage": {
+    "input": 165402,
+    "output": 71041,
+    "cache_read": 1125200,
+    "cache_write": 23200
+  },
+  "cost_usd": 0.0662,
+  "wall_s": 475.98,
+  "found_t": 111.99999999999791,
+  "help_dispatched_t": 115.19999999999773,
+  "help_arrival_t": 754.7218605761016,
+  "drop_err": 1.6730356562043964,
+  "battery_end": {
+    "d1": 15.8,
+    "d2": 9.8
+  },
+  "reports": [
+    {
+      "t": 115.19999999999773,
+      "kind": "person_found",
+      "east": 294.0,
+      "north": 221.0,
+      "message": "Hiker found in red jacket, sitting still, estimate 294,221 +/-1.4 m. Confidence 0.95. Kit needed."
+    },
+    {
+      "t": 115.29999999999772,
+      "kind": "person_found",
+      "east": 294.0,
+      "north": 221.0,
+      "message": "Hiker in red jacket found at (294, 221), confidence 0.95. Kit needed."
+    }
+  ],
+  "markers": [],
+  "skills": {
+    "d1": [
+      {
+        "t": 5.099999999999998,
+        "skill": "assign_tasks",
+        "args": {},
+        "accepted": false,
+        "reason": "on the ground: take off first (or use a skill that takes off itself)"
+      },
+      {
+        "t": 9.699999999999982,
+        "skill": "takeoff",
+        "args": {
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 24.400000000000077,
+        "skill": "assign_tasks",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 27.000000000000114,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r3"
+        },
+        "accepted": true,
+        "warnings": [
+          "north_scree is closed over part of r3: that part is skipped"
+        ]
+      },
+      {
+        "t": 33.60000000000021,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r3"
+        },
+        "accepted": true,
+        "warnings": [
+          "north_scree, summit is closed over part of r3: that part is skipped"
+        ]
+      },
+      {
+        "t": 115.19999999999773,
+        "skill": "report",
+        "args": {
+          "message": "Hiker found in red jacket, sitting still, estimate 294,221 +/-1.4 m. Confidence 0.95. Kit needed.",
+          "kind": "person_found",
+          "east": 294.0,
+          "north": 221.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 121.29999999999738,
+        "skill": "handoff",
+        "args": {
+          "to": "d2",
+          "task": "fetch the medical kit from base depot and deliver it to the person estimate at (294, 221) (drop within 5 m); I stay overhead to keep eyes on them"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 164.69999999999493,
+        "skill": "track_person",
+        "args": {
+          "mode": "orbit",
+          "standoff": 15,
+          "alt": 25,
+          "until": "help_arrived"
+        },
+        "accepted": false,
+        "reason": "at 25 m the camera sees 17 m around: a 15 m standoff loses sight of the person (use <= 14 m or fly higher)"
+      },
+      {
+        "t": 168.39999999999472,
+        "skill": "track_person",
+        "args": {
+          "mode": "orbit",
+          "standoff": 10.0,
+          "alt": 25.0,
+          "speed": 4.0,
+          "until": "help_arrived"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 335.70000000000783,
+        "skill": "goto",
+        "args": {
+          "east": 276,
+          "north": 213,
+          "alt": 25
+        },
+        "accepted": false,
+        "reason": "goto would end inside nofly_power"
+      },
+      {
+        "t": 339.0000000000086,
+        "skill": "goto",
+        "args": {
+          "east": 268.0,
+          "north": 236.0,
+          "alt": 25.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 348.2000000000107,
+        "skill": "goto",
+        "args": {
+          "east": 280.0,
+          "north": 225.0,
+          "alt": 25.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 356.00000000001245,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 434.30000000003025,
+        "skill": "goto",
+        "args": {
+          "east": 368.0,
+          "north": 232.0,
+          "alt": 25.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 443.90000000003243,
+        "skill": "goto",
+        "args": {
+          "east": 322,
+          "north": 222,
+          "alt": 25
+        },
+        "accepted": false,
+        "reason": "goto would end inside r3"
+      },
+      {
+        "t": 446.0000000000329,
+        "skill": "goto",
+        "args": {
+          "east": 385.0,
+          "north": 250.0,
+          "alt": 25.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 455.00000000003496,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 489.6000000000428,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 491.00000000004314,
+        "skill": "goto",
+        "args": {
+          "east": 385,
+          "north": 165,
+          "alt": 25
+        },
+        "accepted": false,
+        "reason": "goto would end inside boulder_field"
+      },
+      {
+        "t": 494.90000000004403,
+        "skill": "goto",
+        "args": {
+          "east": 390.0,
+          "north": 350.0,
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 507.6000000000469,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 513.6000000000482,
+        "skill": "handoff",
+        "args": {
+          "to": "d2",
+          "task": "deliver the kit to the person at (292.7, 221.3) (found, confidence 1.0). Do not enter closed r3 or the power corridor; release from a safe point outside r3 if it is still closed, or wait for it to reopen. I (d1) will keep watch and stay within 30 m of the person when possible."
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 542.7000000000548,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r4"
+        },
+        "accepted": true,
+        "warnings": [
+          "r3 is closed over part of r4: that part is skipped"
+        ]
+      },
+      {
+        "t": 560.4000000000589,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r4"
+        },
+        "accepted": true,
+        "warnings": [
+          "fire_scrub, r3 is closed over part of r4: that part is skipped"
+        ]
+      },
+      {
+        "t": 565.60000000006,
+        "skill": "goto",
+        "args": {
+          "east": 290.0,
+          "north": 248.0,
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 586.8000000000649,
+        "skill": "goto",
+        "args": {
+          "east": 276.0,
+          "north": 224.0,
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 594.3000000000666,
+        "skill": "wait_until",
+        "args": {
+          "value": 0.0,
+          "timeout_s": 300.0,
+          "condition": "help_arrived"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 763.300000000105,
+        "skill": "rtl",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      }
+    ],
+    "d2": [
+      {
+        "t": 3.0000000000000013,
+        "skill": "assign_tasks",
+        "args": {},
+        "accepted": false,
+        "reason": "on the ground: take off first (or use a skill that takes off itself)"
+      },
+      {
+        "t": 6.299999999999994,
+        "skill": "assign_tasks",
+        "args": {},
+        "accepted": false,
+        "reason": "on the ground: take off first (or use a skill that takes off itself)"
+      },
+      {
+        "t": 24.00000000000007,
+        "skill": "takeoff",
+        "args": {
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 29.700000000000152,
+        "skill": "claim_region",
+        "args": {
+          "region": "r2"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 43.300000000000345,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r2"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 115.29999999999772,
+        "skill": "report",
+        "args": {
+          "message": "Hiker in red jacket found at (294, 221), confidence 0.95. Kit needed.",
+          "kind": "person_found",
+          "east": 294.0,
+          "north": 221.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 121.19999999999739,
+        "skill": "pick_up",
+        "args": {
+          "depot": "base"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 186.89999999999367,
+        "skill": "deliver",
+        "args": {
+          "target": "point",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0,
+          "east": 293.1,
+          "north": 220.1
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 335.0000000000077,
+        "skill": "deliver",
+        "args": {
+          "target": "point",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0,
+          "east": 294.4,
+          "north": 220.4
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 435.9000000000306,
+        "skill": "goto",
+        "args": {
+          "east": 370.0,
+          "north": 238.0,
+          "alt": 40.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 444.3000000000325,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 485.70000000004194,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 500.70000000004535,
+        "skill": "goto",
+        "args": {
+          "east": 385.0,
+          "north": 350.0,
+          "alt": 40.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 518.5000000000493,
+        "skill": "goto",
+        "args": {
+          "east": 372.0,
+          "north": 385.0,
+          "alt": 40.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 527.5000000000514,
+        "skill": "hover",
+        "args": {
+          "seconds": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 556.0000000000579,
+        "skill": "goto",
+        "args": {
+          "east": 150.0,
+          "north": 175.0,
+          "alt": 40.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 566.6000000000603,
+        "skill": "inspect",
+        "args": {
+          "alt": 15.0,
+          "seconds": 8.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 592.9000000000663,
+        "skill": "deliver",
+        "args": {
+          "target": "person",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0,
+          "east": 294.7,
+          "north": 219.4
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 712.9000000000935,
+        "skill": "deliver",
+        "args": {
+          "target": "point",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0,
+          "east": 293.8,
+          "north": 219.7
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 791.4000000001114,
+        "skill": "land",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      }
+    ]
+  }
+}

@@ -20,6 +20,7 @@ services:
       - ../missions:/workspace/missions
       - ../worlds:/workspace/worlds
       - ../data:/workspace/data
+      - ../examples:/workspace/examples
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /workspace
     networks: [aas_sim]

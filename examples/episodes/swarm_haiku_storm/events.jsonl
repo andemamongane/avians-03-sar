@@ -1,0 +1,119 @@
+{"t": 20.4, "kind": "zone", "text": "north_scree is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 20.4, "kind": "zone", "text": "r4 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 20.4, "kind": "zone", "text": "north_scree is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 20.4, "kind": "zone", "text": "r4 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 21.0, "kind": "skill_done", "text": "takeoff: at 30 m", "drone": "d1"}
+{"t": 25.4, "kind": "zone", "text": "r4 is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 25.4, "kind": "zone", "text": "r4 is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 26.4, "kind": "message", "text": "radio from d1 [tasking]: d1 assigned you r2", "drone": "d2"}
+{"t": 27.1, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 30.4, "kind": "zone", "text": "summit is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 30.4, "kind": "zone", "text": "summit is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 30.4, "kind": "skill_failed", "text": "search_region failed: summit closed over part of r3 (0% covered); search the rest again", "drone": "d1"}
+{"t": 36.1, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 41.1, "kind": "skill_done", "text": "takeoff: at 30 m", "drone": "d2"}
+{"t": 90.5, "kind": "zone", "text": "north_scree is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 90.5, "kind": "zone", "text": "north_scree is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 95.3, "kind": "progress", "text": "search of r3: 25% of the pattern flown, 44% of the region seen", "drone": "d1"}
+{"t": 96.5, "kind": "progress", "text": "search of r2: 25% of the pattern flown, 42% of the region seen", "drone": "d2"}
+{"t": 112.0, "kind": "found", "text": "person found: estimate (294, 221) +/- 1.4 m, confidence 0.95", "drone": "d1"}
+{"t": 112.0, "kind": "found", "text": "person found: estimate (294, 221) +/- 1.4 m, confidence 0.95", "drone": "d2"}
+{"t": 117.3, "kind": "message", "text": "radio from ground [ack]: Rescue helicopter from the regional base dispatched to (294, 221); ETA about 11 min", "drone": "d1"}
+{"t": 117.4, "kind": "message", "text": "radio from ground [ack]: Rescue helicopter from the regional base already dispatched at t=115 s; ETA t=755 s", "drone": "d2"}
+{"t": 121.7, "kind": "progress", "text": "search of r3: 50% of the pattern flown, 75% of the region seen", "drone": "d1"}
+{"t": 123.4, "kind": "message", "text": "radio from d1 [tasking]: d1 asks you to fetch the medical kit from base depot and deliver it to the person estimate at (294, 221) (drop within 5 m); I stay overhead to keep eyes on them", "drone": "d2"}
+{"t": 149.5, "kind": "progress", "text": "search of r3: 75% of the pattern flown, 84% of the region seen", "drone": "d1"}
+{"t": 170.5, "kind": "zone", "text": "summit is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 170.5, "kind": "zone", "text": "summit is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 177.4, "kind": "progress", "text": "on station over the person (20 m)", "drone": "d1"}
+{"t": 181.5, "kind": "progress", "text": "the orbit would enter a forbidden area: holding beside the person instead", "drone": "d1"}
+{"t": 184.4, "kind": "skill_done", "text": "pick_up: kit loaded at base, back at 30 m", "drone": "d2"}
+{"t": 222.2, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 251.6, "kind": "zone", "text": "east_ridge is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 251.6, "kind": "zone", "text": "summit is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 251.6, "kind": "zone", "text": "east_ridge is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 251.6, "kind": "zone", "text": "summit is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 281.6, "kind": "zone", "text": "east_ridge is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 281.6, "kind": "zone", "text": "east_ridge is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 286.6, "kind": "zone", "text": "summit is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 286.6, "kind": "zone", "text": "summit is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 342.6, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 344.2, "kind": "skill_done", "text": "goto: arrived at (268, 236)", "drone": "d1"}
+{"t": 348.6, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 352.2, "kind": "skill_done", "text": "goto: arrived at (280, 225)", "drone": "d1"}
+{"t": 386.0, "kind": "skill_done", "text": "hover: held for 30 s", "drone": "d1"}
+{"t": 428.5, "kind": "zone", "text": "r1 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 428.5, "kind": "zone", "text": "r2 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 428.5, "kind": "zone", "text": "r3 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 428.5, "kind": "zone", "text": "saddle is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 428.5, "kind": "zone", "text": "r1 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 428.5, "kind": "zone", "text": "r2 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 428.5, "kind": "zone", "text": "r3 is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 428.5, "kind": "zone", "text": "saddle is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 428.5, "kind": "reflex", "text": "safety reflex: inside closed zone r3: leaving by the shortest way", "drone": "d1"}
+{"t": 428.5, "kind": "reflex", "text": "safety reflex: inside closed zone r3: leaving by the shortest way", "drone": "d2"}
+{"t": 441.0, "kind": "skill_done", "text": "goto: arrived at (370, 238)", "drone": "d2"}
+{"t": 441.6, "kind": "skill_done", "text": "goto: arrived at (368, 232)", "drone": "d1"}
+{"t": 451.0, "kind": "skill_done", "text": "goto: arrived at (385, 250)", "drone": "d1"}
+{"t": 474.3, "kind": "skill_done", "text": "hover: held for 30 s", "drone": "d2"}
+{"t": 483.5, "kind": "zone", "text": "boulder_field is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 483.5, "kind": "zone", "text": "boulder_field is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 485.0, "kind": "skill_done", "text": "hover: held for 30 s", "drone": "d1"}
+{"t": 488.5, "kind": "zone", "text": "east_ridge is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 488.5, "kind": "zone", "text": "east_ridge is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 488.5, "kind": "reflex", "text": "safety reflex: inside closed zone east_ridge: leaving by the shortest way", "drone": "d1"}
+{"t": 488.5, "kind": "reflex", "text": "safety reflex: inside closed zone east_ridge: leaving by the shortest way", "drone": "d2"}
+{"t": 493.5, "kind": "zone", "text": "saddle is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 493.5, "kind": "zone", "text": "saddle is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 501.2, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 502.3, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 503.3, "kind": "skill_done", "text": "goto: arrived at (390, 350)", "drone": "d1"}
+{"t": 503.5, "kind": "zone", "text": "r1 is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 503.5, "kind": "zone", "text": "r1 is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 515.6, "kind": "message", "text": "radio from d1 [tasking]: d1 asks you to deliver the kit to the person at (292.7, 221.3) (found, confidence 1.0). Do not enter closed r3 or the power corridor; release from a safe point outside r3 if it is still closed, or wait for it to reopen. I (d1) will keep watch and stay within 30 m of the person when possible.", "drone": "d2"}
+{"t": 522.4, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 525.7, "kind": "skill_done", "text": "goto: arrived at (372, 385)", "drone": "d2"}
+{"t": 537.6, "kind": "skill_done", "text": "hover: held for 30 s", "drone": "d1"}
+{"t": 538.5, "kind": "zone", "text": "creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 538.5, "kind": "zone", "text": "lower_creek is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d1"}
+{"t": 538.5, "kind": "zone", "text": "creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 538.5, "kind": "zone", "text": "lower_creek is now CLOSED: Storm cell overhead: zone closed until it passes", "drone": "d2"}
+{"t": 553.5, "kind": "zone", "text": "lower_creek is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 553.5, "kind": "zone", "text": "lower_creek is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 554.8, "kind": "zone", "text": "fire_scrub is now CLOSED: Fire crews closed the zone: the fire is spreading", "drone": "d1"}
+{"t": 554.8, "kind": "zone", "text": "fire_scrub is now CLOSED: Fire crews closed the zone: the fire is spreading", "drone": "d2"}
+{"t": 554.8, "kind": "skill_failed", "text": "search_region failed: fire_scrub closed over part of r4 (0% covered); search the rest again", "drone": "d1"}
+{"t": 559.5, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 561.6, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 563.5, "kind": "zone", "text": "r3 is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 563.5, "kind": "zone", "text": "r3 is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 565.7, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 566.7, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 566.9, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 568.0, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 569.4, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 578.5, "kind": "zone", "text": "east_ridge is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 578.5, "kind": "zone", "text": "east_ridge is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 580.0, "kind": "skill_done", "text": "goto: arrived at (290, 248)", "drone": "d1"}
+{"t": 583.8, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 587.3, "kind": "progress", "text": "another drone within 20 m: flying 15 m above it until clear", "drone": "d2"}
+{"t": 588.5, "kind": "zone", "text": "r2 is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 588.5, "kind": "zone", "text": "r2 is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 592.3, "kind": "skill_done", "text": "goto: arrived at (276, 224)", "drone": "d1"}
+{"t": 619.2, "kind": "battery", "text": "battery at 30 %", "drone": "d2"}
+{"t": 686.1, "kind": "battery", "text": "battery at 30 %", "drone": "d1"}
+{"t": 698.5, "kind": "zone", "text": "boulder_field is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 698.5, "kind": "zone", "text": "creek_mouth is now SAFE: the storm has passed; zone reopened", "drone": "d1"}
+{"t": 698.5, "kind": "zone", "text": "boulder_field is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 698.5, "kind": "zone", "text": "creek_mouth is now SAFE: the storm has passed; zone reopened", "drone": "d2"}
+{"t": 710.7, "kind": "battery", "text": "battery at 20 %", "drone": "d2"}
+{"t": 754.8, "kind": "help", "text": "Rescue helicopter from the regional base has arrived at the person", "drone": "d1"}
+{"t": 754.8, "kind": "help", "text": "Rescue helicopter from the regional base has arrived at the person", "drone": "d2"}
+{"t": 754.8, "kind": "skill_done", "text": "wait_until: help_arrived after 161 s", "drone": "d1"}
+{"t": 756.5, "kind": "battery", "text": "battery at 15 %", "drone": "d2"}
+{"t": 765.5, "kind": "progress", "text": "clear of the other drone: back to the skill's altitude", "drone": "d2"}
+{"t": 785.5, "kind": "battery", "text": "battery at 20 %", "drone": "d1"}
+{"t": 787.4, "kind": "released", "text": "kit released at (294, 220, 8 m) (falls for ~1.3 s)", "drone": "d2"}
+{"t": 788.8, "kind": "kit_landed", "text": "kit landed at (293, 219), 1.8 m from the person estimate", "drone": "d1"}
+{"t": 788.8, "kind": "kit_landed", "text": "kit landed at (293, 219), 1.8 m from the person estimate", "drone": "d2"}
+{"t": 804.5, "kind": "skill_done", "text": "land: landed at (294, 220)", "drone": "d2"}

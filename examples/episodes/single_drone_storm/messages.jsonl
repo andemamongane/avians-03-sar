@@ -1,0 +1,3 @@
+{"t": 90.0, "sent_t": null, "sender": "operator", "to": "all", "kind": "tasking", "text": "base: search priority is the pine slope, then the creek; report as soon as you have a sighting"}
+{"t": 156.7, "sent_t": 156.69999999999538, "sender": "drone1", "to": "ground", "kind": "person_found", "text": "person found at (304, 273)", "data": {"east": 303.6440662692518, "north": 272.51800715243354, "delivered": true}}
+{"t": 158.7, "sent_t": 156.69999999999538, "sender": "ground", "to": "drone1", "kind": "ack", "text": "Rescue helicopter from the regional base dispatched to (304, 273); ETA about 9 min", "data": {"east": 303.6440662692518, "north": 272.51800715243354}}

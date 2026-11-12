@@ -1,0 +1,25 @@
+{"t": 11.3, "kind": "skill_done", "text": "takeoff: at 30 m"}
+{"t": 75.6, "kind": "progress", "text": "search of r3: 25% of the pattern flown, 44% of the region seen"}
+{"t": 90.1, "kind": "message", "text": "radio from operator [tasking]: base: search priority is the pine slope, then the creek; report as soon as you have a sighting"}
+{"t": 102.0, "kind": "progress", "text": "search of r3: 50% of the pattern flown, 75% of the region seen"}
+{"t": 129.8, "kind": "progress", "text": "search of r3: 75% of the pattern flown, 83% of the region seen"}
+{"t": 156.7, "kind": "found", "text": "person found: estimate (304, 273) +/- 1.4 m, confidence 0.94"}
+{"t": 157.5, "kind": "skill_done", "text": "search_region: pattern over r3 flown in 146 s; 99% of the region seen"}
+{"t": 158.8, "kind": "message", "text": "radio from ground [ack]: Rescue helicopter from the regional base dispatched to (304, 273); ETA about 9 min"}
+{"t": 176.0, "kind": "skill_done", "text": "inspect: looked at the estimate for 12 s: confidence 0.99 -> 1.00"}
+{"t": 220.6, "kind": "zone", "text": "west_woods is now CLOSED: Fire crews closed the zone: the fire is spreading"}
+{"t": 220.6, "kind": "replanned", "text": "replanned around west_woods"}
+{"t": 261.7, "kind": "skill_done", "text": "pick_up: kit loaded at base, back at 30 m"}
+{"t": 302.7, "kind": "zone", "text": "creek_mouth is now CLOSED: Storm cell overhead: zone closed until it passes"}
+{"t": 335.5, "kind": "skill_done", "text": "recharge: battery 67 -> 98 % in 53 s on pad_charge; airborne"}
+{"t": 356.7, "kind": "skill_done", "text": "precision_land: landed at (0, 10)"}
+{"t": 357.7, "kind": "zone", "text": "creek_mouth is now SAFE: the storm has passed; zone reopened"}
+{"t": 380.8, "kind": "skill_done", "text": "wait_until: time after 24 s"}
+{"t": 392.2, "kind": "skill_done", "text": "takeoff: at 30 m"}
+{"t": 402.5, "kind": "reflex", "text": "safety reflex: heading into closed zone west_woods: braked"}
+{"t": 449.2, "kind": "skill_done", "text": "search_around: square to 40 m around (304, 274) flown; best confidence 1.00"}
+{"t": 486.2, "kind": "skill_done", "text": "search_around: square to 45 m around (304, 274) flown; best confidence 1.00"}
+{"t": 525.7, "kind": "skill_done", "text": "search_around: square to 49 m around (304, 274) flown; best confidence 1.00"}
+{"t": 565.2, "kind": "skill_done", "text": "search_around: square to 53 m around (304, 274) flown; best confidence 1.00"}
+{"t": 630.6, "kind": "skill_done", "text": "search_around: square to 57 m around (304, 274) flown; best confidence 1.00"}
+{"t": 680.8, "kind": "help", "text": "Rescue helicopter from the regional base has arrived at the person"}

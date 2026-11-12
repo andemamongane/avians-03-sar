@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 ROS_DOMAIN_ID=1 \
     ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET AVIANS_ROOT=/workspace
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3-pip git curl ffmpeg ros-${ROS_DISTRO}-rosbag2 \
+      python3-pip git curl ffmpeg ros-${ROS_DISTRO}-rosbag2 ros-${ROS_DISTRO}-vision-msgs \
  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ws/src/px4_msgs && cd /ws/src/px4_msgs \
@@ -23,7 +23,7 @@ RUN . /opt/ros/jazzy/setup.sh && cd /ws \
 # Python: no venv (rclpy is built for the system interpreter); numpy pinned to apt's.
 RUN python3 -m pip install --break-system-packages --no-cache-dir \
       "numpy==$(python3 -c 'import numpy; print(numpy.__version__)')" \
-      scipy shapely networkx pyyaml pydantic filterpy matplotlib pymavlink imageio-ffmpeg pytest "anthropic>=1"
+      scipy shapely networkx pyyaml pydantic filterpy matplotlib pymavlink imageio-ffmpeg pytest ruckig "anthropic>=1"
 WORKDIR /workspace
 COPY packages /workspace/packages
 RUN for p in env spec perception skills safety sim adp viz agent; do \
