@@ -51,6 +51,20 @@ class MissionSpec:
     def horizon(self) -> float:
         return max(c.node.horizon() for c in self.clauses)
 
+    def members(self, name: str, domain: str) -> list[tuple[str, stl.Node]]:
+        """The clause restricted to each member of `domain` (one sub-formula per zone, say):
+        the clause's robustness is the min over these, so the smallest names the tightest member."""
+        import copy
+        c = next(c for c in self.clauses if c.name == name)
+        if f" in {domain}" not in c.formula or domain not in self.registry.domains:
+            return []
+        out = []
+        for m in self.registry.domains[domain]:
+            reg = copy.copy(self.registry)
+            reg.domains = {**self.registry.domains, domain: [m]}
+            out.append((m, stl.parse(c.formula, reg)))
+        return out
+
     def describe(self) -> str:
         """For the pilot's prompt."""
         lines = [f"SPEC (signal temporal logic; all clauses must hold; times in s from takeoff "

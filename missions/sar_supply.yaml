@@ -1,5 +1,6 @@
 # The search-and-rescue benchmark: find a missing hiker, get them help and
-# supplies, stay with them until help arrives.
+# supplies, stay with them until help arrives. The valley is tiled into zones;
+# storms and fires close zones during the mission (drawn per seed).
 name: sar_supply
 world: worlds/sar_valley
 envelope: standard
@@ -9,33 +10,32 @@ brief: >-
   them, report their position: that dispatches the rescue helicopter (about
   10 minutes out; a wrong position delays it). Pick up the medical kit at the
   base depot and drop it within 5 m of them. Then stay with them (within 30 m)
-  until the helicopter arrives. Until they are found, keep every search
-  region fresh: each one visited at least once every 10 minutes. The fire
-  zone may close; get out within 30 s and stay out while it is closed. Keep at least 10 %
-  battery: the charging pad is at base, the swap station is forward.
+  until the helicopter arrives. Until they are found, keep every search zone
+  fresh: each one visited at least once every 10 minutes (a zone that is
+  closed meanwhile is excused). Storm cells drift across the valley and fires
+  can start in the dry west: a zone they reach is closed; get out within 30 s
+  and stay out until it reopens. Keep at least 10 % battery: the charging pad
+  is at base, the swap station is on the saddle.
 spec:
   dt: 0.5
   clauses:
     no_fly:       {formula: "G[0,1500] !in(nofly_power)", says: "never enter the power line corridor"}
-    closed_zone:  {formula: "G[0,1500] ((H[0,30] unsafe_zone_fire) -> !in(zone_fire))", says: "once the fire zone has been closed for 30 s, never be in it"}
+    closed_zones: {formula: "G[0,1500] (forall z in zones: ((H[0,30] z.unsafe) -> !in(z)))", says: "once a zone has been closed for 30 s, never be in it"}
     battery:      {formula: "G[0,1500] battery >= 10", says: "keep at least 10 % battery"}
     clearance:    {formula: "G[0,1500] clearance >= 3", says: "stay 3 m or more from obstacles"}
     find:         {formula: "F[0,900] found", says: "find the person within 15 minutes"}
-    patrol_r1:    {formula: "G[0,900] ((!O found) -> F[0,600] (in(r1) | found))", says: "until found, visit r1 at least every 10 minutes"}
-    patrol_r2:    {formula: "G[0,900] ((!O found) -> F[0,600] (in(r2) | found))", says: "until found, visit r2 at least every 10 minutes"}
-    patrol_r3:    {formula: "G[0,900] ((!O found) -> F[0,600] (in(r3) | found))", says: "until found, visit r3 at least every 10 minutes"}
-    patrol_r4:    {formula: "G[0,900] ((!O found) -> F[0,600] (in(r4) | found))", says: "until found, visit r4 at least every 10 minutes"}
+    patrol:       {formula: "G[0,900] (forall z in search_zones: ((!O found) -> F[0,600] (in(z) | found | z.unsafe)))", says: "until found, visit every search zone at least every 10 minutes (closed zones excused)"}
     report:       {formula: "G[0,1300] (found -> F[0,120] help_dispatched)", says: "report the person within 2 minutes of finding them"}
     deliver:      {formula: "F[0,1500] drop_err <= 5", says: "the kit lands within 5 m of the person"}
-    stay:         {formula: "G[0,1500] (((O released) & !help) -> dist_person <= 30)", says: "after the drop, stay within 30 m of the person until help arrives"}
-ground:                 # the ground station (avians_sim.ground); same block in the family mission
+    stay:         {formula: "G[0,1500] (((O released) & !help & !person_zone_closed) -> dist_person <= 30)", says: "after the drop, stay within 30 m of the person until help arrives (excused while their zone is closed)"}
+ground:                 # the ground station (avians_sim.ground)
   name: base
   latency_s: 2          # s from a report to its acknowledgement
   loss: 0.0             # probability a message is lost
   range_m: 2000         # link range from the station (at the launch point)
   answers:              # scripted replies to the pilot's questions (regex -> text)
-    "(where|which region).*(hiker|person)": "operator: last contact was the phone ping near the creek; nothing newer"
+    "(where|which (region|zone)).*(hiker|person)": "operator: last contact was the phone ping near the creek; nothing newer"
     "(helicopter|eta|how long)": "operator: the helicopter's ETA is what the dispatch said; no update"
-    "fire|zone": "operator: fire crews decide zone closures; we relay them as soon as we hear"
+    "fire|storm|zone|weather": "operator: we relay zone closures as soon as we hear; storm cells usually pass in 5 to 10 minutes"
   operator:             # tasking at fixed times
     - {t: 90, text: "base: search priority is the pine slope, then the creek; report as soon as you have a sighting"}

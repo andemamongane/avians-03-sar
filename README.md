@@ -215,9 +215,10 @@ regions). Coordination is through the skills: `search_region` claims its
 region, `assign_tasks` splits regions optimally (Hungarian method) and
 radios each drone its share, `handoff` asks another drone to take over,
 `formation` holds a relay or wing position. Pads are exclusive, and the
-reflex layer keeps the drones apart by altitude (the higher id flies 12 m
-above the other while within range, triggered early enough for the closing
-speed).
+reflex layer keeps the drones apart by altitude: while within range, one
+flies 15 m above the other, triggered early enough for the closing speed. A
+drone on a landing-type task (deliver, land, pick-up, recharge, swap) never
+has to climb, so a drop is never blocked; between equals the higher id climbs.
 
 The spec quantifies over drones: `forall x in drones: x.battery >= 10`,
 `exists x in drones: x.in(r1)`, plus `min_sep` and `min_dist_person`

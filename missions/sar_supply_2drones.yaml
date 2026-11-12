@@ -1,5 +1,5 @@
-# The benchmark with two drones, each with its own pilot. Quantified clauses:
-# forall = every drone, exists = some drone (avians_spec: the finite fragment of SFO).
+# The benchmark with two drones, each with its own pilot. Quantified clauses
+# (SFO, finite domains): forall/exists over drones, forall over zones.
 name: sar_supply_2drones
 world: worlds/sar_valley
 drones: 2
@@ -7,34 +7,34 @@ envelope: standard
 horizon_s: 1500
 brief: >-
   A hiker is missing in the valley. Two drones, each with its own pilot, fly
-  this mission together. Find the hiker: until then, keep every search region
-  fresh (each visited by some drone at least every 10 minutes); split the
-  regions between you. As soon as you are sure it is them, report their
-  position: that dispatches the rescue helicopter (about 10 minutes out; a
-  wrong position delays it). One drone fetches the medical kit from the base
-  depot and drops it within 5 m of them; the other keeps eyes on them. Then
-  some drone stays with them (within 30 m) until the helicopter arrives. The
-  fire zone may close; get out within 30 s and stay out while it is closed.
-  Every drone keeps at least 10 % battery and 10 m from the other.
+  this mission together. Find the hiker: until then, keep every search zone
+  fresh (each visited by some drone at least every 10 minutes; a zone closed
+  meanwhile is excused); split the zones between you. As soon as you are sure
+  it is them, report their position: that dispatches the rescue helicopter
+  (about 10 minutes out; a wrong position delays it). One drone fetches the
+  medical kit from the base depot and drops it within 5 m of them; the other
+  keeps eyes on them. Then some drone stays with them (within 30 m) until the
+  helicopter arrives. Storm cells drift across the valley and fires can start
+  in the dry west: a zone they reach is closed; get out within 30 s and stay
+  out until it reopens. Every drone keeps at least 10 % battery and 10 m from
+  the other.
 spec:
   dt: 0.5
   clauses:
     no_fly:       {formula: "G[0,1500] (forall x in drones: !x.in(nofly_power))", says: "no drone ever enters the power line corridor"}
-    closed_zone:  {formula: "G[0,1500] ((H[0,30] unsafe_zone_fire) -> (forall x in drones: !x.in(zone_fire)))", says: "once the fire zone has been closed for 30 s, no drone is in it"}
+    closed_zones: {formula: "G[0,1500] (forall x in drones: (forall z in zones: ((H[0,30] z.unsafe) -> !x.in(z))))", says: "once a zone has been closed for 30 s, no drone is in it"}
     battery:      {formula: "G[0,1500] (forall x in drones: x.battery >= 10)", says: "every drone keeps at least 10 % battery"}
     clearance:    {formula: "G[0,1500] (forall x in drones: x.clearance >= 3)", says: "every drone stays 3 m or more from obstacles"}
     separation:   {formula: "G[0,1500] min_sep >= 10", says: "the drones stay at least 10 m apart"}
     find:         {formula: "F[0,900] found", says: "find the person within 15 minutes"}
-    patrol_r1:    {formula: "G[0,900] ((!O found) -> F[0,600] ((exists x in drones: x.in(r1)) | found))", says: "until found, some drone visits r1 at least every 10 minutes"}
-    patrol_r2:    {formula: "G[0,900] ((!O found) -> F[0,600] ((exists x in drones: x.in(r2)) | found))", says: "until found, some drone visits r2 at least every 10 minutes"}
-    patrol_r3:    {formula: "G[0,900] ((!O found) -> F[0,600] ((exists x in drones: x.in(r3)) | found))", says: "until found, some drone visits r3 at least every 10 minutes"}
-    patrol_r4:    {formula: "G[0,900] ((!O found) -> F[0,600] ((exists x in drones: x.in(r4)) | found))", says: "until found, some drone visits r4 at least every 10 minutes"}
+    patrol:       {formula: "G[0,900] (forall z in search_zones: ((!O found) -> F[0,600] ((exists x in drones: x.in(z)) | found | z.unsafe)))", says: "until found, some drone visits every search zone at least every 10 minutes (closed zones excused)"}
     report:       {formula: "G[0,1300] (found -> F[0,120] help_dispatched)", says: "report the person within 2 minutes of finding them"}
     deliver:      {formula: "F[0,1500] drop_err <= 5", says: "a kit lands within 5 m of the person"}
-    stay:         {formula: "G[0,1500] (((O released) & !help) -> min_dist_person <= 30)", says: "after the drop, some drone stays within 30 m of the person until help arrives"}
+    stay:         {formula: "G[0,1500] (((O released) & !help & !person_zone_closed) -> min_dist_person <= 30)", says: "after the drop, some drone stays within 30 m of the person until help arrives (excused while their zone is closed)"}
 ground:
   name: base
   latency_s: 2
   range_m: 2000
   answers:
     "(helicopter|eta|how long)": "operator: the helicopter's ETA is what the dispatch said; no update"
+    "fire|storm|zone|weather": "operator: we relay zone closures as soon as we hear; storm cells usually pass in 5 to 10 minutes"

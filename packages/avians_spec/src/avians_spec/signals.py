@@ -119,10 +119,16 @@ def sar_registry(world=None, max_speed: float = 15.0, max_climb: float = 5.0,
                lo=0.0, hi=1.0, monotone="up", boolean=True),
         Signal("help", "0/1", "help has arrived at the person (latched)", lo=0.0, hi=1.0,
                monotone="up", boolean=True),
+        Signal("person_zone_closed", "0/1", "the zone the person is in is closed (storm or fire)",
+               lo=0.0, hi=1.0, boolean=True),
     ):
         r.add(s)
-    zones = world.hazard_zones() if world is not None else []
+    zones = (world.dynamic_zones() if hasattr(world, "dynamic_zones") else world.hazard_zones()) \
+        if world is not None else []
     for z in zones:
         r.add(Signal(f"unsafe_{z.id}", "0/1", f"zone {z.id} is closed (time-varying)", lo=0.0,
                      hi=1.0, boolean=True))
+    if world is not None:
+        r.domains["zones"] = [z.id for z in zones]
+        r.domains["search_zones"] = [z.id for z in world.search_regions()]
     return r

@@ -31,10 +31,10 @@ import math
 import numpy as np
 import shapely
 from shapely import affinity
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Point, Polygon
 
 
-def _lanes(poly: Polygon, spacing: float, rotate: float = 0.0):
+def _lanes(poly: Polygon, spacing: float, rotate: float = 0.0, outer=None):
     rect = poly.minimum_rotated_rectangle
     xs, ys = rect.exterior.coords.xy
     edges = [((xs[i], ys[i]), (xs[i + 1], ys[i + 1])) for i in range(4)]
@@ -54,6 +54,18 @@ def _lanes(poly: Polygon, spacing: float, rotate: float = 0.0):
         parts = [seg] if isinstance(seg, LineString) else list(getattr(seg, "geoms", []))
         parts = [p for p in parts if isinstance(p, LineString) and p.length > 1.0]
         for p in sorted(parts, key=lambda p: p.coords[0][0]):
+            if outer is not None:
+                # lanes run inside the shrunk polygon (so the footprint covers the edges beside
+                # them); extend their ends by half a spacing, clipped to the full area, so the
+                # footprint also covers the edges and corners at the ends
+                (ax, ay), (bx, by) = p.coords[0], p.coords[-1]
+                ext = LineString([(ax - spacing / 2, ay), (bx + spacing / 2, by)])
+                o_rot = affinity.rotate(outer, -angle, origin=c)
+                cl = ext.intersection(o_rot)
+                cands = [cl] if isinstance(cl, LineString) else list(getattr(cl, "geoms", []))
+                cands = [g for g in cands if isinstance(g, LineString) and g.length > 1.0 and g.intersects(p)]
+                if cands:
+                    p = max(cands, key=lambda g: g.length)
             back = affinity.rotate(p, angle, origin=c)
             lanes.append(list(back.coords))
     return lanes
@@ -63,14 +75,16 @@ def lawnmower(poly: Polygon, spacing: float, start: tuple[float, float],
               forbidden: list[Polygon] = (), rotate: float = 0.0) -> list[tuple[float, float]]:
     """Waypoints of a boustrophedon over poly (minus forbidden), nearest corner first."""
     area = poly.buffer(-spacing / 2) if poly.buffer(-spacing / 2).area > 0 else poly
+    outer = poly
     for f in forbidden:
         area = area.difference(f)
+        outer = outer.difference(f)
     if area.is_empty:
         return []
     polys = [area] if isinstance(area, Polygon) else [g for g in area.geoms if isinstance(g, Polygon)]
     best = None
     for p in polys:
-        lanes = _lanes(p, spacing, rotate)
+        lanes = _lanes(p, spacing, rotate, outer)
         if not lanes:
             continue
         for rev_order in (False, True):
@@ -85,6 +99,23 @@ def lawnmower(poly: Polygon, spacing: float, start: tuple[float, float],
                     best = (d, pts, p)
         start = best[1][-1] if best else start
     return best[1] if best else []
+
+
+def headland(poly: Polygon, inset: float, start: tuple[float, float],
+             forbidden: list[Polygon] = ()) -> list[tuple[float, float]]:
+    """One lap around the polygon, `inset` inside its boundary (the headland pass of field
+    coverage): with the lanes, it covers the edge bands whatever the lanes' direction.
+    Starts at the vertex nearest `start`; points inside forbidden areas are dropped."""
+    inner = poly.buffer(-inset, quad_segs=2)
+    if inner.is_empty or not isinstance(inner, Polygon):
+        return []
+    ring = list(inner.exterior.coords)[:-1]
+    ring = [p for p in ring if not any(f.contains(Point(p)) for f in forbidden)]
+    if len(ring) < 2:
+        return []
+    k = min(range(len(ring)), key=lambda i: math.dist(ring[i], start))
+    ring = ring[k:] + ring[:k]
+    return ring + [ring[0]]
 
 
 def expanding_square(datum: tuple[float, float], spacing: float, radius: float,

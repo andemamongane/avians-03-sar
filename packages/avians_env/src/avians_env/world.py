@@ -51,6 +51,8 @@ class Region:
     name: str = ""
     altitude: tuple[float, float] | None = None     # (floor, ceiling); None: ground to sky
     description: str = ""
+    fire_prone: bool = False                        # fires can start or spread here (dynamics)
+    protected: bool = False                         # never closed by dynamics (the base)
 
     def __post_init__(self):
         self.polygon = [tuple(map(float, p)) for p in self.polygon]
@@ -204,6 +206,8 @@ class WorldSpec:
     wind: Wind = field(default_factory=Wind)
     kit: Kit = field(default_factory=Kit)
     family: object = None                    # avians_env.family.Family, or None: one fixed environment
+    dynamics: dict = field(default_factory=dict)    # storms / fires (avians_env.dynamics)
+    tiled: bool = False                      # zones are disjoint and cover the bounds exactly
     source: Path | None = None
 
     # ------------------------------------------------------------ loading
@@ -233,7 +237,8 @@ class WorldSpec:
         for r in d.get("regions", []):
             alt = tuple(map(float, r["altitude"])) if r.get("altitude") else None
             regions[r["id"]] = Region(r["id"], r["kind"], r["polygon"], r.get("name", ""),
-                                      alt, r.get("description", ""))
+                                      alt, r.get("description", ""), bool(r.get("fire_prone", False)),
+                                      bool(r.get("protected", False)))
         obstacles = {}
         for o in d.get("obstacles", []):
             if "circle" in o:
@@ -278,6 +283,8 @@ class WorldSpec:
             safety_timeline=timeline, help=help_,
             wind=Wind(float(wd.get("east", 0)), float(wd.get("north", 0)), float(wd.get("gust_std", 0))),
             kit=Kit(float(kd.get("mass", 1.0)), float(kd.get("cd_area", 0.03)), float(kd.get("rho", 1.225))))
+        w.dynamics = {k: v for k, v in dyn.items() if k in ("storms", "fires")}
+        w.tiled = bool(d.get("tiled", False))
         if d.get("family"):
             from .family import Family
             w.family = Family.from_dict(d["family"])
@@ -305,16 +312,51 @@ class WorldSpec:
         ids = [*self.regions, *self.obstacles, *self.stations, *self.depots]
         if len(ids) != len(set(ids)):
             errs.append("ids must be unique across regions, obstacles, stations and depots")
+        if self.tiled:
+            errs += self.tiling_errors()
         return errs
+
+    def tiling_errors(self, tol: float = 1e-6) -> list[str]:
+        """A tiled world: the zones are pairwise disjoint and their union is the operating area."""
+        from shapely.ops import unary_union
+        errs = []
+        b = self.bounds_shape()
+        if b is None:
+            return ["a tiled world needs bounds"]
+        rs = list(self.regions.values())
+        for i, a in enumerate(rs):
+            for c in rs[i + 1:]:
+                ov = a.shape.intersection(c.shape).area
+                if ov > tol:
+                    errs.append(f"zones {a.id} and {c.id} overlap by {ov:.1f} m^2")
+        gap = unary_union([r.shape for r in rs]).symmetric_difference(b).area
+        if gap > tol:
+            errs.append(f"the zones do not cover the operating area exactly ({gap:.1f} m^2 differ)")
+        return errs
+
+    def zone_at(self, e: float, n: float) -> Region | None:
+        """The zone containing (e, n) (tiled worlds: exactly one inside the bounds)."""
+        pt = Point(e, n)
+        for r in self.regions.values():
+            if r.shape.covers(pt):
+                return r
+        return None
+
+    def dynamic_zones(self) -> list[Region]:
+        """Zones whose safety can change: the file's timeline zones, hazard zones, and, with
+        storms or fires, every zone that is neither no-fly nor protected."""
+        zones = {e.zone for e in self.safety_timeline}
+        anything = bool(self.dynamics)
+        return [r for r in self.regions.values() if r.id in zones or r.kind == "hazard"
+                or (anything and r.kind != "no_fly" and not r.protected)]
 
     # ------------------------------------------------------------ queries
     def search_regions(self) -> list[Region]:
         return [r for r in self.regions.values() if r.kind == "search"]
 
     def hazard_zones(self) -> list[Region]:
-        """Regions whose safety changes over time (the safety timeline's zones)."""
-        zones = {e.zone for e in self.safety_timeline}
-        return [r for r in self.regions.values() if r.id in zones or r.kind == "hazard"]
+        """Regions whose safety changes over time (kept for older callers)."""
+        return self.dynamic_zones()
 
     def no_fly(self) -> list[Region]:
         return [r for r in self.regions.values() if r.kind == "no_fly"]
@@ -392,6 +434,8 @@ class Scenario:
     speed: float = 0.0
     news: list = field(default_factory=list)              # family.News, sorted by t
     person_region: str = ""
+    storms: list = field(default_factory=list)            # dynamics.Storm
+    fires: list = field(default_factory=list)             # {zone, t, from}
 
     @classmethod
     def draw(cls, w: WorldSpec, seed: int, horizon_s: float = 3600.0) -> "Scenario":
@@ -427,8 +471,13 @@ class Scenario:
         else:
             track[:, 1:] = start
         delay = max(60.0, rng.normal(help_mean, w.help.delay_std_s))
+        storms, fires = [], []
+        if w.dynamics:
+            from . import dynamics
+            ev, storms, fires = dynamics.draw(w, np.random.default_rng(seed + 20_000), horizon_s, wind)
+            timeline = sorted(list(timeline) + ev, key=lambda e: (e.t, e.zone))
         return cls(w, seed, track, float(delay), timeline, descriptions, decoys, wind, weights,
-                   motion, speed, news, region)
+                   motion, speed, news, region, storms, fires)
 
     def person_position(self, t: float) -> tuple[float, float]:
         tr = self.person_track
@@ -442,7 +491,8 @@ class Scenario:
                 "descriptions": self.descriptions,
                 "decoys": [{"id": d.id, "position": d.position, "strength": d.strength} for d in self.decoys],
                 "wind": vars(self.wind), "region_weights": self.region_weights, "motion": self.motion,
-                "speed": self.speed, "news": [vars(n) for n in self.news]}
+                "speed": self.speed, "news": [vars(n) for n in self.news],
+                "storms": [s.summary() for s in self.storms], "fires": self.fires}
 
 
 def _free(w: WorldSpec, p) -> bool:
@@ -499,7 +549,17 @@ class WorldState:
         return safe
 
     def unsafe_zones(self, t: float) -> list[Region]:
-        return [r for r in self.world.hazard_zones() if not self.zone_safe(r.id, t)]
+        return [r for r in self.world.dynamic_zones() if not self.zone_safe(r.id, t)]
+
+    def cautions(self, t: float) -> dict[str, str]:
+        """Open zones near an active storm cell: id -> why."""
+        if not self.scenario.storms:
+            return {}
+        from . import dynamics
+        cm = float((self.world.dynamics.get("storms") or {}).get("caution_m", 60))
+        closed = {z.id for z in self.unsafe_zones(t)}
+        return {k: v for k, v in dynamics.cautions(self.world, self.scenario.storms, t, cm).items()
+                if k not in closed}
 
     def changes(self, t0: float, t1: float) -> list[SafetyEvent]:
         """Safety changes in (t0, t1]."""
@@ -537,8 +597,10 @@ class WorldState:
         out = {"help": 1.0 if self.help_arrived(t) else 0.0,
                "help_dispatched": 1.0 if self.help.dispatched_t is not None and
                t >= self.help.dispatched_t else 0.0}
-        for z in self.world.hazard_zones():
+        for z in self.world.dynamic_zones():
             out[f"unsafe_{z.id}"] = 0.0 if self.zone_safe(z.id, t) else 1.0
+        pz = self.world.zone_at(*self.person_position(t)) if self.world.tiled else None
+        out["person_zone_closed"] = 1.0 if pz is not None and not self.zone_safe(pz.id, t) else 0.0
         return out
 
     def describe(self) -> str:
@@ -549,12 +611,21 @@ class WorldState:
     def status(self, t: float) -> str:
         """What is true now that the static map does not say."""
         lines = []
-        for z in self.world.hazard_zones():
+        zones = self.world.dynamic_zones()
+        closed = [z for z in zones if not self.zone_safe(z.id, t)]
+        for z in closed:
             since = max((e.t for e in self.timeline if e.zone == z.id and e.t <= t), default=None)
             notes = [e.note for e in self.timeline if e.zone == z.id and e.t <= t and e.note]
-            state = "SAFE" if self.zone_safe(z.id, t) else "UNSAFE (do not enter)"
-            lines.append(f"- {z.id}: {state}" + (f" since t={since:.0f} s" if since else "")
-                         + (f" ({notes[-1]})" if notes else ""))
+            lines.append(f"- {z.id} ({z.name}): CLOSED (do not enter)" + (f" since t={since:.0f} s" if since else "")
+                         + (f": {notes[-1]}" if notes else ""))
+        for zid, why in self.cautions(t).items():
+            lines.append(f"- {zid} ({self.world.regions[zid].name}): open, CAUTION: {why}")
+        if len(zones) > 3 and not closed:
+            lines.append("- every zone is open")
+        elif len(zones) <= 3:                  # few dynamic zones: list the open ones too
+            for z in zones:
+                if z not in closed:
+                    lines.append(f"- {z.id}: SAFE")
         h = self.help
         if h.dispatched_t is None:
             lines.append("- help: not dispatched (report the person's location to dispatch it)")

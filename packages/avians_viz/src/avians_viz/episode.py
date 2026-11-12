@@ -33,13 +33,19 @@ class Episode:
             if not tj.exists():
                 continue
             did = tj.stem.split("_", 1)[1] if "_" in tj.stem else ""
+            thinking = ""
             for step in json.loads(tj.read_text())["content"]:
-                if step.get("class_") == "api_action":
+                if step.get("class_") == "text_observation" and step.get("source") == "environment":
+                    thinking = ""                       # a new decision prompt
+                elif step.get("class_") == "message_action":
+                    thinking = (step.get("details") or {}).get("thinking") or step.get("content") or ""
+                elif step.get("class_") == "api_action":
                     dd = step["details"]
                     decisions.append({"t_obs": dd.get("t_obs", dd.get("t")), "t_apply": dd.get("t_apply"),
                                       "tool": step["function"], "args": step["kwargs"],
                                       "reason": step.get("description") or "", "by": dd.get("by"),
-                                      "drone": did})
+                                      "drone": did, "latency_s": dd.get("latency_s"),
+                                      "model": dd.get("model"), "thinking": thinking})
         decisions.sort(key=lambda x: x["t_obs"] or 0)
         load = lambda n: json.loads((d / n).read_text()) if (d / n).exists() else {}  # noqa: E731
         return cls(d, load("meta.json"), load("summary.json"), load("score.json"), t, sig, events, decisions)

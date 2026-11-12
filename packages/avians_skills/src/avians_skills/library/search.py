@@ -6,7 +6,7 @@ import math
 from shapely.geometry import LineString, Point
 
 from ..base import Setpoint, Skill, SkillError
-from ..coverage import expanding_square, lawnmower, sector
+from ..coverage import expanding_square, headland, lawnmower, sector
 from ..follow import PathFollower
 from ._common import Transit
 
@@ -15,8 +15,8 @@ NUM = {"type": "number"}
 
 class SearchRegion(Skill):
     name, category = "search_region", "search"
-    summary = ("Search a region with a standard pattern: lawnmower (parallel tracks over the whole "
-               "region), crosshatch (lawnmower twice, the second pass perpendicular: slower, best "
+    summary = ("Search a region with a standard pattern: lawnmower (a lap around the edge, then "
+               "parallel tracks over the whole region), crosshatch (lawnmower twice, the second pass perpendicular: slower, best "
                "detection), expanding_square or sector (around the region centre or a datum). Lane "
                "spacing comes from the camera footprint at the altitude. Finishes when the "
                "pattern is flown; a sighting does not stop it (you decide).")
@@ -55,7 +55,9 @@ class SearchRegion(Skill):
         forbidden = [p.buffer(1.0, quad_segs=2) for _, p in ctx.planner.forbidden(alt, ctx.unsafe_zones())]
         st = ctx.state
         if a["pattern"] == "lawnmower":
-            pts = lawnmower(r.shape, self.spacing, (st.east, st.north), forbidden)
+            # a headland lap first (edges and corners), then the lanes from where it ends
+            ring = headland(r.shape, 0.6 * fp, (st.east, st.north), forbidden)
+            pts = ring + lawnmower(r.shape, self.spacing, ring[-1] if ring else (st.east, st.north), forbidden)
         elif a["pattern"] == "crosshatch":
             pts = lawnmower(r.shape, self.spacing, (st.east, st.north), forbidden)
             if pts:

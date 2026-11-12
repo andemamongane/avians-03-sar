@@ -2,17 +2,7 @@
 # between real callouts drawn per seed. sar_valley itself stays fixed.
 extends: ../sar_valley/world.yaml
 name: sar_valley_family
-family:
-  zone_safety:
-    zone_fire:
-      p_close: 0.8
-      t_close: [150, 800]
-      duration: [240, 900]
-      p_reopen: 0.4
-      notes:
-        - Fire crews closed the zone; the fire is spreading east
-        - Smoke over the west ridge; crews closed the zone as a precaution
-        - A helicopter is water-bombing the scrub; the zone is closed to all aircraft
+family:                # storms and fires come from the base world's dynamics (per seed)
   descriptions:
     r1:
       - Open grass, good visibility. The trail starts here.
@@ -39,7 +29,7 @@ family:
   wind: {speed: [0, 5], gust_std: [0, 1.5]}
   help: {delay_mean_s: [420, 780]}
   news:
-    - {p: 0.5, t: [120, 500], about: zone_fire, text: "Rangers report smoke drifting over {name}; it may be closed soon"}
+    - {p: 0.5, t: [120, 500], about: fire_scrub, text: "Rangers report smoke drifting over {name}; it may be closed soon"}
     - {p: 0.4, t: [60, 400], about: person_region, text: "The hiker's phone pinged once more, roughly near {name}",
        description: "{old} A phone ping was reported here during the search."}
     - {p: 0.3, t: [200, 700], about: r2, text: "A fisherman saw someone in a red jacket near {name} this morning",

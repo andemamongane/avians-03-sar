@@ -59,7 +59,7 @@ class PathPlanner:
 
     # ------------------------------------------------------------ planning
     def plan(self, start: tuple[float, float], goal: tuple[float, float], alt: float,
-             unsafe=()) -> list[tuple[float, float]]:
+             unsafe=(), _depth: int = 0) -> list[tuple[float, float]]:
         """Shortest polyline from start to goal avoiding the forbidden set.
         Raises SkillError when the goal is forbidden or unreachable. A start
         inside a forbidden polygon (e.g. a zone just closed around the drone)
@@ -71,15 +71,26 @@ class PathPlanner:
             raise SkillError(f"the goal ({goal[0]:.0f}, {goal[1]:.0f}) is inside {why} "
                              f"(margin {self.margin:g} m)")
         sp = Point(start)
-        around = [p for _, p in polys if p.contains(sp)]
-        if around:
+        if any(p.contains(sp) for _, p in polys):
+            # leave the forbidden area by the shortest way: the boundary of the whole connected
+            # blob containing the start (adjacent closed zones of a tiled world merge into one),
+            # so the exit point is free and the escape happens once
+            from shapely.geometry import MultiPolygon
             from shapely.ops import nearest_points
-            grown = unary_union(around).buffer(1.0, quad_segs=2)
-            exit_pt = nearest_points(grown.exterior, sp)[0]
-            exit_xy = (float(exit_pt.x), float(exit_pt.y))
-            if math.dist(exit_xy, goal) < 1.0:
-                return [start, goal]
-            return [start] + self.plan(exit_xy, goal, alt, unsafe)
+            blob = unary_union([p for _, p in polys])
+            parts = list(blob.geoms) if isinstance(blob, MultiPolygon) else [blob]
+            comp = next((g for g in parts if g.contains(sp)), None)
+            if comp is not None:
+                grown = Polygon(comp.exterior).buffer(1.0, quad_segs=2)       # holes do not count
+                exit_pt = nearest_points(grown.exterior, sp)[0]
+                exit_xy = (float(exit_pt.x), float(exit_pt.y))
+                b = self.world.bounds_shape()
+                if b is not None and not b.contains(Point(exit_xy)):      # the shortest way leaves
+                    pts = [q for q in grown.exterior.coords if b.contains(Point(q))]   # the area: take
+                    exit_xy = min(pts, key=lambda q: math.dist(q, start)) if pts else exit_xy  # another
+                if _depth > 2 or math.dist(exit_xy, goal) < 1.0:
+                    return [start, goal]
+                return [start] + self.plan(exit_xy, goal, alt, unsafe, _depth + 1)
         if not polys:
             return [start, goal]
         union = unary_union([p for _, p in polys])

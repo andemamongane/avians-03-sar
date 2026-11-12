@@ -1,53 +1,120 @@
 # The benchmark world: a valley where a hiker has gone missing.
 # Owner: Taylor (avians_env). Format: packages/avians_env/README.md.
 # Coordinates: metres east/north of the launch point; altitudes above ground.
+#
+# The valley is TILED: 17 disjoint zones whose union is the whole operating
+# area (generated as a warped grid with shared vertices; avians_env checks the
+# tiling on load). Zone safety changes during a mission: storm cells drift
+# across and close the zones they cover; fires start in fire-prone zones and
+# spread. Both are drawn per seed (dynamics below).
 name: sar_valley
 description: >-
   A wooded valley with a trailhead, a creek, a pine slope and a ridge. A hiker
   did not come back from a day hike; their phone last pinged near the creek.
+  Storms cross the valley and can close zones; the scrub on the west side can burn.
 origin: {lat: 47.397742, lon: 8.545594, alt: 488.0}   # PX4 SITL's default home
 launch: [0, 0]
 max_alt: 60
-bounds: [[-80, -80], [520, -80], [520, 480], [-80, 480]]   # the operating area (geofence)
+bounds: [[-80, -80], [520, -80], [520, 480], [-80, 480]]   # the operating area (geofence) = the union of the zones
+tiled: true            # zones must be disjoint and cover the bounds exactly
 
 regions:
+  - id: home_base
+    kind: landing
+    name: Base
+    polygon: [[-80,  -80],  [-16,  -80],  [49,  -80],  [57,  -11],  [69,  58],  [-6,  51],  [-80,  53],  [-80,  -14]]
+    description: "Launch pad, charging pad and the kit depot. A hangar: storms never close it."
+    protected: true
+  - id: trailhead
+    kind: other
+    name: Trailhead
+    polygon: [[49,  -80],  [123,  -80],  [198,  -80],  [195,  -13],  [203,  55],  [136,  55],  [69,  58],  [57,  -11]]
+    description: "Car park and the trail's first bend; open gravel."
+  - id: lower_creek
+    kind: other
+    name: Lower creek
+    polygon: [[198,  -80],  [270,  -80],  [343,  -80],  [339,  -13],  [337,  54],  [270,  64],  [203,  55],  [195,  -13]]
+    description: "The creek runs into a gorge; steep banks."
+  - id: creek_mouth
+    kind: other
+    name: Creek mouth
+    polygon: [[343,  -80],  [431,  -80],  [520,  -80],  [520,  -14],  [520,  52],  [428,  54],  [337,  54],  [339,  -13]]
+    description: "Marshy flats where the creek leaves the valley."
+  - id: west_woods
+    kind: other
+    name: West woods
+    polygon: [[-80,  53],  [-6,  51],  [69,  58],  [57,  126],  [61,  194],  [70,  202],  [61,  210],  [-10,  208],  [-80,  206],  [-80,  198],  [-80,  190],  [-80,  121]]
+    description: "Dense mixed woods; the canopy hides the ground."
+    fire_prone: true
   - id: r1
     kind: search
     name: Trailhead meadow
-    polygon: [[40, 60], [200, 60], [200, 180], [40, 180]]
-    description: Open grass, good visibility. The trail starts here.
+    polygon: [[69,  58],  [136,  55],  [203,  55],  [207,  125],  [211,  196],  [213,  204],  [211,  212],  [136,  211],  [61,  210],  [70,  202],  [61,  194],  [57,  126]]
+    description: "Open grass, good visibility. The trail crosses it."
   - id: r2
     kind: search
     name: Creek bed
-    polygon: [[240, 40], [400, 40], [400, 160], [240, 160]]
-    description: Rocky creek bed; the phone's last ping. Grey boulders look like people from above.
-  - id: r3
-    kind: search
-    name: Pine slope
-    polygon: [[240, 240], [420, 240], [420, 380], [240, 380]]
-    description: Steep slope with a stand of tall pines; the likeliest place to fall.
-  - id: r4
-    kind: search
-    name: Ridge clearing
-    polygon: [[40, 260], [180, 260], [180, 400], [40, 400]]
-    description: Clearing on the ridge with a campsite.
+    polygon: [[203,  55],  [270,  64],  [337,  54],  [349,  121],  [350,  188],  [280,  192],  [211,  196],  [207,  125]]
+    description: "Rocky creek bed; the phone's last ping. Grey boulders look like people from above."
+  - id: boulder_field
+    kind: other
+    name: Boulder field
+    polygon: [[337,  54],  [428,  54],  [520,  52],  [520,  121],  [520,  190],  [435,  189],  [350,  188],  [349,  121]]
+    description: "Jumbled boulders east of the creek."
   - id: nofly_power
     kind: no_fly
     name: Power line corridor
-    polygon: [[190, 190], [500, 200], [500, 216], [190, 206]]
-    description: High-voltage line between the creek and the slope. Never cross it; go around its west end.
-  - id: zone_fire
+    polygon: [[211,  196],  [280,  192],  [350,  188],  [435,  189],  [520,  190],  [520,  198],  [520,  206],  [435,  205],  [350,  204],  [280,  208],  [211,  212],  [213,  204]]
+    description: "High-voltage line. Never cross it; go around its west end."
+  - id: fire_scrub
     kind: hazard
-    name: Fire zone
-    polygon: [[-40, 280], [46, 280], [46, 460], [-40, 460]]
-    description: Dry scrub along the ridge's west edge; fire crews may close it.
+    name: Fire scrub
+    polygon: [[-80,  206],  [-10,  208],  [61,  210],  [51,  269],  [48,  328],  [-16,  326],  [-80,  335],  [-80,  270]]
+    description: "Dry scrub; fire crews may close it."
+    fire_prone: true
+  - id: saddle
+    kind: other
+    name: Saddle
+    polygon: [[61,  210],  [136,  211],  [211,  212],  [196,  272],  [187,  333],  [117,  335],  [48,  328],  [51,  269]]
+    description: "Grassy saddle between the meadow and the ridge; the forward swap station."
+  - id: r3
+    kind: search
+    name: Pine slope
+    polygon: [[211,  212],  [280,  208],  [350,  204],  [349,  266],  [352,  329],  [269,  323],  [187,  333],  [196,  272]]
+    description: "Steep slope with a stand of tall pines; the likeliest place to fall."
+  - id: east_ridge
+    kind: other
+    name: East ridge
+    polygon: [[350,  204],  [435,  205],  [520,  206],  [520,  266],  [520,  326],  [436,  334],  [352,  329],  [349,  266]]
+    description: "Exposed ridge; storms come in from here."
+  - id: west_ridge
+    kind: other
+    name: West ridge
+    polygon: [[-80,  335],  [-16,  326],  [48,  328],  [46,  404],  [46,  480],  [-17,  480],  [-80,  480],  [-80,  407]]
+    description: "Dry ridge top above the scrub."
+    fire_prone: true
+  - id: r4
+    kind: search
+    name: Ridge clearing
+    polygon: [[48,  328],  [117,  335],  [187,  333],  [184,  406],  [202,  480],  [124,  480],  [46,  480],  [46,  404]]
+    description: "Clearing on the ridge with a campsite."
+  - id: north_scree
+    kind: other
+    name: North scree
+    polygon: [[187,  333],  [269,  323],  [352,  329],  [342,  404],  [334,  480],  [268,  480],  [202,  480],  [184,  406]]
+    description: "Loose scree under the summit."
+  - id: summit
+    kind: other
+    name: Summit
+    polygon: [[352,  329],  [436,  334],  [520,  326],  [520,  403],  [520,  480],  [427,  480],  [334,  480],  [342,  404]]
+    description: "Bare summit; strong winds."
 
 obstacles:
   - id: tower
     name: Radio tower
     circle: {center: [220, 110], radius: 6}
     height: 50
-    description: Between the meadow and the creek.
+    description: In the creek bed, near the meadow.
   - id: pines
     name: Tall pines
     polygon: [[300, 280], [335, 280], [335, 305], [300, 305]]
@@ -64,9 +131,9 @@ stations:
   - id: pad_swap
     kind: swap
     name: Battery swap station
-    position: [210, 320]
+    position: [130, 275]
     swap_s: 40
-    description: Forward station between the ridge and the slope; a ranger swaps batteries.
+    description: Forward station on the saddle; a ranger swaps batteries.
 
 depots:
   - id: base
@@ -84,11 +151,11 @@ person:
 
 decoys:
   - id: tent
-    position: [110, 330]
+    position: [110, 400]
     strength: 0.35
     description: Orange tent at the campsite.
   - id: boulder
-    position: [330, 90]
+    position: [300, 90]
     strength: 0.25
     description: Boulder in the creek bed.
 
@@ -96,9 +163,17 @@ wind: {east: 2.0, north: -1.0, gust_std: 0.8}
 kit: {mass: 1.0, cd_area: 0.03}   # the dropped medical kit: point mass with quadratic drag
 
 dynamics:
-  zone_safety:
-    - {t: 0, zone: zone_fire, safe: true}
-    - {t: 420, zone: zone_fire, safe: false, note: Fire crews closed the zone; the fire is spreading east}
+  storms:                 # storm cells: appear at random, drift, close every zone they cover
+    rate_per_hour: 4      # mean number of cells per hour (Poisson)
+    radius: [45, 100]     # m
+    speed: [1.0, 3.0]     # m/s, roughly with the wind
+    lifetime: [300, 700]  # s
+    caution_m: 60         # zones this close to a cell are marked caution
+  fires:                  # fires start in fire-prone zones and spread to neighbours
+    p_ignite: 0.7
+    t_ignite: [150, 700]
+    spread_delay: [180, 420]
+    p_spread: 0.5
   help:
     description: Rescue helicopter from the regional base
     delay_mean_s: 600        # ~10 min from the report to arrival

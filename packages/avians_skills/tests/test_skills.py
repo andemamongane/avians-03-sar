@@ -11,19 +11,19 @@ from avians_skills.library.targets import intercept_point
 
 def test_planner_goes_around_the_power_line(world):
     p = PathPlanner(world, margin_m=6)
-    path = p.plan((300, 100), (380, 300), 30)
+    path = p.plan((300, 100), (390, 300), 30)
     assert len(path) > 2
     line = LineString(path)
-    assert not line.intersects(world.regions["nofly_power"].shape.buffer(5.9))
+    assert not line.intersects(world.regions["nofly_power"].shape.buffer(5.0))   # planner corners are polygonal
     assert p.length(path) < 2.5 * 200
 
 
 def test_planner_respects_closed_zones_and_rejects_forbidden_goals(world):
     p = PathPlanner(world)
-    z = world.regions["zone_fire"]
-    with pytest.raises(SkillError, match="zone_fire"):
-        p.plan((100, 100), (0, 380), 30, unsafe=[z])
-    path = p.plan((20, 250), (80, 470), 30, unsafe=[z])
+    z = world.regions["fire_scrub"]
+    with pytest.raises(SkillError, match="fire_scrub"):
+        p.plan((100, 100), (-10, 270), 30, unsafe=[z])
+    path = p.plan((20, 150), (20, 400), 30, unsafe=[z])        # around the closed zone, not through it
     assert not LineString(path).intersects(z.shape)
     with pytest.raises(SkillError, match="tower"):
         p.plan((0, 0), (220, 110), 30)

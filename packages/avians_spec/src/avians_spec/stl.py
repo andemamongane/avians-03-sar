@@ -13,13 +13,14 @@ Syntax (whitespace-insensitive; times in seconds; `inf` allowed in past windows)
     past                   H[a,b] phi   historically: always in [t-b, t-a]
                            O[a,b] phi   once: at some time in [t-b, t-a]
                            H phi, O phi the whole past, [0, inf)
-    drones                 forall x in drones: phi    every drone (a conjunction)
+    quantifiers            forall x in drones: phi    every drone (a conjunction)
                            exists x in drones: phi    some drone (a disjunction)
-                           inside phi, x.battery, x.in(r3), x.dist_person name that
-                           drone's signals (battery_d1, east_d1, ...). The registry
-                           supplies the domain; the quantifier is expanded at parse
-                           time, so evaluation and the online bounds are unchanged.
-                           (This is the finite-domain fragment of SFO.)
+                           forall z in zones: phi     every zone (also search_zones)
+                           x.sig names drone x's signal (battery_d1, ...); z.unsafe
+                           names zone z's (unsafe_r3); in(z) / x.in(z) take a zone
+                           variable. The registry supplies the domains; quantifiers
+                           expand at parse time, so evaluation and the online bounds
+                           are unchanged. (The finite-domain fragment of SFO.)
 
     e.g.  G[0,1500] ((O released) & !help -> dist_person <= 25)
           "once the kit is down, stay within 25 m of the person until help arrives"
@@ -263,6 +264,7 @@ class _Parser:
                 raise STLSyntaxError(f"'{var}' is not a quantified drone variable")
             self.take("(")
             name = self.take()
+            name = self.bound.get(name, name)        # in(z) with z a quantified zone variable
             self.take(")")
             return Node("in", name=name, var=self.bound.get(var, ""))
         if not re.match(r"[A-Za-z_]", tok):
