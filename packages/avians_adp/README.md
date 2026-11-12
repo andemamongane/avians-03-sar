@@ -45,23 +45,43 @@ everything needed, so one decision makes one training example.
 ## Building datasets
 
 ```bash
-python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/pilot_v1
+python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/pilot_v1 --satisfied
 ```
 
-Every `trajectory.json` under the folder is validated; invalid ones are
-skipped and reported. Each decision with an action becomes one example: the
-system prompt, the tools and the decision prompt in; the teacher's tool call
-out, with `reason` (and `notes`) put back into its arguments.
+Each decision with an action becomes one example: the system prompt, the
+tools and the decision prompt in; the teacher's tool call out, with
+`reason` (and `notes`) put back into its arguments. The pipeline, in order:
 
-| File | Layout |
+1. **Validate.** Every `trajectory.json` under the folder; invalid or
+   unreadable ones are skipped and reported.
+2. **Episodes.** `--satisfied`, `--min-robustness R`,
+   `--require-clauses battery,deliver` (each satisfied, with robustness at
+   least `--clause-margin`), `--pilot haiku`, `--tier fast`. A clause name
+   no episode has is an error.
+3. **Split by seed.** `--split 80/10/10` (the default). A seed's split comes
+   from a hash of the seed alone: every episode of a seed (any pilot) lands
+   in the same split, and adding episodes never moves an old seed.
+4. **Decisions.** Dropped by default, each counted: keeps the teacher never
+   chose (`api_error`, `no_tool_call`, `router_commit`), `rejected` calls and
+   `unanswered` ones (the episode ended first). `--allow rejected,...` keeps
+   some anyway; `--model claude-haiku-5-5` keeps only that model's calls.
+5. **Thin (train only).** In a run of consecutive `keep` decisions with the
+   same skill, skill status, mission facts, closed regions and battery band
+   (`--battery-band`, default 25 %; 0 ignores battery), keep 1 in
+   `--keep-every` (default 3). Val and test are not thinned.
+
+| File (per split: `train`, `val`, `test`) | Layout |
 |---|---|
-| `pilot/all.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` |
-| `pilot/all.meta.jsonl` | `id` + `meta` per row (episode, seed, model, error, accepted, robustness, ...), same order |
-| `pilot_lf/all.jsonl`, `pilot_lf/dataset_info.json` | LLaMA-Factory sharegpt: set `dataset_dir` to `pilot_lf`, `dataset: avians_pilot_all`, `template: qwen3` |
+| `pilot/<split>.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` |
+| `pilot/<split>.meta.jsonl` | `id` + `meta` per row (episode, seed, kind, model, accepted, robustness, ...), same order |
+| `pilot_lf/<split>.jsonl`, `pilot_lf/dataset_info.json` | LLaMA-Factory sharegpt: `dataset_dir: pilot_lf`, `dataset: avians_pilot_train`, `eval_dataset: avians_pilot_val`, `template: qwen3` |
 
-`--text` and `--thinking` add the pilot's visible text and thinking summary
-to the TRL layout (the sharegpt `function_call` turn has no place for them).
-The output folder must be empty unless `--force` is given.
+The command prints what each stage removed and warns about an empty split
+(likely with only a few seeds). `--text` and `--thinking` add the pilot's
+visible text and thinking summary to the TRL layout (the sharegpt
+`function_call` turn has no place for them). The output folder must not
+contain the episodes, and must be empty unless `--force` is given, which
+replaces only `pilot/` and `pilot_lf/`.
 
 **Sequence length.** With the Qwen3 tokenizer an example is 6.1k–7.1k
 tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision

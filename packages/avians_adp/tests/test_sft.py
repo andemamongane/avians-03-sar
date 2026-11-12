@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 from avians_adp import EpisodeRecorder, Trajectory, decisions, load
-from avians_adp.build import build, main
+from avians_adp.build import BuildConfig, build, main
+from avians_adp.filters import DROPPABLE, DecisionFilter
 from avians_adp.formats import sharegpt_dataset_info, to_sharegpt, to_trl
 from avians_adp.sft import clean_reason, decision_kind, openai_tools, pilot_examples, target_arguments
 
@@ -21,6 +22,8 @@ TOOLS = [
         "type": "object", "properties": {"reason": {"type": "string"}, "notes": {"type": "string"}}}},
 ]
 META = {"seed": 7, "pilot": "haiku"}
+# Phase 2's layout tests: every decision, all in train, nothing dropped or thinned
+EVERYTHING = BuildConfig(decisions=DecisionFilter(allow=DROPPABLE), ratios=(1.0, 0.0, 0.0), keep_every=1)
 
 
 def record_episode(out: Path, ep_id: str = "sar_supply_haiku_s0007", seed: int = 7) -> Trajectory:
@@ -142,24 +145,24 @@ def test_build_writes_both_layouts(tmp_path):
         record_episode(tmp_path / "eps" / f"s{seed:04d}", ep_id=f"ep_s{seed}", seed=seed)
     (tmp_path / "eps" / "broken").mkdir()
     (tmp_path / "eps" / "broken" / "trajectory.json").write_text("{not json")
-    r = build(tmp_path / "eps", tmp_path / "out")
-    assert r["episodes"] == ["ep_s1", "ep_s2"] and r["examples"] == 8 and list(r["skipped"]) == [
+    r = build(tmp_path / "eps", tmp_path / "out", EVERYTHING)
+    assert r["episodes"]["train"] == ["ep_s1", "ep_s2"] and r["examples"]["train"] == 8 and list(r["skipped"]) == [
         str(tmp_path / "eps" / "broken")]
     out = tmp_path / "out"
-    trl = [json.loads(x) for x in (out / "pilot" / "all.jsonl").read_text().splitlines()]
-    meta = [json.loads(x) for x in (out / "pilot" / "all.meta.jsonl").read_text().splitlines()]
-    lf = [json.loads(x) for x in (out / "pilot_lf" / "all.jsonl").read_text().splitlines()]
+    trl = [json.loads(x) for x in (out / "pilot" / "train.jsonl").read_text().splitlines()]
+    meta = [json.loads(x) for x in (out / "pilot" / "train.meta.jsonl").read_text().splitlines()]
+    lf = [json.loads(x) for x in (out / "pilot_lf" / "train.jsonl").read_text().splitlines()]
     assert len(trl) == len(meta) == len(lf) == 8
     assert meta[0]["id"] == "ep_s1#d1" and meta[4]["id"] == "ep_s2#d1"      # same row order everywhere
     for t, l in zip(trl, lf):
         a = json.loads(t["messages"][2]["tool_calls"][0]["function"]["arguments"])
         assert a == json.loads(l["conversations"][1]["value"])["arguments"]
     info = json.loads((out / "pilot_lf" / "dataset_info.json").read_text())
-    assert info["avians_pilot_all"]["file_name"] == "all.jsonl"
+    assert info["avians_pilot_train"]["file_name"] == "train.jsonl"
     assert not any("meta" in row for row in trl + lf)
     with pytest.raises(FileExistsError):
-        build(tmp_path / "eps", out)
-    assert build(tmp_path / "eps", out, force=True)["examples"] == 8
+        build(tmp_path / "eps", out, EVERYTHING)
+    assert build(tmp_path / "eps", out, EVERYTHING, force=True)["examples"]["train"] == 8
 
 
 def test_build_rejects_duplicate_episode_ids(tmp_path):
@@ -171,9 +174,9 @@ def test_build_rejects_duplicate_episode_ids(tmp_path):
 
 def test_build_cli(tmp_path, capsys):
     record_episode(tmp_path / "eps" / "s0007")
-    assert main([str(tmp_path / "eps"), str(tmp_path / "out"), "--thinking"]) == 0
-    assert json.loads(capsys.readouterr().out)["examples"] == 4
-    row = json.loads((tmp_path / "out" / "pilot" / "all.jsonl").read_text().splitlines()[0])
+    assert main([str(tmp_path / "eps"), str(tmp_path / "out"), "--thinking", "--split", "100/0/0"]) == 0
+    assert json.loads(capsys.readouterr().out)["examples"] == {"train": 1, "val": 0, "test": 0}
+    row = json.loads((tmp_path / "out" / "pilot" / "train.jsonl").read_text().splitlines()[0])
     assert row["messages"][2]["reasoning_content"] == "Need altitude before searching."
     assert main([str(tmp_path / "eps"), str(tmp_path / "out")]) == 1          # not empty, no --force
     assert main([str(tmp_path / "empty"), str(tmp_path / "out2")]) == 1        # no episodes
@@ -240,8 +243,8 @@ def test_force_never_deletes_episodes_or_unrelated_files(tmp_path):
     (out2 / "notes.txt").write_text("keep me")
     with pytest.raises(FileExistsError):
         build(eps, out2)
-    build(eps, out2, force=True)
-    assert (out2 / "notes.txt").read_text() == "keep me" and (out2 / "pilot" / "all.jsonl").exists()
+    build(eps, out2, EVERYTHING, force=True)
+    assert (out2 / "notes.txt").read_text() == "keep me" and (out2 / "pilot" / "train.jsonl").exists()
     (tmp_path / "afile").write_text("x")
     with pytest.raises(FileExistsError, match="not a folder"):
         build(eps, tmp_path / "afile")
@@ -250,8 +253,8 @@ def test_force_never_deletes_episodes_or_unrelated_files(tmp_path):
 def test_build_skips_unreadable_trajectory(tmp_path):
     record_episode(tmp_path / "eps" / "good")
     (tmp_path / "eps" / "odd" / "trajectory.json").mkdir(parents=True)      # a folder, not a file
-    r = build(tmp_path / "eps", tmp_path / "out")
-    assert r["examples"] == 4 and any("odd" in k for k in r["skipped"])
+    r = build(tmp_path / "eps", tmp_path / "out", EVERYTHING)
+    assert r["examples"]["train"] == 4 and any("odd" in k for k in r["skipped"])
 
 
 def test_files_load_unchanged_with_datasets(tmp_path):
@@ -259,9 +262,9 @@ def test_files_load_unchanged_with_datasets(tmp_path):
     datasets = pytest.importorskip("datasets")
     for seed in (1, 2):
         record_episode(tmp_path / "eps" / f"s{seed}", ep_id=f"ep{seed}", seed=seed)
-    build(tmp_path / "eps", tmp_path / "out")
+    build(tmp_path / "eps", tmp_path / "out", EVERYTHING)
     for sub in ("pilot", "pilot_lf"):
-        f = tmp_path / "out" / sub / "all.jsonl"
+        f = tmp_path / "out" / sub / "train.jsonl"
         raw = [json.loads(x) for x in f.read_text().splitlines()]
         ds = datasets.load_dataset("json", data_files=str(f), split="train")
         assert [ds[i] for i in range(len(ds))] == raw

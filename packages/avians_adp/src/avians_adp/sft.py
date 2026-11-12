@@ -94,6 +94,7 @@ def pilot_examples(traj: Trajectory) -> list[dict]:
 
     Keys: id, system, tools (OpenAI layout), prompt, call {name, arguments},
     text (the pilot's visible text, or ""), thinking (its summary, or ""),
+    state (the structured snapshot at t_obs, used by filters.thin_keeps),
     meta {episode, seed, pilot, kind, model, t, decision, by, error, stop,
     accepted, robustness, satisfied, extra_calls}. `kind` (decision_kind)
     says whether the call is one the pilot really made.
@@ -123,6 +124,7 @@ def pilot_examples(traj: Trajectory) -> list[dict]:
             "call": {"name": a.function, "arguments": target_arguments(a.kwargs, reason, det.get("notes"))},
             "text": dec.message.content if dec.message else "",
             "thinking": thinking,
+            "state": det.get("state"),          # for keep-thinning; never written to a file
             "meta": {
                 "episode": traj.id, "seed": meta_ep.get("seed"), "pilot": meta_ep.get("pilot"),
                 "kind": decision_kind(a.function, reason, det),
