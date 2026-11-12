@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 ROS_DOMAIN_ID=1 \
     ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET AVIANS_ROOT=/workspace
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3-pip git curl ffmpeg ros-${ROS_DISTRO}-rosbag2 ros-${ROS_DISTRO}-vision-msgs \
+      python3-pip git curl ffmpeg ros-${ROS_DISTRO}-rosbag2 ros-${ROS_DISTRO}-vision-msgs ros-${ROS_DISTRO}-geographic-msgs \
  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /ws/src/px4_msgs && cd /ws/src/px4_msgs \

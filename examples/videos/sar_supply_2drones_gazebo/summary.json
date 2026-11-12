@@ -1,0 +1,245 @@
+{
+  "episode": "sar_supply_2drones_scripted_s0000",
+  "seed": 0,
+  "end": "help arrived and landed",
+  "t_end": 756.0,
+  "robustness": -0.215,
+  "satisfied": false,
+  "violated": [
+    "separation"
+  ],
+  "decisions": 50,
+  "usage": {
+    "input": 0,
+    "output": 0,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "cost_usd": 0.0,
+  "wall_s": 86.18,
+  "found_t": 156.69999999999538,
+  "help_dispatched_t": 156.69999999999538,
+  "help_arrival_t": 680.7747117372322,
+  "drop_err": 0.8257760304147654,
+  "battery_end": {
+    "d1": 55.9,
+    "d2": 21.2
+  },
+  "reports": [
+    {
+      "t": 156.69999999999538,
+      "kind": "person_found",
+      "east": 303.6440662692518,
+      "north": 272.51800715243354,
+      "message": ""
+    }
+  ],
+  "markers": [],
+  "skills": {
+    "d1": [
+      {
+        "t": 0.0,
+        "skill": "takeoff",
+        "args": {
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 11.399999999999975,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r3"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 156.69999999999538,
+        "skill": "report",
+        "args": {
+          "message": "",
+          "kind": "person_found"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 157.79999999999532,
+        "skill": "inspect",
+        "args": {
+          "alt": 20.0,
+          "seconds": 12.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 176.09999999999428,
+        "skill": "pick_up",
+        "args": {
+          "depot": "base"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 261.79999999999103,
+        "skill": "recharge",
+        "args": {
+          "until_pct": 100.0,
+          "station": "pad_charge"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 335.6000000000078,
+        "skill": "precision_land",
+        "args": {
+          "place": "base"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 356.80000000001263,
+        "skill": "wait_until",
+        "args": {
+          "value": 380.7747117372322,
+          "timeout_s": 1500.0,
+          "condition": "time"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 380.9000000000181,
+        "skill": "takeoff",
+        "args": {
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 392.3000000000207,
+        "skill": "deliver",
+        "args": {
+          "target": "person",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 402.60000000002304,
+        "skill": "deliver",
+        "args": {
+          "target": "person",
+          "drop_alt": 8.0,
+          "max_sigma": 8.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 455.90000000003516,
+        "skill": "track_person",
+        "args": {
+          "mode": "orbit",
+          "standoff": 10.0,
+          "alt": 25.0,
+          "speed": 4.0,
+          "until": "help_arrived"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 680.8000000000862,
+        "skill": "rtl",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 719.300000000095,
+        "skill": "rtl",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      }
+    ],
+    "d2": [
+      {
+        "t": 0.0,
+        "skill": "takeoff",
+        "args": {
+          "alt": 30.0
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 11.399999999999975,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r2"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 149.5999999999958,
+        "skill": "search_region",
+        "args": {
+          "pattern": "lawnmower",
+          "alt": 30.0,
+          "overlap": 0.2,
+          "region": "r4"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 156.69999999999538,
+        "skill": "track_person",
+        "args": {
+          "mode": "orbit",
+          "standoff": 15.0,
+          "alt": 30.0,
+          "speed": 4.0,
+          "until": "help_arrived"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 677.7000000000855,
+        "skill": "recharge",
+        "args": {
+          "until_pct": 95.0,
+          "station": "pad_charge"
+        },
+        "accepted": true,
+        "warnings": []
+      },
+      {
+        "t": 680.8000000000862,
+        "skill": "rtl",
+        "args": {},
+        "accepted": true,
+        "warnings": []
+      }
+    ]
+  }
+}
