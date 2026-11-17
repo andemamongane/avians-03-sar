@@ -84,12 +84,14 @@ world.yaml --sample(seed)--> Scenario (person, help delay)
 git clone --recursive git@github.com:andemamongane/avians-03-sar.git && cd avians-03-sar
 python3 -m venv .venv && source .venv/bin/activate      # Python >= 3.10
 ./scripts/install.sh
-cp .env.example .env                                     # then paste ANTHROPIC_API_KEY into .env
+cp .env.example .env                                     # then paste ANTHROPIC_API_KEY and/or OPENROUTER_API_KEY
 
 avians doctor                                            # what is installed
 avians check missions/sar_supply.yaml                    # exactly what the pilot sees; nothing flies
 avians fly missions/sar_supply.yaml --seed 3 --video     # scripted pilot, ~5 s, plus a 2D replay video
 avians fly missions/sar_supply.yaml --pilot haiku --seed 3 --video --qgc   # the teacher (about $0.02)
+avians fly missions/sar_supply.yaml --pilot nemotron --seed 3              # Nemotron 3 Ultra, OpenRouter free tier
+                                                         # (~40 requests of the 50/day free cap; --workers 1 for rollouts)
 avians rollouts missions/sar_supply.yaml --seeds 0-99 --workers 8          # a sweep, with a results table
 python -m pytest                                         # all packages' tests
 ```

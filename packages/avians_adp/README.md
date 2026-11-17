@@ -16,12 +16,22 @@ for step in traj.content:
 
 ## What an episode contains (written by `avians_agent.loop`)
 
+The record follows the standardized ADP schema 1.3.1 (`schema.py` mirrors
+`neulab/agent-data-protocol@274f935a`; upstream has since moved to ATIF, an
+export for which can be added later). Each decision point is four steps:
+
 | ADP step | avians meaning | `details` |
 |---|---|---|
-| `TextObservation(source="environment")` | the decision prompt: self-contained (state, events, memory, notes, last decisions) | `t`, `decision` |
-| `MessageAction` | the pilot's visible text | `thinking` (summary), `decision` |
-| `APIAction(function, kwargs, description)` | the tool call: a skill or `keep`; description = its reason | `t_obs`, `t_apply`, `latency_s`, `wall_s`, `model`, `usage`, `by` (local/escalate), `route`, `state` (structured snapshot), `notes` |
-| `TextObservation(source="tool")` | what the skill replied (accepted / rejected and why) | `accepted` |
+| `TextObservation(source="environment")` | the decision prompt: self-contained (state, events, memory, notes, last decisions) | `t`, `decision`, `events` (kinds since the previous prompt: the router's input) |
+| `MessageAction` | the pilot's visible text; `reasoning_content` = its thinking summary | `t`, `decision` |
+| `ApiAction(function, kwargs, description, tool_call_id)` | the tool call: a skill or `keep`; description = its reason | `t_obs`, `t_apply`, `latency_s`, `wall_s`, `model`, `usage`, `by` (local/escalate), `route`, `state` (structured snapshot), `notes`, `decision` |
+| `TextObservation(source="environment", tool_call_id)` | what the skill replied (accepted / rejected and why); the id links it to its call | `accepted`, `decision` |
+
+`Trajectory.available_apis` lists the tool names. `decisions(traj)` groups
+the steps per decision point; `validate(traj)` checks a record (every
+`finish()` runs it and warns), and `python -m avians_adp validate <dir>`
+checks a folder. Records written before `schema_version` existed
+(`source="tool"`, no call ids) are upgraded on load.
 
 `Trajectory.details` holds the system prompt, the tool definitions, the meta
 (seed, pilot, scenario truth), the final STL score and the summary. Next to
@@ -31,6 +41,139 @@ for rewards.
 This is storage option A: the full growing history. The pilot itself sees
 option C: a window plus structured memory. Each prompt already contains
 everything needed, so one decision makes one training example.
+
+## Building datasets
+
+```bash
+python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/pilot_v1 --satisfied
+```
+
+Each decision with an action becomes one example: the system prompt, the
+tools and the decision prompt in; the teacher's tool call out, with
+`reason` (and `notes`) put back into its arguments. The pipeline, in order:
+
+1. **Validate.** Every `trajectory.json` under the folder; invalid or
+   unreadable ones are skipped and reported.
+2. **Episodes.** `--satisfied`, `--min-robustness R`,
+   `--require-clauses battery,deliver` (each satisfied, with robustness at
+   least `--clause-margin`), `--pilot haiku`, `--tier fast`. A clause name
+   no episode has is an error.
+3. **Split by seed.** `--split 80/10/10` (the default). A seed's split comes
+   from a hash of the seed alone: every episode of a seed (any pilot) lands
+   in the same split, and adding episodes never moves an old seed.
+4. **Decisions.** Dropped by default, each counted: keeps the teacher never
+   chose (`api_error`, `no_tool_call`, `router_commit`), decisions the
+   student made in an episode flown with a router (`student`), `rejected`
+   calls and `unanswered` ones (the episode ended first). `--allow rejected,...` keeps
+   some anyway; `--model claude-haiku-5-5` keeps only that model's calls.
+5. **Thin (train only).** In a run of consecutive `keep` decisions with the
+   same skill, skill status, mission facts, closed regions and battery band
+   (`--battery-band`, default 25 %; 0 ignores battery), keep 1 in
+   `--keep-every` (default 3). Val and test are not thinned.
+
+| File (per split: `train`, `val`, `test`) | Layout |
+|---|---|
+| `pilot/<split>.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` (a JSON string) |
+| `pilot/<split>.meta.jsonl` | `id` + `meta` per row (episode, seed, kind, model, accepted, robustness, ...), same order |
+| `pilot_lf/<split>.jsonl`, `pilot_lf/dataset_info.json` | LLaMA-Factory sharegpt: `dataset_dir: pilot_lf`, `dataset: avians_pilot_train`, `eval_dataset: avians_pilot_val`, `template: qwen3` |
+
+The command prints what each stage removed and warns about an empty split
+(likely with only a few seeds). `--text` and `--thinking` add the pilot's
+visible text and thinking summary to the TRL layout (the sharegpt
+`function_call` turn has no place for them).
+
+**Manifest.** Every build writes `manifest.json`. It records:
+- the episodes folder, the episodes skipped and why, and the episode ids per
+  split;
+- the counts per split, tool, pilot and model, and what each filter removed;
+- the full settings, the git commit (and whether the tree had uncommitted
+  changes), the ADP schema version and the file encoding;
+- a sha256 and row count for every file, and a `data_digest` over all of
+  them.
+
+Two builds of the same episodes with the same settings and code have the
+same `data_digest`.
+
+**Output folder.** Without an output folder the build goes to
+`data/datasets/build-<UTC time>` (`data/` is gitignored). Files are written
+to a staging folder and moved into place only when complete, so a failed
+build leaves no half dataset and keeps the previous one. The output folder
+must not contain the episodes, and must be empty unless `--force` is given.
+`--force` replaces only what a build writes (`pilot/`, `pilot_lf/`,
+`router/`, `manifest.json`).
+
+**Sequence length.** With the Qwen3 tokenizer an example is 6.1k–7.1k
+tokens (system prompt about 1.8k, the 23 tools about 3.9k, the decision
+prompt about 0.9k), and the target is only about 25 tokens at the very end.
+Set `cutoff_len` (LLaMA-Factory) or `max_length` (TRL) to at least 8192. At the
+common 2048, LLaMA-Factory keeps the target and silently cuts the prompt to
+fit: the student then learns the right call after a prompt missing its state,
+memory and "Decide" lines.
+
+**TRL: parse `tools` first.** In both layouts `tools` is a JSON string, so
+any `datasets` version loads it unchanged. (A list of tool dicts is not safe:
+`datasets` 4.x, which LLaMA-Factory 0.9.5 pins, pads every tool's schema with
+the other tools' parameter names as nulls.) A TRL script calls
+`json.loads(row["tools"])` before `apply_chat_template` or `SFTTrainer`
+(unparsed, Qwen3's template silently renders one "tool" per character). The
+only change on load is `tool_calls: null` on the system and user messages,
+which Qwen3's template treats as absent.
+
+**Training.** `training/` holds the LLaMA-Factory config for the student
+pilot (`pilot_sft_qwen3_4b_lora.yaml`) and `check_lf.py`, which checks a build
+against it without a GPU. See `training/README.md`.
+
+## Router set (System One)
+
+At each decision point the router chooses `commit` (keep the current skill,
+no model), `local` (the onboard student) or `escalate` (the remote teacher).
+Labels come from a teacher episode plus a student run offline on the same
+prompts:
+
+```bash
+python -m avians_adp.student_calls data/episodes/sar_supply/haiku --pilot <student>   # writes student_calls.jsonl per episode
+python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/v1            # now also writes router/
+```
+
+| Label | When |
+|---|---|
+| `commit` | the teacher called `keep` |
+| `local` | the student's call matches the teacher's: same tool, same arguments ignoring `reason`/`notes`, numbers within `routing.TOLERANCES` (e.g. 10 m for positions, 5 m for altitudes) |
+| `escalate` | anything else: a different tool or arguments, the student escalated, or it replied with no tool call |
+
+`router/<split>.jsonl` holds `id`, `text`, `label` and `options`; `text` is
+`avians_agent.router.features(state, events)`, the exact string the live
+router reads (a test flies an episode with a recording router and compares).
+`router/<split>.meta.jsonl` holds the teacher and student calls, the reason
+for the label, the state and the events. Keeps the teacher never chose (API
+errors, no tool call, router commits) are skipped; keeps are not thinned.
+Same episodes and seed splits as the pilot set.
+
+Notes:
+- `student_calls` makes a fresh pilot for each episode: a pilot may remember
+  earlier decisions (the scripted one remembers the regions it searched).
+  It asks the student only where the label depends on it (the teacher's
+  real non-keep calls, about 40 % of decisions) and gives it the `escalate`
+  tool it has in flight. Each row names its episode; the build ignores a file
+  written for another episode.
+- A failed student call (an API error) is recorded as an error and skipped
+  when labelling; a reply with no tool call is labelled `escalate`.
+- A teacher call with no student row at all (an incomplete
+  `student_calls.jsonl`) is skipped, not labelled: it is counted as
+  `no student call` under `router.skipped` in the manifest, and the build
+  warns. A teacher `keep` is `commit` with or without a student row.
+- `router.skipped` keys: `api_error`, `no_tool_call`, `router_commit`,
+  `student`, `model` (as for the pilot set), plus `student error` and
+  `no student call` (router only).
+- An episode with no `student_calls.jsonl` at all is left out of the router
+  set; when some episodes have one and others do not, the build warns.
+- A pilot that calls an API costs money for every decision it is asked.
+- Real labels need the student model, which is still open. Until then, a
+  scripted student gives `commit` and `local` only, since it is a copy of
+  the scripted teacher.
+- The training layout for Kev or Laya depends on the System One API
+  reference (open in the notebook log). The rows are plain classification
+  data so they can be reshaped.
 
 ## Your tasks
 
@@ -57,5 +200,5 @@ everything needed, so one decision makes one training example.
 6. **Scale:** `avians rollouts ... --pilot haiku --seeds 0-999 --workers 16`
    costs about $0.02 per episode. Coordinate with Andema before large runs.
 
-The skipped tests in `tests/test_todo.py` mark tasks 2 and 4. Turn them into
-real tests as you implement them.
+Tasks 2 and 4 are tested in `tests/test_sft.py` and `tests/test_routing.py`
+(the skipped placeholders in `tests/test_todo.py` are gone).

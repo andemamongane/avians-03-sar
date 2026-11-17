@@ -1,0 +1,335 @@
+{
+ "id": "sar_supply_scripted_s0000",
+ "content": [
+  {
+   "details": {
+    "t": 0.0,
+    "decision": 1
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=0.0 s of 1500 s\nDRONE at (0, 0) alt 0 m, speed 0.0 m/s, ON THE GROUND; battery 100.0 % (~12.2 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: no skill has run yet\nLAST RESULT: (none)\nEVENTS since the last decision:\n- (none)\nPERSON: not found; no credible candidate (0 weak track(s))\nSEARCH COVERAGE: r1 0% seen, never; r2 0% seen, never; r3 0% seen, never;\n[... cut ...]"
+  },
+  {
+   "details": {
+    "t": 0.0,
+    "notes": null,
+    "t_obs": 0.0,
+    "t_apply": 0.0,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "t": 0.0,
+     "battery": 100.0,
+     "skill": null,
+     "skill_status": null
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "takeoff",
+   "kwargs": {
+    "alt": 30
+   },
+   "description": "start the search"
+  },
+  {
+   "details": {
+    "t": 0.0,
+    "accepted": true,
+    "decision": 1
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started takeoff(alt=30.0)"
+  },
+  {
+   "details": {
+    "t": 11.099999999999977,
+    "decision": 2
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=11.1 s of 1500 s\nDRONE at (0, 0) alt 30 m, speed 0.0 m/s, flying; battery 98.4 % (~11.9 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: last skill takeoff(alt=30.0) succeeded: at 29 m\nLAST RESULT: (decided at t=0, applied at t=0) takeoff(alt=30): started takeoff(alt=30.0)\nEVENTS since the last decision:\n- t=11 skill_done: takeoff: at 29 m\nPERSON: not fou\n[... cut ...]"
+  },
+  {
+   "details": {
+    "t": 11.099999999999977,
+    "notes": null,
+    "t_obs": 11.1,
+    "t_apply": 11.1,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "t": 11.1,
+     "battery": 98.35477251302476,
+     "skill": "takeoff",
+     "skill_status": "succeeded"
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "search_region",
+   "kwargs": {
+    "region": "r3",
+    "alt": 30
+   },
+   "description": "search r3 (prior 45%)"
+  },
+  {
+   "details": {
+    "t": 11.099999999999977,
+    "accepted": true,
+    "decision": 2
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3), about 188 s"
+  },
+  {
+   "details": {
+    "t": 56.10000000000053,
+    "decision": 3
+   },
+   "class_": "text_observation",
+   "source": "environment",
+   "content": "TIME t=56.1 s of 1500 s\nDRONE at (279, 257) alt 30 m, speed 9.0 m/s, flying; battery 92.9 % (~11.2 min of cruise above the 10 % reserve); carrying nothing; cruise 9 m/s at 30 m\nSKILL: running search_region(pattern=lawnmower, alt=30.0, overlap=0.2, region=r3) for 45 s: 2% of the pattern flown, 7% of r3 seen, about 139 s left\nLAST RESULT: (decided at t=11, applied at t=11) search_region(region=r3, a\n[... cut ...]"
+  },
+  {
+   "details": {
+    "t": 56.10000000000053,
+    "notes": null,
+    "t_obs": 56.1,
+    "t_apply": 56.1,
+    "latency_s": 0.0,
+    "wall_s": 0.0,
+    "model": "scripted",
+    "usage": {},
+    "route": null,
+    "by": "local",
+    "state": {
+     "t": 56.1,
+     "battery": 92.87648474662076,
+     "skill": "search_region",
+     "skill_status": "running"
+    },
+    "error": ""
+   },
+   "class_": "api_action",
+   "function": "inspect",
+   "kwargs": {
+    "alt": 15,
+    "seconds": 8
+   },
+   "description": "check the candidate"
+  },
+  {
+   "details": {
+    "t": 56.10000000000053,
+    "accepted": true,
+    "decision": 3
+   },
+   "class_": "text_observation",
+   "source": "tool",
+   "content": "started inspect(alt=15.0, seconds=8.0)"
+  }
+ ],
+ "details": {
+  "meta": {
+   "episode": "sar_supply_scripted_s0000",
+   "mission": "sar_supply",
+   "world": "sar_valley",
+   "seed": 0,
+   "pilot": "scripted",
+   "remote_pilot": null,
+   "router": null,
+   "tier": "fast",
+   "envelope": "standard",
+   "horizon_s": 1500.0,
+   "wake_s": 45.0,
+   "latency": {
+    "local": {
+     "median_s": 0.0,
+     "sigma": 0.0,
+     "floor_s": 0.0
+    },
+    "escalate": {
+     "median_s": 0.0,
+     "sigma": 0.0,
+     "floor_s": 0.0
+    }
+   },
+   "person": [
+    292.24502105727476,
+    253.08071696808815
+   ],
+   "help_delay_s": 606.2940070291824
+  },
+  "system": "You are the pilot of a search-and-rescue drone.\n\nYou fly by calling skills (the tools). A skill runs on its own until it\nfinishes, fails or you replace it: it plans paths around no-fly zones, closed\nzones and obstacles, holds altitude and speed, and reports back. Starting a new\nskill replaces the ru\n[... cut for the fixture ...]",
+  "tools": [
+   {
+    "name": "inspect",
+    "description": "Fly low over the person estimate (or a point) and hover there to look closely: raises confidence in a real person, lowers it for a decoy.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "east": {
+       "type": "number",
+       "description": "default: the person estimate"
+      },
+      "north": {
+       "type": "number"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (default 15.0)"
+      },
+      "seconds": {
+       "type": "number",
+       "description": "how long to look (default 8.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "search_region",
+    "description": "Search a region with a standard pattern: lawnmower (parallel tracks over the whole region), expanding_square or sector (around the region centre or a datum). Lane spacing comes from the camera footprint at the altitude. Finishes when the pattern is flown; a sighting does not stop it (you decide).",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "region": {
+       "type": "string",
+       "description": "a search region id"
+      },
+      "pattern": {
+       "type": "string",
+       "enum": [
+        "lawnmower",
+        "expanding_square",
+        "sector"
+       ],
+       "description": "(default lawnmower)"
+      },
+      "alt": {
+       "type": "number",
+       "description": "m (lower: better detection, narrower lanes) (default 30.0)"
+      },
+      "overlap": {
+       "type": "number",
+       "description": "lane overlap fraction (default 0.2)"
+      },
+      "speed": {
+       "type": "number",
+       "description": "m/s (default: cruise speed)"
+      },
+      "datum_east": {
+       "type": "number",
+       "description": "pattern centre for square/sector"
+      },
+      "datum_north": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [
+      "region"
+     ],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "takeoff",
+    "description": "Arm and climb straight up to the given altitude.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "alt": {
+       "type": "number",
+       "description": "altitude, m (default 30.0)"
+      },
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   },
+   {
+    "name": "keep",
+    "description": "Let the running skill continue (or stay idle). Use when nothing needs to change.",
+    "input_schema": {
+     "type": "object",
+     "properties": {
+      "reason": {
+       "type": "string",
+       "description": "one sentence: why this, now"
+      },
+      "notes": {
+       "type": "string",
+       "description": "optional: replaces your notes (your only memory across decisions); keep them short"
+      }
+     },
+     "required": [],
+     "additionalProperties": false
+    }
+   }
+  ],
+  "score": {
+   "robustness": 0.5,
+   "satisfied": true,
+   "clauses": [
+    {
+     "clause": "no_fly",
+     "formula": "G[0,1500] !in(nofly_power)",
+     "robustness": 5.486,
+     "satisfied": true
+    },
+    {
+     "clause": "closed_zone",
+     "formula": "G[0,1500] ((H[0,30] unsafe_zone_fire) -> !in(zone_fire))",
+     "robustness": 149.123,
+     "satisfied": true
+    }
+   ]
+  },
+  "summary": {
+   "episode": "sar_supply_scripted_s0000",
+   "seed": 0,
+   "end": "help arrived and landed",
+   "robustness": 0.5,
+   "satisfied": true,
+   "decisions": 23
+  }
+ }
+}

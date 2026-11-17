@@ -1,0 +1,67 @@
+# LLaMA-Factory 0.9.5: supervised fine-tuning of the student pilot on a build's pilot_lf/ files.
+#
+# Run from the repository root, on a GPU machine with LLaMA-Factory installed (Python <= 3.12):
+#   llamafactory-cli train packages/avians_adp/training/pilot_sft_qwen3_4b_lora.yaml \
+#       dataset_dir=data/datasets/<build>/pilot_lf output_dir=data/models/<run name>
+# Check a build against this config first (no GPU needed; see training/README.md):
+#   python packages/avians_adp/training/check_lf.py packages/avians_adp/training/pilot_sft_qwen3_4b_lora.yaml \
+#       data/datasets/<build>/pilot_lf
+#
+# What is fixed by the data (do not change without rebuilding or re-checking):
+#   template, enable_thinking, cutoff_len, dataset names, train_on_prompt.
+# What is a starting point (tune on the val split):
+#   model size, LoRA rank, learning rate, epochs, batch size.
+
+### model
+model_name_or_path: Qwen/Qwen3-4B      # student model is still open (REPORT.md); any Qwen3 size uses this file
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+
+### dataset (written by `python -m avians_adp.build`; pilot_lf/dataset_info.json names them)
+dataset_dir: data/datasets/pilot_v1/pilot_lf   # override per build on the command line
+dataset: avians_pilot_train
+eval_dataset: avians_pilot_val                 # empty with few seeds: then drop it and the eval_* keys below
+template: qwen3
+enable_thinking: true      # the target is "<think>\n\n</think>\n\n<tool_call>{...}</tool_call>": the student
+                           # learns to emit an empty think block. Serve it with Qwen3's default (thinking on).
+cutoff_len: 8192           # examples are 6.1k-7.1k tokens. At 2048 the prompt is silently cut (REPORT.md D3)
+train_on_prompt: false     # loss on the ~25-token tool call only
+packing: false
+overwrite_cache: true
+preprocessing_num_workers: 8
+dataloader_num_workers: 2
+
+### output
+output_dir: data/models/pilot_qwen3-4b_lora    # data/ is gitignored; override per run
+logging_steps: 10
+save_strategy: steps
+save_steps: 200            # with a small build (e.g. 91 rows = 6 steps an epoch) neither eval nor
+                           # save fires before the end: use eval_strategy=epoch save_strategy=epoch
+save_total_limit: 3
+plot_loss: true
+report_to: none
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
+learning_rate: 1.0e-4
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.05         # works on transformers 4.x and 5.x (5.x warns it is deprecated). Not
+                           # warmup_steps: 0.05, which only 5.x reads as a fraction; 4.x warms up 0 steps
+bf16: true
+flash_attn: auto
+seed: 42
+
+### eval (loss on the val split)
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 200

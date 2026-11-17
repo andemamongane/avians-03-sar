@@ -35,13 +35,8 @@ def _out(args, mission_name: str, pilot: str) -> Path:
 
 
 def _load_env() -> None:
-    """Read KEY=VALUE lines from .env at the repo root into the environment (not overriding)."""
-    env = repo_root() / ".env"
-    if env.exists():
-        for line in env.read_text().splitlines():
-            k, eq, v = line.strip().partition("=")
-            if eq and k and not k.startswith("#") and v and k not in os.environ:
-                os.environ[k] = v
+    from .env import load_env
+    load_env()
 
 
 def cmd_check(a) -> int:
@@ -212,7 +207,9 @@ def cmd_doctor(a) -> int:
     print("ok   ffmpeg" if shutil.which("ffmpeg") else "--   ffmpeg not on PATH (videos use imageio-ffmpeg)")
     _load_env()
     print("ok   ANTHROPIC_API_KEY set" if os.environ.get("ANTHROPIC_API_KEY") else
-          "--   ANTHROPIC_API_KEY not set (.env): only --pilot scripted works")
+          "--   ANTHROPIC_API_KEY not set (.env): --pilot haiku/sonnet will not work")
+    print("ok   OPENROUTER_API_KEY set" if os.environ.get("OPENROUTER_API_KEY") else
+          "--   OPENROUTER_API_KEY not set (.env): --pilot nemotron will not work")
     print(f"repo root: {repo_root()}")
     return 0 if ok else 1
 
