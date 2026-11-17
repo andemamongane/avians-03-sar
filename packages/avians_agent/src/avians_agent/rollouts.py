@@ -26,7 +26,13 @@ def run_many(mission_path, pilot_name: str, seeds, out_dir, workers: int = 4, en
     out.mkdir(parents=True, exist_ok=True)
     jobs = [(str(mission_path), pilot_name, s, str(out), envelope) for s in seeds]
     if workers <= 1:
-        results = [_one(j) for j in jobs]
+        results = []
+        for j in jobs:
+            results.append(_one(j))
+            if results[-1].get("daily_cap"):           # the API quota is spent: later seeds would fly blind
+                print(f"stopping after seed {j[2]}: the pilot's daily API quota is spent "
+                      f"({len(jobs) - len(results)} seeds not flown)")
+                break
     else:
         with ProcessPoolExecutor(workers) as pool:
             results = list(pool.map(_one, jobs))
@@ -36,11 +42,12 @@ def run_many(mission_path, pilot_name: str, seeds, out_dir, workers: int = 4, en
 
 def table(results: list[dict]) -> str:
     ok = [r for r in results if "error" not in r]
-    rows = ["| seed | end | robustness | violated | decisions | found at | drop err | $ |",
-            "|---|---|---|---|---|---|---|---|"]
+    rows = ["| seed | end | robustness | violated | decisions | API errors | found at | drop err | $ |",
+            "|---|---|---|---|---|---|---|---|---|"]
     for r in ok:
         rows.append(f"| {r['seed']} | {r['end']} | {r['robustness']} | {', '.join(r['violated']) or '-'} | "
-                    f"{r['decisions']} | {r['found_t'] if r['found_t'] is None else round(r['found_t'])} | "
+                    f"{r['decisions']} | {r.get('api_errors', 0)}{' (daily cap)' if r.get('daily_cap') else ''} | "
+                    f"{r['found_t'] if r['found_t'] is None else round(r['found_t'])} | "
                     f"{'-' if r['drop_err'] is None else round(r['drop_err'], 1)} | {r['cost_usd']} |")
     sat = sum(1 for r in ok if r["satisfied"])
     rows.append(f"\n{sat}/{len(ok)} satisfied; {len(results) - len(ok)} errored")

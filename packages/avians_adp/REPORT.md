@@ -33,6 +33,29 @@ blocked on other people or on a GPU, not on this package's code.
 
 **Still open** (section 4 has the full table):
 1. **Real teacher data:** about 10 Haiku episodes (about $0.20) need the API key from Andema.
+   *2026-11-17:* a second teacher is wired in: `--pilot nemotron` flies NVIDIA Nemotron 3 Ultra through
+   OpenRouter's free tier (`avians_agent.pilots.OpenRouterPilot`; OpenMDW-1.1 licence, no restrictions on
+   outputs). Its records validate and build exactly like Claude's (`test_an_openrouter_episode_records_and_builds`).
+   The free tier allows 50 requests a day (about one episode) unless $10 of credits are bought (1,000 a day).
+   **First real teacher episode, 2026-11-17** (`data/episodes/sar_supply/nemotron/s0003`, seed 3):
+   - All 12 STL clauses satisfied (robustness 0.5); 32 decisions; 545 s of real time; $0.
+   - The kit was dropped 1.3 m from the hiker.
+   - The record validates. All 32 decisions are real calls: 0 API errors, 0 rejected, 0 replies without
+     a tool call.
+   - Each decision recorded about 1.3k characters of raw reasoning.
+   - `latency-fit` gave a median of 9.7 s (sigma 0.79), now in `configs/latency.yaml`.
+   - Built with `--satisfied --split 100/0/0`: 22 training rows after keep-thinning. `check_lf.py`: 22/22
+     rows train on exactly the teacher's call; the longest is 7,160 tokens (cutoff 8,192).
+   - A Fable review of `OpenRouterPilot` found edge cases (crash on a dropped connection, provider errors
+     recorded as model failures, nameless calls, `wall_s` including retry sleeps, latency key mismatch,
+     daily-cap detection, narrow retry set). All are fixed and tested.
+   - Review A7 is guarded, not solved:
+     - Once the daily quota runs out mid-episode, the episode still flies on as API-error keeps.
+     - The episode summary now has `api_errors` and `daily_cap`, and the rollouts table shows them.
+     - A one-worker `avians rollouts` sweep stops at the cap.
+     - Build with `--satisfied`, and check the manifest's `api_error` count.
+   - A re-review confirmed the fixes. Timeouts are now retried once, not up to 5 times, and
+     `timeout_s` is 120 s.
 2. **Student model choice:** gives the final chat template and, through `student_calls`, real router
    labels. The config assumes Qwen3-4B.
 3. **A student pilot in `avians_agent`:** a `decide()` adapter that calls the served model and parses

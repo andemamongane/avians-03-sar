@@ -49,6 +49,13 @@ def _cost(model: str, usage: dict) -> float:
             + pout * usage.get("output", 0)) / 1e6
 
 
+def latency_key(cfg: dict, pilot) -> str:
+    """The latency.yaml entry for a pilot: its model id when listed (what `avians latency-fit` prints,
+    from the recorded `model`), else its name (scripted, or a pilot whose model is not listed)."""
+    model = getattr(pilot, "model", None)
+    return model if model and model in cfg.get("models", {}) else getattr(pilot, "name", "scripted")
+
+
 def _decide(state, prompt, events, system, tools, pilots, router, lat, lat_router, rng):
     """Route, ask the pilot(s): (Decision, simulated latency, who, route)."""
     route, latency, chosen = None, 0.0, "local"
@@ -67,7 +74,10 @@ def _decide(state, prompt, events, system, tools, pilots, router, lat, lat_route
     return d, latency, chosen, route
 
 
-def _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, quiet) -> float:
+def _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, quiet, errs=None) -> float:
+    if errs is not None and d.error:            # API failures: shown in the summary and the rollouts table
+        errs["api_errors"] += 1
+        errs["daily_cap"] = errs["daily_cap"] or "daily cap" in d.error
     for k in usage_tot:
         usage_tot[k] += int(d.usage.get(k, 0) or 0)
     details = {"t_obs": round(t, 2), "t_apply": round(t + latency, 2), "latency_s": round(latency, 3),
@@ -103,7 +113,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     tools = tool_definitions(tool_names)
     system = system_prompt(mission, wake_s)
     pilots = {"local": pilot, "escalate": remote_pilot or pilot}
-    lat = {k: LatencyModel.for_model(latency_cfg, getattr(p, "name", "scripted")) for k, p in pilots.items()}
+    lat = {k: LatencyModel.for_model(latency_cfg, latency_key(latency_cfg, p)) for k, p in pilots.items()}
     lat_router = LatencyModel.for_model(latency_cfg, "onboard-router")
     ep_id = f"{mission.name}_{getattr(pilot, 'name', 'pilot')}_s{seed:04d}"
     out = Path(out_dir)
@@ -123,6 +133,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     since: list = []                     # events since the last decision prompt
     need, last_t, last_result, last_rejected = True, -math.inf, "", None
     n_dec, cost, wall0 = 0, 0.0, time.monotonic()
+    errs = {"api_errors": 0, "daily_cap": False}
     usage_tot = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
     end_reason = "horizon"
     stl_log = open(out / "stl_online.jsonl", "w")
@@ -145,7 +156,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
                     d, latency, chosen, route = job()
                     pending = {"t_obs": t, "t_apply": t + latency, "result": (d, latency, chosen, route),
                                "state": state}
-                    cost += _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, quiet)
+                    cost += _log_decision(rec, d, latency, chosen, route, state, t, n_dec, usage_tot, quiet, errs)
                 since, need, last_t = [], False, t
         # ---------------------------------------------------- apply
         if pending is not None and realtime and "result" not in pending and pending["future"].done():
@@ -153,7 +164,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
             latency = t - pending["t_obs"]                       # the real one
             pending.update(result=(d, latency, chosen, route), t_apply=t)
             cost += _log_decision(rec, d, latency, chosen, route, pending["state"], pending["t_obs"],
-                                  n_dec, usage_tot, quiet)
+                                  n_dec, usage_tot, quiet, errs)
         if pending is not None and "t_apply" in pending and t >= pending["t_apply"] - 1e-9:
             d, t_obs = pending["result"][0], pending["t_obs"]
             if d.tool == "keep":
@@ -208,7 +219,7 @@ def run_episode(mission, pilot, seed: int, out_dir: str | Path, agent_cfg: dict,
     summary = {"episode": ep_id, "seed": seed, "end": end_reason, "t_end": round(sim.t, 1),
                "robustness": score["robustness"], "satisfied": score["satisfied"],
                "violated": [c["clause"] for c in score["clauses"] if not c["satisfied"]],
-               "decisions": n_dec, "usage": usage_tot, "cost_usd": round(cost, 4),
+               "decisions": n_dec, "usage": usage_tot, "cost_usd": round(cost, 4), **errs,
                "wall_s": round(time.monotonic() - wall0, 2),
                "found_t": sim.tracker.found_t, "help_dispatched_t": sim.world_state.help.dispatched_t,
                "help_arrival_t": sim.world_state.help.arrival_t,

@@ -6,6 +6,7 @@ models:
   claude-haiku-5-5:  {median_s: 2.5, sigma: 0.45, floor_s: 0.3}   # placeholder until fitted
   claude-sonnet-5-5: {median_s: 6.0, sigma: 0.5,  floor_s: 0.5}
   claude-opus-5-5:   {median_s: 9.0, sigma: 0.5,  floor_s: 0.5}
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {median_s: 9.72, sigma: 0.79, floor_s: 0.0}   # fitted 2026-11-17, n=32 (seed 3)
   scripted:          {median_s: 0.0, sigma: 0.0,  floor_s: 0.0}
   onboard-slm:       {median_s: 0.6, sigma: 0.3,  floor_s: 0.1}   # target for the distilled pilot
   onboard-router:    {median_s: 0.05, sigma: 0.2, floor_s: 0.01}  # Laya/Kev-class System One model

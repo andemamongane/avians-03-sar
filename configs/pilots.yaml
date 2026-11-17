@@ -13,6 +13,13 @@ pilots:
     effort: medium
     thinking_display: summarized
     max_tokens: 6000
+  nemotron:                  # NVIDIA Nemotron 3 Ultra on OpenRouter, free tier (OPENROUTER_API_KEY in .env)
+    provider: openrouter     # OpenMDW-1.1 licence: no restrictions on outputs (distillation allowed)
+    model: nvidia/nemotron-3-ultra-550b-a55b:free
+    effort: medium           # reasoning effort: low | medium | high
+    max_tokens: 8000
+    # free tier: 20 requests/min; 50/day (1,000/day after buying $10 of credits). Use --workers 1.
+    max_wait_s: 90           # a 429 asking to wait longer = the daily cap: stop calling for this episode
   scripted:                  # rule-based baseline: no API key, deterministic
     provider: scripted
 router:                      # System One routing (avians_agent.router), for student pilots
