@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from avians_adp import EpisodeRecorder, load, sft
+from avians_adp import EpisodeRecorder, decisions, load, sft
 from avians_adp.build import BuildConfig, build
 from avians_adp.routing import CHOICES, TOLERANCES, args_match, event_kinds, label, router_examples
 from avians_adp.student_calls import read_calls, run_student, write_calls
@@ -71,14 +71,26 @@ def test_tolerances_can_be_replaced():
     ({"tool": "goto", "args": {"east": 0.0}}, {"tool": "goto", "args": {"east": 40.0}}, "escalate"),
     ({"tool": "search_region", "args": {"region": "r1"}}, {"tool": "keep", "args": {}}, "escalate"),
     ({"tool": "search_region", "args": {"region": "r1"}}, {"tool": "escalate", "args": {}}, "escalate"),
-    ({"tool": "search_region", "args": {"region": "r1"}}, None, "escalate"),
-    ({"tool": "search_region", "args": {"region": "r1"}}, {"tool": None, "args": {}, "error": "boom"}, "escalate"),
+    ({"tool": "search_region", "args": {"region": "r1"}}, {"tool": None, "args": {}, "no_tool_call": True}, "escalate"),
 ])
 def test_label(teacher, student, lab):
     assert label(teacher, student)[0] == lab
 
 
+@pytest.mark.parametrize("student", [None, {"tool": None, "args": {}}, {"tool": None, "args": {}, "error": "boom"}])
+def test_label_refuses_a_missing_student_call(student):
+    """No student answer says nothing about the student: never `escalate` (REPORT.md D4)."""
+    with pytest.raises(ValueError, match="no student call"):
+        label({"tool": "search_region", "args": {"region": "r1"}}, student)
+
+
 # ------------------------------------------------------------------ router examples
+
+def _echo(tj):
+    """A student that makes the teacher's own call at every decision: every decision gets a label."""
+    return [{"decision": d.n, "tool": d.action.function, "args": dict(d.action.kwargs)}
+            for d in decisions(tj) if d.action is not None]
+
 
 def test_router_examples(tmp_path):
     """Replaces the skipped test in test_todo.py: keep, match, near-match within tolerance, mismatch."""
@@ -107,10 +119,27 @@ def test_router_examples_skip_keeps_the_teacher_never_chose(tmp_path):
                              ("keep", {}, {"model": "router", "by": "commit"}),
                              ("search_region", {"region": "r1"}, {"model": "student-1b"})])
     tj = load(tmp_path / "ep")
-    exs, skipped = router_examples(tj, [])
+    student = [{"decision": 1, "tool": "takeoff", "args": {"alt": 30}},
+               {"decision": 4, "tool": "search_region", "args": {"region": "r1"}}]
+    exs, skipped = router_examples(tj, student)
     assert [e["meta"]["decision"] for e in exs] == [1, 4] and skipped == {"api_error": 1, "router_commit": 1}
-    exs, skipped = router_examples(tj, [], models=("claude-haiku-5-5",))
+    exs, skipped = router_examples(tj, student, models=("claude-haiku-5-5",))
     assert [e["meta"]["decision"] for e in exs] == [1] and skipped["model"] == 1
+
+
+def test_router_examples_skip_teacher_calls_with_no_student_call(tmp_path):
+    """A partial student_calls.jsonl: calls it does not cover are skipped and counted, keeps still commit."""
+    record(tmp_path / "ep", [("takeoff", {"alt": 30}, {}),
+                             ("keep", {}, {}),
+                             ("search_region", {"region": "r1"}, {}),
+                             ("goto", {"east": 5.0}, {})])
+    tj = load(tmp_path / "ep")
+    exs, skipped = router_examples(tj, [{"decision": 1, "tool": "takeoff", "args": {"alt": 30}},
+                                        {"decision": 3, "tool": None, "args": {}}])   # malformed: no answer
+    assert [(e["meta"]["decision"], e["label"]) for e in exs] == [(1, "local"), (2, "commit")]
+    assert skipped == {"no student call": 2}
+    exs, skipped = router_examples(tj, [])
+    assert [e["label"] for e in exs] == ["commit"] and skipped == {"no student call": 3}
 
 
 def test_features_text_and_events(tmp_path):
@@ -122,7 +151,7 @@ def test_features_text_and_events(tmp_path):
     def features(st, events):
         seen.append(st)
         return f"skill={st['skill']} events={','.join(e.kind for e in events) or 'none'}"
-    exs = sft.router_examples(tj, [], features=features)
+    exs = sft.router_examples(tj, _echo(tj), features=features)
     assert [e["events"] for e in exs] == [[], ["skill_done", "zone"], []]
     assert exs[1]["text"] == "skill=search_region events=skill_done,zone"
     assert all(e["meta"]["events_exact"] for e in exs) and seen[0] == state()
@@ -210,7 +239,7 @@ def test_a_routed_episode_labels_only_the_teachers_decisions(tmp_path):
     tj = load(tmp_path / "ep")
     kinds = [e["meta"]["kind"] for e in sft.pilot_examples(tj)]
     assert kinds == ["call", "student", "router_commit", "call"]
-    exs, skipped = router_examples(tj, [])
+    exs, skipped = router_examples(tj, _echo(tj))
     assert [e["meta"]["decision"] for e in exs] == [1, 4] and skipped == {"student": 1, "router_commit": 1}
     assert [d.n for d in __import__("avians_adp.student_calls", fromlist=["x"]).needs_student(tj)] == [1, 4]
     r = build(tmp_path, tmp_path.parent / f"{tmp_path.name}_out", BuildConfig(ratios=(1.0, 0.0, 0.0)))
@@ -245,13 +274,18 @@ def test_build_writes_router_files_with_the_pilot_splits(tmp_path):
     write_calls(eps / "b", student[:2])                       # the student never answered decision 3
     r = build(eps, tmp_path / "out")
     assert r["router"]["episodes"] == 2
-    assert r["router"]["examples"] == {"train": 3, "val": 0, "test": 3}
-    assert r["router"]["labels"] == {"commit": 2, "local": 2, "escalate": 2}
+    assert r["router"]["examples"] == {"train": 3, "val": 0, "test": 2}
+    assert r["router"]["labels"] == {"commit": 2, "local": 2, "escalate": 1}
+    assert r["router"]["skipped"] == {"no student call": 1}
+    assert any("1 teacher calls have no student call" in w for w in r["warnings"])
+    assert any("1 episodes have no student_calls.jsonl" in w and "c_s7" in w for w in r["warnings"])
+    m = json.loads((tmp_path / "out" / "manifest.json").read_text())
+    assert m["router"]["skipped"] == {"no student call": 1}
     rows = [json.loads(x) for x in (tmp_path / "out" / "router" / "train.jsonl").read_text().splitlines()]
     assert set(rows[0]) == {"id", "text", "label", "options"} and [x["label"] for x in rows] == [
         "local", "commit", "escalate"]
     meta = [json.loads(x) for x in (tmp_path / "out" / "router" / "test.meta.jsonl").read_text().splitlines()]
-    assert meta[2]["why"] == "no student call" and meta[2]["state"]["skill"] == "search_region"
+    assert [x["decision"] for x in meta] == [1, 2]            # decision 3 had no student call: skipped
     pilot_ids = {json.loads(x)["episode"] for x in (tmp_path / "out" / "pilot" / "train.meta.jsonl").read_text().splitlines()}
     assert pilot_ids == {"a_s0"}                              # router and pilot sets share the split
     if _has_agent():                                          # the live router's feature string
@@ -304,7 +338,8 @@ def test_rebuilt_features_equal_what_the_live_router_saw(tmp_path):
             return super().route(f)
     r = Recording()
     d = _fly(tmp_path, 4, router=r)                       # seed 4: zone closure, reflex, replans
-    exs = sft.router_examples(load(d), [], features=features)
+    tj = load(d)
+    exs = sft.router_examples(tj, _echo(tj), features=features)
     assert len(exs) == len(r.seen) > 20
     assert [e["text"] for e in exs] == r.seen
 

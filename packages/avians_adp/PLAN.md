@@ -580,8 +580,78 @@ Findings and what was done:
 - D4 (a missing student row becomes escalate, uncounted) and D5 (the loader test is skipped in `.venv`)
   are open; see REPORT.md section 7.
 
+## Phase 6: review fixes and the LLaMA-Factory config (2026-11-12)
+
+Austin's request, after the final review: fix D1 with option B (TRL `tools` as a JSON string) and D4
+(missing student rows), write the LLaMA-Factory training config, update this file and REPORT.md, and
+have a Fable subagent independently test and review the work.
+
+**Plan, as executed:**
+- 6.1 **D1.** `formats.to_trl` writes `tools` as `json.dumps` of the OpenAI function list (the same
+  content as before, now a string); `ENCODING["tools_trl"] = "json_string"`, so the manifest tells old
+  and new builds apart. README: a TRL script calls `json.loads(row["tools"])` before the chat template.
+- 6.2 **D5** (it guards D1). `test_files_load_unchanged_with_datasets` now compares `tools` byte for
+  byte and the rest of each row after dropping nulls (Arrow still adds `tool_calls: null` to the system
+  and user messages; Qwen3's template treats that as absent). New test
+  `test_trl_tools_are_a_json_string_of_openai_functions`.
+- 6.3 **D4.** `router_examples` skips a teacher call with no student answer (no row, or a row with no
+  tool and no `no_tool_call`) and counts it as `"no student call"`; the count reaches the manifest's
+  `router.skipped`, and the build warns. A teacher `keep` is still `commit` with or without a student
+  row. `routing.label()` now raises `ValueError` when given no student answer for a teacher call, so no
+  other caller can turn it into `escalate`. Tests updated (four that relied on the old behaviour now pass
+  an "echo" student that repeats the teacher's call) and two added.
+- 6.4 **Training config.** New folder `packages/avians_adp/training/` (no file outside
+  `packages/avians_adp`):
+  - `pilot_sft_qwen3_4b_lora.yaml`: LLaMA-Factory 0.9.5, `Qwen/Qwen3-4B`, LoRA (rank 16, all linear
+    layers), template `qwen3`, `enable_thinking: true`, `cutoff_len: 8192`, loss on the call only,
+    2 epochs, lr 1e-4, effective batch 16, bf16, eval on `avians_pilot_val`. Keys checked against the
+    installed LLaMA-Factory 0.9.5 / transformers 5.6.0: `overwrite_output_dir` no longer exists.
+    The first version used `warmup_steps: 0.05`, because transformers 5 deprecates `warmup_ratio`.
+    The review (R1) showed that LLaMA-Factory also accepts transformers 4.x, which reads 0.05 as 0
+    steps. It is now `warmup_ratio: 0.05`, which works on both.
+  - `check_lf.py`: gate 5.4 made reusable. Runs LLaMA-Factory's own parser and SFT data pipeline with
+    the config (dataset_dir swapped for a build's `pilot_lf/`, mixed precision off, tokenizer only) and
+    fails unless every train and eval row loads, has its loss on exactly one `<tool_call>` equal to the
+    teacher's call, and fits in `cutoff_len`. `key=value` overrides, as with `llamafactory-cli`.
+  - `README.md`: build → check → train, what the config fixes and why, the empty-val case, and what is
+    still missing (a student pilot in `avians_agent`, router format).
+- 6.5 Docs: package README (TRL layout, router labels, training pointer), REPORT.md (Phase 6 section at
+  the top; stale passages marked in place), this section.
+
+**Status: done; verified on scripted seeds 0–5** (all evidence below re-runnable; scratch builds outside
+`data/`):
+- Root suite **182 passed, 2 skipped** on Python 3.14.4 (`.venv`) and on Python 3.10.22 (`venv310`);
+  `packages/avians_adp` alone 147 passed, 2 skipped.
+- D1: the new TRL files load with `datasets` 4.0.0 (`venv312`) and 5.2.0 (`venv312new`): `tools`
+  identical to the file in 91/91 train and 35/35 test rows, 0 nulls inside `tools`, rows otherwise
+  equal after dropping message-level nulls. Loaded through `datasets` 4.0.0, parsed with `json.loads`
+  and rendered with the Qwen3-4B template: 91/91 rows hold exactly one correct call, 6,134–7,073
+  tokens (the old layout gave ~9.7k).
+- D5: the loader test now runs and passes in `venv312` (`datasets` 4.0.0; pytest borrowed from
+  `venv310` via `PYTHONPATH`, as `venv312` has no pip), and **fails** against the old `formats.py`. It
+  is still skipped in `.venv`, which has no `datasets`.
+- D4: a partial `student_calls.jsonl` gives `router.skipped == {"no student call": n}` in the result
+  and the manifest, plus a warning; keeps are still `commit`.
+- Config: `check_lf.py` with the config on a fresh build: train 91/91 and eval (test split, via
+  `eval_dataset=avians_pilot_test`) 35/35 rows supervise exactly the teacher's call, longest 7,073
+  tokens. With the default `avians_pilot_val` it stops cleanly (val is empty at seeds 0–5); with
+  `cutoff_len=2048` it fails, as it should; `eval_dataset=null eval_strategy=no` passes.
+- Not verified: an actual training run (no GPU on this machine; no model weights downloaded, only the
+  tokenizer). The hyperparameters are starting points.
+
+**Independent review:** a Fable subagent was given the request, the diff and the environments, but
+not the author's conclusions. Its verdict: D1 and D4 are done and confirmed, the config is valid and
+consistent with the data, and the docs' numbers are right. It found R1–R5 (REPORT.md, "Phase 6 review").
+- 6.6 Follow-up:
+  - R1: switched to `warmup_ratio`.
+  - R3: the build warns when some episodes have no `student_calls.jsonl`; a test checks it.
+  - R2, R4, R5: documented.
+  - Re-verified: `check_lf.py` gives 91/91 and 35/35; the root suite gives 182 passed, 2 skipped on
+    Python 3.14 and 3.10.
+
 ## Setup state
 
-- Branch `mcglashan/adp-datasets` exists; nothing is committed.
+- Branch `mcglashan/adp-datasets`: Phases 1–5 and the final review are committed (`1633daa`..`6f1f803`);
+  Phase 6 is not committed yet.
 - `.venv` (Python 3.14.4) has every package installed.
 - Seeds 0–5 of the scripted pilot are in `data/episodes/sar_supply/scripted/`, in the new format.

@@ -3,8 +3,9 @@
 Two layouts, both for a Qwen3 student (its chat template prints each tool as
 JSON inside <tools>, and each call as <tool_call>{"name", "arguments"}):
 
-  TRL         {"messages": [system, user, assistant + tool_calls], "tools": [...]}
-              Loads with datasets.load_dataset("json") and trl.SFTTrainer.
+  TRL         {"messages": [system, user, assistant + tool_calls], "tools": "<json>"}
+              Loads with datasets.load_dataset("json"); parse `tools` with
+              json.loads before apply_chat_template / trl.SFTTrainer.
   sharegpt    {"conversations": [human, function_call], "system": ..., "tools": "<json>"}
               LLaMA-Factory's sharegpt layout, described by dataset_info.json.
 
@@ -14,8 +15,12 @@ Encoding (format spike, PLAN.md 0.2):
     string cannot hit Arrow type conflicts across tools whose arguments
     differ. (A template that always applies tojson would double-encode it:
     another student family means another writer, not a rebuild.)
-  - TRL `tools` is a list of OpenAI function dicts; sharegpt `tools` is a
-    JSON string of the bare function dicts, as LLaMA-Factory's examples have.
+  - `tools` is a JSON string in both layouts. TRL: a list of OpenAI function
+    dicts ({"type": "function", "function": {...}}); sharegpt: the bare
+    function dicts, as LLaMA-Factory's examples have. A list of dicts is not
+    safe: `datasets` 4.x (Arrow) merges the parameter names of all tools into
+    one struct and pads every tool with the others' names as nulls (REPORT.md,
+    D1). A string loads unchanged on any `datasets` version.
 
 The target is the same in both: the teacher's tool call with its reason.
 The pilot's visible text and thinking summary go into the TRL layout only,
@@ -29,7 +34,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ENCODING = {"arguments": "json_string", "tools_trl": "list", "tools_sharegpt": "json_string"}
+ENCODING = {"arguments": "json_string", "tools_trl": "json_string", "tools_sharegpt": "json_string"}
 
 
 def to_trl(ex: dict, *, include_text: bool = False, include_thinking: bool = False) -> dict:
@@ -42,7 +47,7 @@ def to_trl(ex: dict, *, include_text: bool = False, include_thinking: bool = Fal
     return {"messages": [{"role": "system", "content": ex["system"]},
                          {"role": "user", "content": ex["prompt"]},
                          assistant],
-            "tools": ex["tools"]}
+            "tools": json.dumps(ex["tools"], ensure_ascii=False)}
 
 
 def to_sharegpt(ex: dict) -> dict:

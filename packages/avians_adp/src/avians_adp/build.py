@@ -238,6 +238,10 @@ def build(episodes: str | Path, out_dir: str | Path, config: BuildConfig | None 
             router_warnings.append(f"{ep_id}: student_calls.jsonl belongs to {sorted(stale)}; ignored "
                                    "(rerun student_calls with --force)")
             del with_calls[ep_id]
+    no_file = sorted(t.id for s in SPLITS for t in by_split[s] if t.id not in with_calls)
+    if with_calls and no_file:
+        router_warnings.append(f"{len(no_file)} episodes have no student_calls.jsonl and are not in the router "
+                               f"set: {no_file[:5]}{' ...' if len(no_file) > 5 else ''}")
     features = _router_features() if with_calls else None
     if with_calls and features is None:
         router_warnings.append("avians_agent is not installed: router examples have no `text`")
@@ -251,6 +255,10 @@ def build(episodes: str | Path, out_dir: str | Path, config: BuildConfig | None 
             router[split].extend(exs)
             for k, v in skipped.items():
                 router_skipped[k] = router_skipped.get(k, 0) + v
+    missing = router_skipped.get("no student call", 0)
+    if missing:
+        router_warnings.append(f"{missing} teacher calls have no student call and were skipped "
+                               "(an incomplete student_calls.jsonl? rerun student_calls with --force)")
     inexact = sum(1 for s in SPLITS for e in router[s] if not e["meta"]["events_exact"])
     if inexact:
         router_warnings.append(f"{inexact} router examples rebuilt their events from a time window "

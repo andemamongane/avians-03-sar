@@ -73,7 +73,7 @@ tools and the decision prompt in; the teacher's tool call out, with
 
 | File (per split: `train`, `val`, `test`) | Layout |
 |---|---|
-| `pilot/<split>.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` |
+| `pilot/<split>.jsonl` | TRL: `messages` (system, user, assistant + `tool_calls`) and `tools` (a JSON string) |
 | `pilot/<split>.meta.jsonl` | `id` + `meta` per row (episode, seed, kind, model, accepted, robustness, ...), same order |
 | `pilot_lf/<split>.jsonl`, `pilot_lf/dataset_info.json` | LLaMA-Factory sharegpt: `dataset_dir: pilot_lf`, `dataset: avians_pilot_train`, `eval_dataset: avians_pilot_val`, `template: qwen3` |
 
@@ -110,10 +110,18 @@ common 2048, LLaMA-Factory keeps the target and silently cuts the prompt to
 fit: the student then learns the right call after a prompt missing its state,
 memory and "Decide" lines.
 
-**TRL and `datasets` versions.** Load `pilot/*.jsonl` with `datasets` 5.x.
-`datasets` 4.x (which LLaMA-Factory 0.9.5 pins) pads each tool's schema with
-the other tools' properties as nulls when it loads the `tools` list. The
-LLaMA-Factory files store `tools` as a JSON string and are unaffected.
+**TRL: parse `tools` first.** In both layouts `tools` is a JSON string, so
+any `datasets` version loads it unchanged. (A list of tool dicts is not safe:
+`datasets` 4.x, which LLaMA-Factory 0.9.5 pins, pads every tool's schema with
+the other tools' parameter names as nulls.) A TRL script calls
+`json.loads(row["tools"])` before `apply_chat_template` or `SFTTrainer`
+(unparsed, Qwen3's template silently renders one "tool" per character). The
+only change on load is `tool_calls: null` on the system and user messages,
+which Qwen3's template treats as absent.
+
+**Training.** `training/` holds the LLaMA-Factory config for the student
+pilot (`pilot_sft_qwen3_4b_lora.yaml`) and `check_lf.py`, which checks a build
+against it without a GPU. See `training/README.md`.
 
 ## Router set (System One)
 
@@ -131,7 +139,7 @@ python -m avians_adp.build data/episodes/sar_supply/haiku data/datasets/v1      
 |---|---|
 | `commit` | the teacher called `keep` |
 | `local` | the student's call matches the teacher's: same tool, same arguments ignoring `reason`/`notes`, numbers within `routing.TOLERANCES` (e.g. 10 m for positions, 5 m for altitudes) |
-| `escalate` | anything else: a different tool or arguments, the student escalated, or it has no call |
+| `escalate` | anything else: a different tool or arguments, the student escalated, or it replied with no tool call |
 
 `router/<split>.jsonl` holds `id`, `text`, `label` and `options`; `text` is
 `avians_agent.router.features(state, events)`, the exact string the live
@@ -150,6 +158,15 @@ Notes:
   written for another episode.
 - A failed student call (an API error) is recorded as an error and skipped
   when labelling; a reply with no tool call is labelled `escalate`.
+- A teacher call with no student row at all (an incomplete
+  `student_calls.jsonl`) is skipped, not labelled: it is counted as
+  `no student call` under `router.skipped` in the manifest, and the build
+  warns. A teacher `keep` is `commit` with or without a student row.
+- `router.skipped` keys: `api_error`, `no_tool_call`, `router_commit`,
+  `student`, `model` (as for the pilot set), plus `student error` and
+  `no student call` (router only).
+- An episode with no `student_calls.jsonl` at all is left out of the router
+  set; when some episodes have one and others do not, the build warns.
 - A pilot that calls an API costs money for every decision it is asked.
 - Real labels need the student model, which is still open. Until then, a
   scripted student gives `commit` and `local` only, since it is a copy of

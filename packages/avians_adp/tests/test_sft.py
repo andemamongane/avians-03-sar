@@ -257,8 +257,19 @@ def test_build_skips_unreadable_trajectory(tmp_path):
     assert r["examples"]["train"] == 4 and any("odd" in k for k in r["skipped"])
 
 
+def _drop_nulls(x):
+    """Arrow gives every message the union of keys (system/user gain `tool_calls: None`); drop them."""
+    if isinstance(x, dict):
+        return {k: _drop_nulls(v) for k, v in x.items() if v is not None}
+    if isinstance(x, list):
+        return [_drop_nulls(v) for v in x]
+    return x
+
+
 def test_files_load_unchanged_with_datasets(tmp_path):
-    """The training loaders read the files exactly as written (no Arrow null padding)."""
+    """The training loaders read the files as written: `tools` and the call arguments are strings, so
+    Arrow cannot pad one tool's schema with another's parameter names (REPORT.md D1, seen with
+    datasets 4.x). The only change on load is a null for a key a message does not have."""
     datasets = pytest.importorskip("datasets")
     for seed in (1, 2):
         record_episode(tmp_path / "eps" / f"s{seed}", ep_id=f"ep{seed}", seed=seed)
@@ -267,4 +278,15 @@ def test_files_load_unchanged_with_datasets(tmp_path):
         f = tmp_path / "out" / sub / "train.jsonl"
         raw = [json.loads(x) for x in f.read_text().splitlines()]
         ds = datasets.load_dataset("json", data_files=str(f), split="train")
-        assert [ds[i] for i in range(len(ds))] == raw
+        loaded = [ds[i] for i in range(len(ds))]
+        assert [r["tools"] for r in loaded] == [r["tools"] for r in raw]      # byte-identical strings
+        assert [_drop_nulls(r) for r in loaded] == raw
+
+
+def test_trl_tools_are_a_json_string_of_openai_functions(episode):
+    row = to_trl(pilot_examples(episode)[0])
+    assert isinstance(row["tools"], str)
+    tools = json.loads(row["tools"])
+    assert [t["type"] for t in tools] == ["function"] * 3
+    assert [t["function"]["name"] for t in tools] == ["takeoff", "search_region", "keep"]
+    assert tools == pilot_examples(episode)[0]["tools"]

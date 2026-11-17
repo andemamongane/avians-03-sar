@@ -10,11 +10,15 @@ episode):
     commit     the teacher called `keep`
     local      otherwise, and the student's call matches the teacher's
     escalate   otherwise: the student's call differs, the student asked to
-               escalate, it replied without calling a tool, or there is no
-               student call for that decision
+               escalate, or it replied without calling a tool
 
-A student call that failed for an infrastructure reason (an API error) says
-nothing about the student: that decision is skipped, not labelled.
+A teacher call with no student answer cannot be labelled `local` or
+`escalate`: it is skipped and counted as "no student call" (the manifest's
+router.skipped; the build warns). A student_calls.jsonl that stops early, or
+was written for fewer decisions, must not turn into escalate labels. A
+student call that failed for an infrastructure reason (an API error) says
+nothing about the student either: that decision is skipped as "student
+error". A teacher `keep` needs no student answer: it is always `commit`.
 
 Only the teacher's decisions are labelled. In an episode flown with a router
 the student made the `local` ones (decision_kind "student"); they are
@@ -84,13 +88,19 @@ def args_match(teacher: dict, student: dict, tolerances: dict[str, float] | None
 
 def label(teacher_call: dict, student_call: dict | None,
           tolerances: dict[str, float] | None = None) -> tuple[str, str]:
-    """(label, why). Calls are {"tool": name, "args": {...}}."""
+    """(label, why). Calls are {"tool": name, "args": {...}}.
+
+    A teacher `keep` is `commit` whatever the student did. Any other teacher
+    call needs a student answer: a call, or {"no_tool_call": True}. Without
+    one (None, or no tool and no no_tool_call) this raises ValueError: the
+    caller skips that decision (router_examples counts it).
+    """
     if teacher_call["tool"] == "keep":
         return "commit", "teacher kept going"
     if student_call is not None and student_call.get("no_tool_call"):
         return "escalate", "student made no tool call"
     if student_call is None or student_call.get("tool") is None:
-        return "escalate", "no student call"
+        raise ValueError("no student call: skip this decision, do not label it")
     if student_call["tool"] == "escalate":
         return "escalate", "student escalated"
     if student_call["tool"] != teacher_call["tool"]:
@@ -129,10 +139,12 @@ def router_examples(teacher: Trajectory, student_calls: list[dict], *,
     student_calls: [{"decision": n, "tool": name or None, "args": {...}}],
     matched to the teacher's decisions by number. Skipped, and counted by
     reason: decisions without an action, keeps the teacher never chose
-    (decision_kind != "call": API error, no tool call, router commit), and,
+    (decision_kind != "call": API error, no tool call, router commit),
     when `models` is given, decisions made by another model (a teacher
-    episode flown with a router holds the student's decisions too). Keeps
-    are never thinned: every one is a `commit` example.
+    episode flown with a router holds the student's decisions too), teacher
+    calls whose student call failed ("student error"), and teacher calls
+    with no student answer at all ("no student call"). Keeps are never
+    thinned: every one is a `commit` example.
     """
     meta_ep = teacher.details.get("meta", {})
     routed = bool(meta_ep.get("router"))
@@ -155,9 +167,14 @@ def router_examples(teacher: Trajectory, student_calls: list[dict], *,
         n = d.n if d.n is not None else d.index + 1
         teacher_call = {"tool": a.function, "args": dict(a.kwargs)}
         student_call = by_n.get(n)
-        if student_call is not None and student_call.get("error") and a.function != "keep":
-            skipped["student error"] = skipped.get("student error", 0) + 1
-            continue
+        if a.function != "keep":
+            if student_call is not None and student_call.get("error"):
+                skipped["student error"] = skipped.get("student error", 0) + 1
+                continue
+            if student_call is None or (student_call.get("tool") is None
+                                        and not student_call.get("no_tool_call")):
+                skipped["no student call"] = skipped.get("no student call", 0) + 1
+                continue
         lab, why = label(teacher_call, student_call, tolerances)
         state = det.get("state") or {}
         ev, exact = kinds.get(d.index, ([], False))

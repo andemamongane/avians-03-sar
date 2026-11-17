@@ -1,7 +1,131 @@
 # avians_adp: status report (McGlashan)
 
-**As of 2026-11-12. Branch `mcglashan/adp-datasets`, 6 commits on `main` (`1633daa`..the report
-commit), not yet pushed or opened as a pull request.**
+**As of 2026-11-12. Branch `mcglashan/adp-datasets`, 6 commits on `main` (`1633daa`..`6f1f803`) plus
+the uncommitted Phase 6 work below; not yet pushed or opened as a pull request.**
+
+## Current state (after Phase 6, 2026-11-12)
+
+**All five notebook tasks are done, and every defect the final review found is fixed (D1–D5).** The
+package also now carries the LLaMA-Factory training config for the student pilot. What remains is
+blocked on other people or on a GPU, not on this package's code.
+
+| | State |
+|---|---|
+| Recording (`EpisodeRecorder`, ADP 1.3.1, validator) | Done; all real episodes validate |
+| Pilot SFT set: LLaMA-Factory (`pilot_lf/`) | Done; checked end to end against the training config (`training/check_lf.py`) |
+| Pilot SFT set: TRL (`pilot/`) | Done; **D1 fixed in Phase 6**: `tools` is a JSON string, loads unchanged on `datasets` 4.0.0 and 5.2.0. A TRL script calls `json.loads(row["tools"])` |
+| Filters, seed splits, keep-thinning | Done |
+| Router set | Done; **D4 fixed in Phase 6**: a teacher call with no student answer is skipped and counted (`router.skipped["no student call"]`), never labelled `escalate`. Real labels still need the student model |
+| Manifests, transactional builds | Done |
+| Training config (`training/`) | **New in Phase 6.** LLaMA-Factory 0.9.5, Qwen3-4B LoRA; the data path is verified, an actual training run is not (no GPU here) |
+| Tests | Root suite 182 passed, 2 skipped (Python 3.14 and 3.10); the `datasets` loader test (D5) runs and passes with `datasets` 4.0.0 and fails on the old layout |
+
+**Phase 6 changes** (details and evidence in PLAN.md, "Phase 6"):
+- `formats.py`: TRL `tools` written as a JSON string; `ENCODING["tools_trl"] = "json_string"` (builds
+  made before carry `"list"` in their manifest and should be rebuilt for TRL).
+- `routing.py`, `build.py`: D4 as above, plus a build warning; `label()` raises `ValueError` when given no
+  student answer for a teacher call.
+- Tests: the loader test compares `tools` byte for byte (D5); new tests for the TRL string and for
+  partial student files; four router tests now pass an "echo" student instead of none.
+- `training/pilot_sft_qwen3_4b_lora.yaml`, `training/check_lf.py` (gate 5.4, now reusable),
+  `training/README.md`.
+- No file outside `packages/avians_adp` was edited.
+
+**Still open** (section 4 has the full table):
+1. **Real teacher data:** about 10 Haiku episodes (about $0.20) need the API key from Andema.
+2. **Student model choice:** gives the final chat template and, through `student_calls`, real router
+   labels. The config assumes Qwen3-4B.
+3. **A student pilot in `avians_agent`:** a `decide()` adapter that calls the served model and parses
+   its `<tool_call>`. Without it a trained student cannot fly, be scored by STL robustness, or label the
+   router set. Outside this package.
+4. **A training run** on a GPU machine with LLaMA-Factory, and the router's training format (waits on the
+   System One API reference).
+5. **The pull request:** commit Phase 6, push, open it into `main`. Section 3 should go in its
+   description.
+
+### Phase 6 review
+
+*Independent review of the uncommitted Phase 6 work, 2026-11-12. Everything below was rerun; scratch
+builds under the session scratchpad (`.../scratchpad/review/`), nothing written into `data/`.*
+
+**What I ran.** Root suite in `.venv` (3.14.4): 182 passed, 2 skipped; in `venv310` (3.10.22): 182
+passed, 2 skipped; `packages/avians_adp` alone in `.venv`: 147 passed, 2 skipped; in `venv312`
+(`datasets` 4.0.0, pytest borrowed from `venv310`): 140 passed, 9 skipped (no `avians_agent` there),
+the loader test among the passes. The new tests against HEAD's `formats.py` + `routing.py` (copied to
+a scratch `PYTHONPATH`): 8 fail (`test_files_load_unchanged_with_datasets`,
+`test_trl_tools_are_a_json_string_of_openai_functions`, 3× `test_label_refuses_a_missing_student_call`,
+`test_router_examples_skip_teacher_calls_with_no_student_call`,
+`test_build_writes_router_files_with_the_pilot_splits`, the manifest encoding test), so the tests do
+guard the fixes. Built seeds 0–5 (copied to scratch, with their `student_calls.jsonl`): 91/0/35 pilot
+rows, 121/0/35 router rows, `encoding.tools_trl == "json_string"`. Loaded `pilot/train|test.jsonl`
+with `datasets` 4.0.0 and 5.2.0: `tools` byte-identical in 91/91 and 35/35 rows, 0 nulls inside
+`tools`, rows equal after dropping message-level nulls (4.0.0 adds `tool_calls: null` to system/user;
+5.2.0 adds nothing). Rendered the 4.0.0-loaded rows with the Qwen3-4B template after `json.loads`:
+91/91 one correct call, 6,134–7,073 tokens; the same build with HEAD's `formats.py` gives 9,657–10,596
+(the "~9.7k" claim). Built with one truncated `student_calls.jsonl` (2 of 8 rows) and one removed:
+`router.skipped == {"no student call": 6}`, the warning is printed by the CLI and stored in the
+manifest, keeps still `commit`. `check_lf.py` in `venv312` (`HF_HUB_OFFLINE=1`): default config stops
+with "avians_pilot_val is empty" (exit 1); `eval_dataset=avians_pilot_test`: train 91/91, eval 35/35,
+longest 7,073 / 7,048, supervised text `<think>\n\n</think>\n\n<tool_call>…</tool_call><|im_end|>\n`
+(exit 0); `cutoff_len=2048`: 0/91, every row 2,048 tokens (exit 1); `eval_dataset=null
+eval_strategy=no`: 91/91 (exit 0). Verified in `venv312`: LLaMA-Factory 0.9.5 requires
+`transformers>=4.55,<=5.6`, `datasets<=4.0.0`; `TrainingArguments` 5.6.0 has no `overwrite_output_dir`,
+`warmup_ratio` is deprecated and `warmup_steps` takes a float ratio; `read_args` merges `key=value`
+after a YAML; `DataArguments.enable_thinking` exists; `--satisfied`, `--split`, `--force` exist.
+
+**Verdict.** (1) D1: done as asked (option B), confirmed. (2) D4: done, confirmed; the design (skip and
+count, `label()` refuses to guess) is right and the count reaches the CLI output, the manifest and the
+result dict. (3) Training config: valid for the installed LLaMA-Factory 0.9.5 / transformers 5.6.0 and
+consistent with the data; one portability defect (R1). (4) Docs: every number and command I checked is
+right; two small wording gaps (R4, R5). Fit to commit after R1.
+
+**Findings, most severe first.**
+- **R1. SUSPECTED, medium. `warmup_steps: 0.05` only means "5 %" on transformers ≥ 5.**
+  `training/pilot_sft_qwen3_4b_lora.yaml:57`. LLaMA-Factory 0.9.5 accepts transformers 4.55–5.6, and
+  `pip install llamafactory==0.9.5` on a box that already has 4.x keeps it. On 4.x `warmup_steps` is an
+  int field and `get_warmup_steps` returns `0.05` as is, so the scheduler warms up for 0 steps (no
+  error, no warning). Not runnable here (only 5.6.0 installed); read from 5.6.0's `get_warmup_steps`
+  and `__post_init__`. *Fix:* `warmup_ratio: 0.05` works on both (5.x maps it onto `warmup_steps` with
+  a deprecation warning), or state `transformers>=5` in `training/README.md` section 2 and the YAML.
+- **R2. CONFIRMED, low. `eval_steps`/`save_steps: 200` never fire on a small build.** With 91 train rows
+  and an effective batch of 16 there are 6 steps an epoch, 12 in all: no evaluation and no checkpoint
+  until the end. Fine for the 25k-decision target, misleading for a smoke run. *Fix:* say so in
+  `training/README.md`, or use `eval_strategy: epoch` / `save_strategy: epoch` as the starting point.
+- **R3. CONFIRMED, low, pre-existing. An episode with no `student_calls.jsonl` at all leaves the router
+  set silently.** `src/avians_adp/build.py:247` (`if calls is None: continue`). In my partial build the
+  router set had 5 of 6 episodes and no warning; only `router.episodes` in the manifest shows it. D4
+  now warns for a partial file but not for a missing one. *Fix:* warn with the count of episodes that
+  have pilot rows but no student file.
+- **R4. CONFIRMED, low. TRL `tools` as a string has no guard against being passed unparsed.**
+  `formats.py:50`. `trl.SFTTrainer` hands `example["tools"]` straight to `apply_chat_template`; Qwen3's
+  template iterates it, so a string renders one "tool" per character without an error. The README says
+  to `json.loads` it (`README.md:117`, `training/README.md:77`); nothing enforces it. Accepted risk of
+  option B; worth one sentence in `README.md` saying what the symptom looks like.
+- **R5. CONFIRMED, cosmetic. Skip-reason keys mix styles.** `routing.py:172,176`: `"student error"` and
+  `"no student call"` (spaces) beside `api_error`, `router_commit`, `no_tool_call` (underscores) in the
+  same `router.skipped` dict and in `README.md:65`, which lists only the underscore ones.
+- Checked and found correct: the `label()` `ValueError` is only reachable through `router_examples`'s
+  pre-check (a row with `error` is "student error", a row with `no_tool_call` is `escalate`, a row with
+  `tool: null` and neither is "no student call"); no other package imports `label`, `to_trl` or
+  `router_examples` (`avians_agent/router.py` only mentions it in a docstring); the `python -I` in the
+  check command is fine because `check_lf.py` imports nothing from the repo; `1.0e-4` parses as a float;
+  the YAML's `trust_remote_code: true` is unnecessary for Qwen3 but harmless; the token budget in
+  `training/README.md` (system ~1.8k, tools ~3.9k) measures 1,801 / ~4,020 on row 0, close enough.
+
+**Author's follow-up to the Phase 6 review (2026-11-12).** All five findings were acted on:
+- **R1 fixed.** The YAML uses `warmup_ratio: 0.05`, with a comment on why not `warmup_steps`; the table in
+  `training/README.md` says the same. Checked on transformers 5.6.0 through LLaMA-Factory's
+  `get_train_args`: `warmup_ratio` 0.05 becomes `warmup_steps` 0.05, which is 50 steps of 1,000.
+  Transformers 4.x is not installed here, so the 4.x side rests on the reviewer's reading of the source.
+- **R2 documented.** A YAML comment and a "Small builds" section in `training/README.md`: add
+  `eval_strategy=epoch save_strategy=epoch` for a smoke run. The 200-step defaults stay for real builds.
+- **R3 fixed.** When some episodes have a `student_calls.jsonl` and others do not, the build warns with
+  the count and the first ids. `test_build_writes_router_files_with_the_pilot_splits` asserts it.
+- **R4 documented.** `README.md` and `training/README.md` describe the symptom: one "tool" per character.
+- **R5 documented, not renamed.** Renaming the keys would change existing manifests for a cosmetic gain.
+  The README now lists every `router.skipped` key.
+- After these changes: `check_lf.py` gives train 91/91 and eval 35/35 again. The root suite gives
+  182 passed, 2 skipped on Python 3.14.4 and on 3.10.22.
 
 ## Independent review (final)
 
@@ -53,7 +177,8 @@ What I ran (everything under `~/.cache/avians_adp_final/`, nothing written into 
   - **Consequence:** the TRL layout is correct, and loads unchanged, with `datasets` ≥ 5. With
     `datasets` 4.x it is silently padded.
   - **The sharegpt / LLaMA-Factory path is unaffected either way.**
-  - **The fix is a decision for Austin** (section 5, step 0a):
+  - **The fix was a decision for Austin** (section 5, step 0a). *Phase 6: Austin chose the JSON string;
+    done.*
     - keep `tools` as a list, which TRL takes natively, and require `datasets` ≥ 5; or
     - write a JSON string, which works on any version but needs a parse step in the TRL script.
 - **D2 is fixed.**
@@ -65,7 +190,7 @@ What I ran (everything under `~/.cache/avians_adp_final/`, nothing written into 
     2 skipped**, the same as on 3.14. So the package now runs on 3.10, as its `pyproject.toml` says.
 - **D3 is accepted.** The README's "2048 trains on nothing" sentence is corrected to the measured
   behaviour.
-- **D4 and D5 are open**, as described in section 7.2.
+- **D4 and D5 were open**, as described in section 7.2. *Phase 6: both fixed.*
 
 All five notebook tasks for `packages/avians_adp` are implemented and tested, and the notebook's
 definition of done holds:
@@ -131,6 +256,8 @@ Companion documents:
   - LLaMA-Factory sharegpt: `conversations`, `system` and `tools`, plus `dataset_info.json`.
   - A meta side file carries the episode, seed, model, decision kind and so on.
 - **Verified:**
+  - *(Phase 6: fixed. TRL `tools` is now a JSON string and loads unchanged on `datasets` 4.0.0 and 5.2.0;
+    the rest of this bullet is the review's finding on the old layout.)*
   - The sharegpt layout loads with `datasets` exactly as written. **The TRL layout does not**
     (corrected in review): `datasets` 4.0.0 / pyarrow 26.0.1 unify the `tools[*].function.parameters.
     properties` structs across the 23 tools and pad each tool with the others' property names as
@@ -210,7 +337,7 @@ python -m avians_adp.build data/episodes/sar_supply/scripted --satisfied # -> da
 | Root test suite (`python -m pytest`) | 178 passed, 2 skipped (145 tests in `avians_adp`) |
 | Real episodes validate (scripted seeds 0–5) | 6/6 |
 | Every SFT target round-trips to the recorded call (seeds 0–5) | 156/156 decisions |
-| `datasets` loads the files unchanged; Qwen3 template renders the right call | sharegpt: yes. TRL: **no**, the tools column is null-padded on load (corrected in review; section 7, D1). The written TRL rows render the right call |
+| `datasets` loads the files unchanged; Qwen3 template renders the right call | sharegpt: yes. TRL: **yes since Phase 6** (`tools` is a JSON string; 0 nulls in tools on `datasets` 4.0.0 and 5.2.0; loaded rows render the right call at 6.1k–7.1k tokens). Before Phase 6 the tools column was null-padded on load (section 7, D1) |
 | LLaMA-Factory 0.9.5 `get_dataset` (template `qwen3`, `cutoff_len` 8192) | 91/91 train, 35/35 test; supervised tokens = the teacher's call |
 | Rebuilt router text = the live router's input | 81/81 decisions (3 seeds) |
 | Upstream ADP 1.3.1's own models accept our records (`ADP_UPSTREAM=...`) | yes (fixture, hand-built and all real episodes) |
@@ -251,6 +378,7 @@ D1), so that rejection was wrong (noted in review).
     a 2048 cutoff is wrong.
   - This is for the sharegpt files. A TRL run that loads `pilot/*.jsonl` with `datasets` sees ~9.7k
     tokens an example because of the null padding (section 7, D1), so it needs the fix there first.
+    *(Phase 6: fixed; a loaded TRL row is 6.1k–7.1k tokens, the same as the sharegpt one.)*
   - The student needs an ~8k context window. Shrinking the tool descriptions or the system prompt would
     cut cost a lot.
 - **LLaMA-Factory needs Python ≤ 3.12.** The `datasets` 4.0.0 it pins cannot run on Python 3.14.
@@ -274,12 +402,15 @@ D1), so that rejection was wrong (noted in review).
 | **Router labels from outcomes** | More data | README task 4: "later, label from outcomes too (which choice led to higher robustness)" |
 | **Scale** (README task 6) | Andema's approval | `avians rollouts ... --pilot haiku --seeds 0-999` is about $20; ask before more than 100 episodes |
 | **Pull request** | Austin | Push the branch and open the PR into `main`; the description should carry section 3 |
+| **Training run** (Phase 6) | A GPU machine | `training/pilot_sft_qwen3_4b_lora.yaml` is ready and its data path checked; hyperparameters are starting points |
+| **Student pilot adapter** in `avians_agent` (Phase 6 finding) | Student model choice; outside this package | Needed to fly, score and route a trained student |
 
 ---
 
 ## 5. Suggested next steps (in order)
 
-0. **Two small fixes before the pull request** (added in review; section 7):
+0. ~~**Two small fixes before the pull request**~~ (added in review; section 7). *Both done: 0a in Phase 6
+   (JSON string), 0b after the review.*
    - **0a.** In `formats.py` `to_trl`, write `tools` as a JSON string (as `to_sharegpt` already does),
      set `ENCODING["tools_trl"] = "json_string"`, and say in the README that a TRL training script
      must `json.loads(row["tools"])` before `apply_chat_template`. Then make
@@ -310,6 +441,8 @@ D1), so that rejection was wrong (noted in review).
    - ~~test on Python 3.10~~ (done, see the follow-up at the top);
    - pin `target-version = "py310"` for ruff in the repo, so `ruff --fix` cannot reintroduce 3.11-only
      code (D2's cause);
+   - *(Phase 6: gate 5.4 is now `training/check_lf.py`, run against the training config; gate 2.6b is
+     covered by `test_files_load_unchanged_with_datasets`, which now passes where `datasets` is installed.)*
    - move the two gate scripts (below) into the repo, e.g. `packages/avians_adp/scripts/`, with an
      optional extra for their dependencies;
    - consider an ATIF exporter.
@@ -330,7 +463,7 @@ D1), so that rejection was wrong (noted in review).
   run `gate_2_6b.py <build> <split>` (load and Qwen3 render), but as of the final review
   `datasets.load_dataset` crashes there (`dill` 0.4.1 vs Python 3.14 pickling). Run that gate with
   `venv312` instead (it has `datasets`, `transformers` 5.6.0 and the Qwen3-4B tokenizer); expect it to
-  fail on the TRL split until step 0a in section 5 is done.
+  fail on the TRL split until step 0a in section 5 is done. *(Phase 6: step 0a is done.)*
 - `~/.cache/avians_adp_spike/venv312`: Python 3.12 (uv-installed) with LLaMA-Factory 0.9.5 and CPU
   torch. Runs `gate_5_4.py <build> avians_pilot_train` (LLaMA-Factory pipeline). It has no `pip` or
   `pytest`; `uv` is not on PATH on this machine (the interpreter is under `~/.local/share/uv/python/`).
@@ -342,7 +475,8 @@ D1), so that rejection was wrong (noted in review).
   builds (`build_default`, `build_filtered`), the upstream checkout (`upstream/`), the check scripts
   (`spotcheck.py <build> <episodes>`, `diffload.py <jsonl>`, `render_loaded.py <trl jsonl>`,
   `three_tools.py`) and the gate logs (`gates.txt`, `gates2.txt`).
-- Neither gate script is in the repo yet (next step 7).
+- Neither gate script is in the repo yet (next step 7). *(Phase 6: gate 5.4 is in the repo as
+  `training/check_lf.py`.)*
 - `ADP_UPSTREAM=<checkout of neulab/agent-data-protocol@274f935a>` enables the upstream test. A copy of
   the pre-ATIF schema was in the session scratchpad, which is gone. Re-clone, then `git checkout 274f935a`.
 
@@ -359,6 +493,7 @@ D1), so that rejection was wrong (noted in review).
 | `filters.py`, `splits.py` | episode/decision filters, keep-thinning, seed splits |
 | `routing.py`, `student_calls.py` | router labels and matching; offline student runs |
 | `manifest.py`, `build.py` | the manifest; the build pipeline, CLI and transactional install |
+| `../../training/` (Phase 6) | LLaMA-Factory config for the student pilot, `check_lf.py`, a README; not imported by the package |
 
 **Gotchas learned the hard way:**
 - **`by` does not identify the teacher.** Without a router it is always `"local"`. Use
@@ -383,7 +518,7 @@ D1), so that rejection was wrong (noted in review).
 | # | Requirement | Finding |
 |---|---|---|
 | 1 | Schema matches upstream; import if pip-installable; validator every trajectory passes | **Met.** `schema.py` matches `neulab/agent-data-protocol@274f935a` field for field (`Action`/`Observation` optionals, `class_` values, `source` literal, `validate_tool_result_source`, `validate_tool_call_links`, supported versions). Not importable for the reasons given in section 1; mirroring is the right call and was Austin's decision. `validate()` passes on all 8 fresh episodes and the 6 in `data/`; `finish()` writes before validating. The per-step `details` extension is additive and `to_upstream()` strips it (upstream models accept the result: 7/7 opt-in tests) |
-| 2 | One example per decision; system prompt, tools, decision prompt in; teacher's call with reason out; chat JSONL that LLaMA-Factory and TRL load, in the student's tool-calling layout | **Met for LLaMA-Factory; partly met for TRL.** 296 rows spot-checked against their trajectories: 0 differences. `reason` and `notes` go back into the arguments and match the student's tool schema. Qwen3 renders a written row as `<think>\n\n</think>\n\n<tool_call>{...}</tool_call>`, and with `--thinking` as `<think>\n<summary>\n</think>` (rendered in review). The TRL file is well-formed but see D1 |
+| 2 | One example per decision; system prompt, tools, decision prompt in; teacher's call with reason out; chat JSONL that LLaMA-Factory and TRL load, in the student's tool-calling layout | **Met for LLaMA-Factory; partly met for TRL (fully met since Phase 6: D1 fixed).** 296 rows spot-checked against their trajectories: 0 differences. `reason` and `notes` go back into the arguments and match the student's tool schema. Qwen3 renders a written row as `<think>\n\n</think>\n\n<tool_call>{...}</tool_call>`, and with `--thinking` as `<think>\n<summary>\n</think>` (rendered in review). The TRL file is well-formed but see D1 |
 | 3 | Filter by episode or clause robustness; thin near-identical keeps; split by seed, never one episode across splits | **Met.** `--satisfied` removed exactly the 2 unsatisfied episodes of 8 (seeds 1, 5); a bad clause name is an error before anything is written. Thinning removed only `keep` rows, only in train, in decision order (35 of 145 train decisions at `--keep-every 3`; 23 at 5 with `--battery-band 0`). Every row's split equals `split_of(seed, ratios)`; no episode in two splits in either build |
 | 4 | Router set: commit / local / escalate as defined | **Met, with the stated caveat.** Labels recomputed independently for all 354 router rows: 0 differences; `text` equals the live router's `features()` over the recorded event kinds for all of them. With the scripted stand-in student the labels are 207 commit / 147 local / 0 escalate across the two builds, which says nothing about a real student (the scripted policy reads the state, not the prompt). Real labels wait on the student model, as section 4 says |
 | 5 | Every build writes counts, episode ids, the git commit and the filter settings | **Met.** `manifest.json` has all four plus file hashes, row counts, the command line and the skipped episodes; identical inputs gave identical `data_digest` across a `--force` rebuild |
@@ -395,7 +530,7 @@ supervised tokens = the call); the two placeholder tests are real and pass, yes
 
 ### 7.2 Defects found (most severe first)
 
-**D1. Confirmed with `datasets` 4.0.0; not reproduced with 5.2.0 (author's follow-up at the top). The TRL layout is null-padded when loaded with `datasets` 4.x; the report said it was not.**
+**D1. (Fixed in Phase 6: TRL `tools` is a JSON string.) Confirmed with `datasets` 4.0.0; not reproduced with 5.2.0 (author's follow-up at the top). The TRL layout is null-padded when loaded with `datasets` 4.x; the report said it was not.**
 `src/avians_adp/formats.py:45` (`"tools": ex["tools"]`, a list of dicts). Arrow unifies the
 `parameters.properties` struct across the 23 tools, so after `load_dataset("json", ...)` every tool
 carries every other tool's property names with `None` values (665 null paths a row, measured on
@@ -426,7 +561,7 @@ truncates the prompt and keeps the target (`llamafactory/data/processor/processo
 That is silently wrong training data, not "nothing". Corrected in section 3. No code change needed;
 keep 8192.
 
-**D4. Suspected, low. A missing student row is labelled `escalate`, not skipped.**
+**D4. (Fixed in Phase 6: skipped and counted as `no student call`; the build warns.) Suspected, low. A missing student row is labelled `escalate`, not skipped.**
 `src/avians_adp/routing.py:93` (`label()`, "no student call"). `student_calls.py` always writes a row
 for every decision it is asked about, so a complete `student_calls.jsonl` never triggers this. A
 partial file (an older `needs_student` rule, a hand-edited file, a file written by a future student
@@ -434,7 +569,7 @@ runner that stops early) would quietly turn every uncovered non-keep decision in
 only `meta.why` saying so and no count in the manifest. *Suggested:* count "no student call" under
 `router.skipped` in the manifest, or skip those decisions like student errors.
 
-**D5. Low. The `datasets` loader test cannot catch D1.** `tests/test_sft.py:260` is skipped in `.venv`
+**D5. (Fixed in Phase 6: the test ignores only the message-level nulls, passes with `datasets` 4.0.0, and fails on the old layout.) Low. The `datasets` loader test cannot catch D1.** `tests/test_sft.py:260` is skipped in `.venv`
 (no `datasets`) and would fail where `datasets` is installed. Either install `datasets` in `.venv` as
 a test extra, or drop the test and keep the gate script in the repo (section 5, step 7).
 
@@ -445,6 +580,8 @@ With seeds 0–7 at 80/10/10 the val split holds one episode (seed 7); at 0–5 
 
 ### 7.3 Risks to carry into the pull request
 
+- *(Phase 6: the first three risks below are resolved by the fix; builds made before it still carry
+  `tools_trl: "list"` in their manifest and must be rebuilt for TRL.)*
 - Anyone training with TRL from `pilot/*.jsonl` before step 0a gets D1 without a warning. If the PR
   opens before the fix, say so in the description.
 - The manifest records `tools_trl: "list"`; builds made before step 0a can be told apart by that field.

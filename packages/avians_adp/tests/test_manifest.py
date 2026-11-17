@@ -97,7 +97,7 @@ def test_manifest_records_source_settings_and_code(flown, tmp_path):
     assert c["keep_every"] == 4 and c["ratios"] == [0.8, 0.1, 0.1] and c["battery_band"] == 25.0
     assert c["episodes"]["satisfied"] is False and c["decisions"]["allow"] == []
     assert c["tolerances"]["east"] == 10.0
-    assert m["encoding"] == {"arguments": "json_string", "tools_trl": "list", "tools_sharegpt": "json_string",
+    assert m["encoding"] == {"arguments": "json_string", "tools_trl": "json_string", "tools_sharegpt": "json_string",
                              "chat_template": "qwen3"}
     assert m["command"][-2:] == ["--keep-every", "4"]
     assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\+00:00", m["created"])
